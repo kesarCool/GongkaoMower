@@ -1,0 +1,15 @@
+# Unity (generated / local)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/MemoryCaptures/
+
+# NuGet / manual dependency extract at repo root (not Unity Assets)
+/_bc_extract/
+/_npoi_extract/
+/_nuget_dl/
+/_zip_extract/
