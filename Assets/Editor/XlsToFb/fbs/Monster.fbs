@@ -1,0 +1,25 @@
+namespace ProtoTable.Monster;
+enum eCrypt :int{
+	code = -1159206884,}
+
+namespace ProtoTable;
+table Monster{
+	ID:int32;
+	monsterId:int32;
+	type:int32;
+	CategoryTag :int32;
+	ThemePackId:int32;
+	randomKillPro:int32;
+	triggerMode:int32;
+	drop:[string];
+	path:string;
+	name:string;
+	beizhu:string;
+	describe:string;
+	element:[string];
+	elementNum:[string];
+	ImmuneEffect:[string];
+	pic:string;
+}
+
+root_type Monster;

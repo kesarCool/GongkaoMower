@@ -1,0 +1,173 @@
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// 单张卡牌UI：根据模板动态显示技能信息
+/// </summary>
+public class CardView : MonoBehaviour
+{
+    [Header("UI组件")]
+    public Image background;
+    public Image icon;
+    public Text titleText;
+    public Text descText;
+    public Text labelText;
+    public Image labelIcon;
+    public Image borderGlow;
+
+    [Header("点击")]
+    [Tooltip("可为空：自动取同物体上的 Button；点击与 Animator 无关。")]
+    public Button clickButton;
+
+    [Header("动画（可选）")]
+    public Animator animator;
+
+    private Action _onClick;
+
+    private void Awake()
+    {
+        if (clickButton == null)
+            clickButton = GetComponent<Button>();
+    }
+
+    /// <summary>
+    /// 绑定卡牌数据
+    /// </summary>
+    public void Bind(CardDeck.DrawResult data, Action onClick)
+    {
+        _onClick = onClick;
+        StopClickPropagationFromDecorations();
+        WireButton();
+
+        if (data == null) return;
+
+        var tmpl = data.template;
+        if (tmpl == null)
+        {
+            if (labelText != null) labelText.text = "";
+            if (titleText != null) titleText.text = data.skillDef != null ? data.skillDef.displayName : "";
+            if (descText != null) descText.text = GetLevelUpPreview(data);
+            if (icon != null && data.skillDef != null) icon.sprite = data.skillDef.icon;
+            gameObject.SetActive(true);
+            return;
+        }
+
+        // 应用样式
+        var style = tmpl.style;
+        if (style != null)
+        {
+            if (background != null) background.sprite = style.background;
+            borderGlow.gameObject.SetActive(false);
+     //       if (borderGlow != null)
+      //      {
+      //          borderGlow.color = style.borderGlowColor;
+      //          borderGlow.gameObject.SetActive(style.rarityStars > 0);
+      //      }
+
+            labelIcon.gameObject.SetActive(false);
+            if (labelIcon != null)
+            {
+                labelIcon.sprite = style.labelIcon;
+                labelIcon.color = style.labelColor;
+                labelIcon.gameObject.SetActive(true);
+            }
+        }
+
+        // 标签文字
+        if (labelText != null)
+            labelText.text = tmpl.labelText;
+
+        // 技能图标
+        if (icon != null && data.skillDef != null)
+            icon.sprite = data.skillDef.icon;
+
+        // 标题（动态替换格式）
+        if (titleText != null && data.skillDef != null)
+        {
+            string title = string.Format(tmpl.titleFormat, data.skillDef.displayName);
+            titleText.text = title;
+        }
+
+        // 描述（显示等级变化）
+        if (descText != null)
+        {
+            string desc = string.Format(tmpl.descriptionFormat,
+                data.currentLevel,
+                GetLevelUpPreview(data));
+            descText.text = desc;
+        }
+
+        // 播放入场动画
+        if (animator != null)
+            animator.SetTrigger("Show");
+
+        gameObject.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 获取升级预览文本（简单版）
+    /// </summary>
+    private string GetLevelUpPreview(CardDeck.DrawResult data)
+    {
+        if (data.currentLevel == 0)
+            return "新技能！";
+
+        if (data.targetLevel >= 5)
+            return "升级到顶级！";
+
+        // 根据技能类型显示不同预览
+        switch (data.skillId)
+        {
+            case SkillId.AutoProjectile:
+                return $"Lv.{data.targetLevel}：攻速+10%";
+            case SkillId.LineBeam:
+                return $"Lv.{data.targetLevel}：伤害+20%";
+            case SkillId.OrbitingBlades:
+                return $"Lv.{data.targetLevel}：刀片+1";
+            default:
+                return $"升级到 Lv.{data.targetLevel}";
+        }
+    }
+
+    /// <summary>
+    /// 点击事件（由 Button 或 Inspector 绑定触发）
+    /// </summary>
+    public void OnClick()
+    {
+        if (animator != null)
+            animator.SetTrigger("Selected");
+
+        _onClick?.Invoke();
+    }
+
+    /// <summary>
+    /// 子层 Image/Text 若 raycastTarget=true 会拦截射线，导致根节点 <see cref="Button"/> 收不到点击。
+    /// </summary>
+    private void StopClickPropagationFromDecorations()
+    {
+        if (borderGlow != null) borderGlow.raycastTarget = false;
+        if (labelIcon != null) labelIcon.raycastTarget = false;
+        if (icon != null) icon.raycastTarget = false;
+        if (titleText != null) titleText.raycastTarget = false;
+        if (descText != null) descText.raycastTarget = false;
+        if (labelText != null) labelText.raycastTarget = false;
+        if (background != null) background.raycastTarget = true;
+    }
+
+    private void WireButton()
+    {
+        if (clickButton == null)
+            clickButton = GetComponent<Button>();
+        if (clickButton == null) return;
+        if (clickButton.targetGraphic == null && background != null)
+            clickButton.targetGraphic = background;
+        clickButton.onClick.RemoveAllListeners();
+        clickButton.onClick.AddListener(OnClick);
+    }
+}

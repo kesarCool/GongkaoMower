@@ -1,0 +1,14 @@
+namespace ProtoTable.ChapterLevel;
+enum eCrypt :int{
+	code = 1366214331,}
+
+namespace ProtoTable;
+table ChapterLevel{
+	ID:int32;
+	chapterId:int32;
+	levelId:int32;
+	mapName:string;
+	mapPath:string;
+}
+
+root_type ChapterLevel;

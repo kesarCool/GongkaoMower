@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df961c54329d71d419d7b588a6cc2984, type: 3}
+  m_Name: SkillDef_LineBeam
+  m_EditorClassIdentifier: 
+  id: 2
+  maxLevel: 5
+  displayName: "\u4E0A\u5CB8\u5C04\u7EBF"
+  description: "\u5C04\u7EBF"
+  icon: {fileID: 21300000, guid: 5dd298371bd2dfb4c8e7a2dabad7a462, type: 3}
+  intervalByLevel:
+  - 0.8
+  - 0.75
+  - 0.7
+  - 0.65
+  - 0.6
+  damageByLevel:
+  - 2
+  - 2.5
+  - 3
+  - 3.8
+  - 4.6
+  beamCountByLevel: 0100000001000000020000000200000003000000
+  spreadDegrees: 14

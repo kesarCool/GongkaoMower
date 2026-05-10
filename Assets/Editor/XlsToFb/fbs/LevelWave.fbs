@@ -1,0 +1,25 @@
+namespace ProtoTable.LevelWave;
+enum eCrypt :int{
+	code = 94060743,}
+
+namespace ProtoTable;
+table LevelWave{
+	ID:int32;
+	levelId:int32;
+	wave:int32;
+	waveTimeContinue:int32;
+	monsterId:int32;
+	attack:int32;
+	maxHp:int32;
+	exp:int32;
+	prop:int32;
+	timeStart:int32;
+	intervalSpawn:float;
+	totalMonster:int32;
+	lineSpawn:int32;
+	iscirculate:bool;
+	isBoss:bool;
+	quantityBoss:int32;
+}
+
+root_type LevelWave;

@@ -1,0 +1,16 @@
+namespace ProtoTable.LexiconTable;
+enum eCrypt :int{
+	code = -160721668,}
+
+namespace ProtoTable;
+table LexiconTable{
+	ID:int32;
+	lexiconId:int32;
+	DisplayText:string;
+	ThemePackId:int32;
+	CategoryTag:int32;
+	Weight:float;
+	EffectId:int32;
+}
+
+root_type LexiconTable;
