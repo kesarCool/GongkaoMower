@@ -32,10 +32,6 @@ public class GameLayer : MonoBehaviour
     private float _timeLeft;
     private bool _paused;
 
-    private void Awake()
-    {
-        TableManager.Instance.Init();
-    }
     private void Start()
     {
         
