@@ -89,6 +89,8 @@ public class BattleLoadingSceneController : MonoBehaviour
         if (initTableManagerInLoading && TableManager.Instance != null)
             TableManager.Instance.Init();
 
+        BattleChineseFontRuntime.EnsureLoaded();
+
         SetStatus("进入战斗…");
         SetProgress(0f);
 

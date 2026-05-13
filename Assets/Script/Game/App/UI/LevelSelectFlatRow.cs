@@ -18,4 +18,6 @@ public struct LevelSelectFlatRow
     public string mapName;
     /// <summary>配表行主键，便于调试或跳转。</summary>
     public int tableRowId;
+    /// <summary>全列表中关卡行的序号（从 1 起）；仅 <see cref="LevelSelectRowKind.Level"/> 有效，章节头为 0。</summary>
+    public int levelOrdinalInList;
 }

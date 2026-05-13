@@ -15,16 +15,27 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("为 true 时打开选关使用 ModalDefault（会参与暂停栈）；大厅一般有动画则建议 false 使用 NonPausingModal）。")]
     [SerializeField] private bool pauseWhenLevelSelectOpen;
 
+    [Header("词汇预览")]
+    [Tooltip("打开词汇表预览弹窗（ThemePackId / CategoryTag 页签）。")]
+    [SerializeField] private Button openLexiconPreviewButton;
+
+    [Tooltip("为 true 时打开词汇预览使用 ModalDefault。")]
+    [SerializeField] private bool pauseWhenLexiconPreviewOpen;
+
     private void OnEnable()
     {
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.AddListener(OpenLevelSelect);
+        if (openLexiconPreviewButton != null)
+            openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
     }
 
     private void OnDisable()
     {
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
+        if (openLexiconPreviewButton != null)
+            openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
     }
 
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
@@ -41,5 +52,21 @@ public class HomeHubController : MonoBehaviour
 
         var opt = pauseWhenLevelSelectOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
         UIManager.Instance.Open<LevelSelectPanel>(null, opt);
+    }
+
+    /// <summary>打开词汇预览：先 <see cref="TableManager.Init"/> 再弹窗。</summary>
+    public void OpenLexiconPreview()
+    {
+        if (TableManager.Instance != null)
+            TableManager.Instance.Init();
+
+        if (UIManager.Instance == null)
+        {
+            Debug.LogWarning("[HomeHubController] UIManager.Instance 为空，无法打开词汇预览。");
+            return;
+        }
+
+        var opt = pauseWhenLexiconPreviewOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
+        UIManager.Instance.Open<LexiconPreviewPanel>(null, opt);
     }
 }

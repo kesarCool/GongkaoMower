@@ -49,7 +49,7 @@ Home (Scene)
 - 已在工程中实现：**Prefab 注册表**、`Open<T>()`、`CloseTop()`、`ShowConfirm()`。  
 - Home 场景 Inspector 配置：  
   - `stackRoot` / `overlayRoot`  
-  - `panelPrefabs` 中注册 **`LevelSelectPanel` Prefab**（根物体挂 `LevelSelectPanel` 脚本）  
+  - `panelPrefabs` 中注册 **`LevelSelectPanel`**、**`LexiconPreviewPanel`** Prefab（根物体挂对应脚本）  
   - 可选 `confirmDialogPrefab`（二次确认「是否进入该关」）
 
 ---
@@ -83,6 +83,7 @@ Home (Scene)
 以下入口均可由 `HomeHubController` 统一转发到 `UIManager.Open<T>()` 或切 Tab：
 
 - 选关 → `LevelSelectPanel`（当前优先）  
+- **词汇预览** → `LexiconPreviewPanel`（`ThemePackId` / `CategoryTag` 页签 + `DisplayText`；`HomeHubController.openLexiconPreviewButton`）  
 - 选角 → `CharacterSelectPanel`（后续）  
 - 设置 → `SettingsPanel`  
 - 公告 / 邮件 → `NoticePanel`  
@@ -102,7 +103,7 @@ Home (Scene)
 ## 八、验收清单（Home）
 
 - [ ] 场景内 **EventSystem** + **一个主 Canvas**。  
-- [ ] **UIManager** 已配置 `stackRoot`、`panelPrefabs` 含 `LevelSelectPanel`。  
+- [ ] **UIManager** 已配置 `stackRoot`、`panelPrefabs` 含 `LevelSelectPanel` 与 `LexiconPreviewPanel`。  
 - [ ] **HomeHubController** 能打开/关闭选关弹窗；返回键 / Escape 行为符合预期（`UiOpenOptions`）。  
 - [ ] 打开选关前已 `TableManager.Init()`；列表绑定后无空引用。  
 - [ ] 无 `msyh` / TMP 大字库出现在 Home Prefab 引用链中。
@@ -115,6 +116,7 @@ Home (Scene)
 |------|------|
 | 大厅编排（示例） | `Assets/Script/Game/App/UI/HomeHubController.cs` |
 | 选关弹窗（骨架） | `Assets/Script/Game/App/UI/LevelSelectPanel.cs` |
+| 词汇预览弹窗 | `Assets/Script/Game/App/UI/LexiconPreviewPanel.cs`、`LexiconPreviewCatalog.cs` |
 | 弹窗框架 | `Assets/Script/Game/UI/Framework/UIManager.cs`、`UIPanelBase.cs` |
 | 壳流程总述 | `docs/壳流程操作指南.md` |
 

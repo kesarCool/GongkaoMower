@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 2031775293712214337}
   - component: {fileID: 2031775293712214336}
   m_Layer: 5
-  m_Name: 'LevelSelectLevelRowCell '
+  m_Name: LevelSelectLevelRowCell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -34,6 +34,7 @@ public static class ChapterLevelListBuilder
             .GroupBy(c => c.chapterId)
             .OrderBy(g => g.Key);
 
+        var levelOrdinal = 0;
         foreach (var group in byChapter)
         {
             int ch = group.Key;
@@ -44,10 +45,12 @@ public static class ChapterLevelListBuilder
                 levelId = 0,
                 mapName = string.Empty,
                 tableRowId = 0,
+                levelOrdinalInList = 0,
             });
 
             foreach (var cl in group.OrderBy(x => x.levelId))
             {
+                levelOrdinal++;
                 rows.Add(new LevelSelectFlatRow
                 {
                     Kind = LevelSelectRowKind.Level,
@@ -55,6 +58,7 @@ public static class ChapterLevelListBuilder
                     levelId = cl.levelId,
                     mapName = cl.mapName ?? string.Empty,
                     tableRowId = cl.ID,
+                    levelOrdinalInList = levelOrdinal,
                 });
             }
         }

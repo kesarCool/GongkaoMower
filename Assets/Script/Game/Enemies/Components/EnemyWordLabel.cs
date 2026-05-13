@@ -104,12 +104,17 @@ public class EnemyWordLabel : MonoBehaviour
     private void Awake()
     {
         ResolveTargets();
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.TryApplyTo(this);
         CaptureBaselines();
         CaptureStrikeBaselines();
     }
 
     private void OnEnable()
     {
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.TryApplyTo(this);
+
         if (!enableHitFeedback)
             return;
         _enemyBase = GetComponentInParent<EnemyBase>();
@@ -262,6 +267,30 @@ public class EnemyWordLabel : MonoBehaviour
             worldText = GetComponentInChildren<TextMeshPro>(true);
         if (uiText == null)
             uiText = GetComponentInChildren<TextMeshProUGUI>(true);
+    }
+
+    /// <summary>局内将 TMP 切换为中文字体（prefab 占位为 LiberationSans，避免首包序列化依赖 msyh）。</summary>
+    public void ApplyBattleChineseFont(TMP_FontAsset font)
+    {
+        if (font == null)
+            return;
+
+        ResolveTargets();
+        if (worldText != null)
+        {
+            worldText.font = font;
+            worldText.fontSharedMaterial = font.material;
+            worldText.SetVerticesDirty();
+            worldText.SetLayoutDirty();
+        }
+
+        if (uiText != null)
+        {
+            uiText.font = font;
+            uiText.fontSharedMaterial = font.material;
+            uiText.SetVerticesDirty();
+            uiText.SetLayoutDirty();
+        }
     }
 
     private void CaptureBaselines()

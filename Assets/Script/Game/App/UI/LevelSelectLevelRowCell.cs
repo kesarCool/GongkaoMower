@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 关卡行 Cell：展示关卡名/ID，点击写入 <see cref="SelectedLevelContext"/>。
+/// 关卡行 Cell：展示「序号 + 关卡名/ID」（序号见 <see cref="LevelSelectFlatRow.levelOrdinalInList"/>），点击写入 <see cref="SelectedLevelContext"/>。
 /// </summary>
 [DisallowMultipleComponent]
 public class LevelSelectLevelRowCell : MonoBehaviour
@@ -40,10 +40,11 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
         if (titleText != null)
         {
+            var prefix = row.levelOrdinalInList > 0 ? $"{row.levelOrdinalInList}. " : string.Empty;
             if (!string.IsNullOrEmpty(row.mapName))
-                titleText.text = row.mapName;
+                titleText.text = prefix + row.mapName;
             else
-                titleText.text = $"关卡 {row.levelId}";
+                titleText.text = $"{prefix}关卡 {row.levelId}";
         }
     }
 
