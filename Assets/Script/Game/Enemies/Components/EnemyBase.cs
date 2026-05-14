@@ -54,6 +54,8 @@ public class EnemyBase : MonoBehaviour
     public float MoveSpeed => moveSpeed;
     public float Hp => hp;
     public float MaxHp => maxHp;
+    /// <summary>近战/碰撞伤害（关卡表可覆盖 <see cref="ApplyWaveStatOverrides"/>）。</summary>
+    public float ContactDamage => damage;
     public GameObject BulletPrefab => bulletPrefab;
 
     /// <summary>
@@ -116,13 +118,16 @@ public class EnemyBase : MonoBehaviour
         }
     }
 
-    public virtual void TakeDamage(float amount)
+    public virtual void TakeDamage(float amount, SkillId damageSource = SkillId.None)
     {
         if (amount <= 0f) return;
         if (hp <= 0f) return;
 
         hp -= amount;
         OnDamaged.Invoke(amount);
+
+        if (damageSource != SkillId.None)
+            BattleRunMetrics.AddSkillDamage(damageSource, amount);
 
         EventBus.Publish(new EnemyDamagedEvent
         {

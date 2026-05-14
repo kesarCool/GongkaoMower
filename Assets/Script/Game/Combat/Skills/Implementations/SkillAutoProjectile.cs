@@ -73,6 +73,7 @@ public class SkillAutoProjectile : SkillBase
             Bullet b = bullet.GetComponent<Bullet>();
             if (b != null)
             {
+                b.damageSourceSkillId = SkillId.AutoProjectile;
                 b.SetDirection(d, bulletSpeed);
             }
             else

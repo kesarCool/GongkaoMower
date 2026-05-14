@@ -7,6 +7,9 @@ public class Bullet : MonoBehaviour
     public string enemyTag = "monster";
     [Tooltip("子弹伤害（优先作用于 EnemyBase）")]
     public float damage = 1f;
+
+    [Tooltip("用于局内伤害统计（技能子弹等）")]
+    public SkillId damageSourceSkillId = SkillId.None;
     private Vector2 direction = Vector2.right;
     private bool hit;
     private Collider2D col;
@@ -57,7 +60,7 @@ public class Bullet : MonoBehaviour
             if (eb == null) eb = other.GetComponentInParent<EnemyBase>();
             if (eb != null)
             {
-                eb.TakeDamage(Mathf.Max(0.01f, damage));
+                eb.TakeDamage(Mathf.Max(0.01f, damage), damageSourceSkillId);
                 SpawnLimiter.Instance?.Unregister("Bullet", gameObject);
                 GameObjectPool.Release(gameObject);
                 return;

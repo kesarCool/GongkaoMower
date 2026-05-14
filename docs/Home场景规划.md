@@ -114,9 +114,9 @@ Home (Scene)
 
 | 资源 | 路径 |
 |------|------|
-| 大厅编排（示例） | `Assets/Script/Game/App/UI/HomeHubController.cs` |
-| 选关弹窗（骨架） | `Assets/Script/Game/App/UI/LevelSelectPanel.cs` |
-| 词汇预览弹窗 | `Assets/Script/Game/App/UI/LexiconPreviewPanel.cs`、`LexiconPreviewCatalog.cs` |
+| 大厅编排（示例） | `Assets/Script/Game/Shell/UI/HomeHubController.cs` |
+| 选关弹窗（骨架） | `Assets/Script/Game/Shell/UI/LevelSelectPanel.cs` |
+| 词汇预览弹窗 | `Assets/Script/Game/Shell/UI/LexiconPreviewPanel.cs`、`LexiconPreviewCatalog.cs` |
 | 弹窗框架 | `Assets/Script/Game/UI/Framework/UIManager.cs`、`UIPanelBase.cs` |
 | 壳流程总述 | `docs/壳流程操作指南.md` |
 

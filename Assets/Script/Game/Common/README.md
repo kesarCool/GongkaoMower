@@ -10,11 +10,13 @@
 
 工程脚本根目录建议保持如下结构（按功能域分层，域内再分 Components/Data/Systems）：
 
+- `Shell/`：局外壳（登录/大厅流程、选关与词汇预览等 **业务弹窗脚本**，见 `Shell/UI/`；与局内 `UI/` 区分）
+- `App/`：壳层启动与场景编排（如 `AppBootstrap`、登录/Loading 场景控制器等，**不放** `Shell/UI` 已覆盖的弹窗脚本）
 - `Player/`：玩家相关
 - `Enemies/`：怪物相关
 - `Combat/`：战斗/子弹/伤害计算
 - `Spawning/`：刷怪/波次
-- `UI/`：界面层（HUD、Layer、**弹窗框架**见 `UI/Framework/`）
+- `UI/`：局内界面层（HUD、Layer、**弹窗框架**见 `UI/Framework/`）
 - `Input/`：输入（摇杆、触摸、输入采集）
 - `Camera/`：相机跟随/边界
 - `World/`：Tilemap、地图边界、世界规则（如有）
@@ -56,7 +58,7 @@ Common 内部建议（按需建立子文件夹）：
 - `Enemies/*` 依赖 `Common/*`
 - `Spawning/*` 依赖 `Enemies/Data`、`Enemies/Components`
 - `UI/*` 监听事件或读取状态（但不直接写核心战斗逻辑）
-- `UI/Framework/*`（`UIManager`、面板基类）仅依赖 uGUI / UnityEngine，**不反向引用**具体业务模块；业务弹窗放在各域下（如 `Roguelike/UI/`），继承 `UIPanelBase` 即可
+- `UI/Framework/*`（`UIManager`、面板基类）仅依赖 uGUI / UnityEngine，**不反向引用**具体业务模块；**局外壳弹窗**脚本放在 `Shell/UI/`，局内玩法弹窗放在各域下（如 `Roguelike/UI/`），均继承 `UIPanelBase` 即可
 
 ### 禁止（反模式）
 - `Common` 引用 `UI`/`Enemies`/`Player`（会导致循环依赖）
@@ -135,6 +137,7 @@ Common 内部建议（按需建立子文件夹）：
 - `DynamicJoystick`：`Input/UI/`（输入模块的 UI 控件）
 - `TouchLayer`：`UI/Layers/`（全屏触摸层属于 UI Layer）
 - `UIManager` / `UIPanelBase` / `UiConfirmDialog`：`UI/Framework/`（全局弹窗栈，**不放 Common**）
+- 大厅/选关/词汇预览等壳业务 Panel：`Shell/UI/`（与 `Roguelike/UI/` 对称：前者局外，后者局内）
 - `SpawnerWaves`：`Spawning/Systems/`
 - `EnemyBase/EnemyAI/EnemyRanged`：`Enemies/Components/`
 - `EnemyCatalog/EnemyDefinition`：`Enemies/Data/`
@@ -155,7 +158,7 @@ Common 内部建议（按需建立子文件夹）：
 
 | 框架（`UIManager`） | 业务（具体 Panel 脚本） |
 |---------------------|-------------------------|
-| 主栈 / Overlay 父节点、可选 **共用遮罩**（`stackBackdrop`） | 继承 **`UIPanelBase`**，实现 **`OnOpen(object payload)`** / **`OnClose()`** |
+| 主栈 / Overlay 父节点、可选 **共用遮罩**（`stackBackdrop`） | 继承 **`UIPanelBase`**，实现 **`OnOpen(object payload)`** / **`OnClose()`**；脚本落位 **`Shell/UI/`**（壳）或 **`Roguelike/UI/`** 等玩法域 |
 | **Canvas 排序**（`stackSortingBase` / `overlaySortingBase`，子物体需 `Canvas` 且 Override Sorting） | 数据绑定、布局、按钮逻辑 |
 | **`Time.timeScale` 暂停栈**（`UiOpenOptions.PauseTime`，引用计数） | 在 `Update`/动画中按 **`LastOptions.UseUnscaledTime`** 选用 `unscaledDeltaTime` |
 | **Escape**：先关确认框（`onResult(false)`），再按栈顶 **`CloseOnBack`** 关闭 | 微信/Android **返回键**建议在输入层转发为 `CloseConfirm()` / `CloseTop()` |
@@ -187,4 +190,4 @@ Common 内部建议（按需建立子文件夹）：
 - 是否所有 Inspector 字段都有清晰中文 Tooltip？
 - 是否避免了不必要的 `Update()`（可以用协程/事件就别每帧轮询）？
 - 是否避免在运行时频繁 `FindObjectOfType`（能缓存就缓存）？
-- **弹窗**：新模态是否继承 `UIPanelBase` 并通过 `UIManager` 打开？是否误把业务逻辑写进 `UI/Framework/`？
+- **弹窗**：新模态是否继承 `UIPanelBase` 并通过 `UIManager` 打开？局外壳是否落在 **`Shell/UI/`**？是否误把业务逻辑写进 `UI/Framework/`？

@@ -358,6 +358,7 @@ MonoBehaviour:
   stackBackdrop: {fileID: 7363969295885651202}
   panelPrefabs:
   - {fileID: 6775079129782722412, guid: 34540c3dfa0f02d44bf16e07444c6ba0, type: 3}
+  - {fileID: 287845476752872038, guid: f4bd2e707490ba846a68292dd492437e, type: 3}
   confirmDialogPrefab: {fileID: 0}
   stackSortingBase: 200
   overlaySortingBase: 800

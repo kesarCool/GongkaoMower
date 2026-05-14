@@ -128,6 +128,7 @@ public class SkillOrbitingBlades : SkillBase
             var hit = blade.AddComponent<SkillOrbBladeHit>();
             hit.damagePerTick = damagePerTick;
             hit.tickInterval = tickInterval;
+            hit.damageSourceSkillId = SkillId.OrbitingBlades;
         }
     }
 

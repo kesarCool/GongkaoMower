@@ -32,6 +32,9 @@ public class GameLayer : MonoBehaviour
     private float _timeLeft;
     private bool _paused;
 
+    public int CurrentKills => _kills;
+    public int TargetKills => targetKills;
+
     private void Start()
     {
         

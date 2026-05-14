@@ -9,6 +9,7 @@ public class EnemyAI : MonoBehaviour
 
     private Transform player;
     private Rigidbody2D rb;
+    private float _nextDamageToPlayerTime;
 
     private void Start()
     {
@@ -49,9 +50,30 @@ public class EnemyAI : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.CompareTag(playerTag))
-        {
-            Debug.Log("受伤");
-        }
+        if (!collision.collider.CompareTag(playerTag)) return;
+        TryDamagePlayer();
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (!collision.collider.CompareTag(playerTag)) return;
+        TryDamagePlayer();
+    }
+
+    private void TryDamagePlayer()
+    {
+        if (Time.time < _nextDamageToPlayerTime) return;
+        _nextDamageToPlayerTime = Time.time + 0.35f;
+
+        if (player == null) return;
+
+        PlayerHealth ph = player.GetComponentInChildren<PlayerHealth>(true);
+        if (ph == null) return;
+
+        float dmg = 1f;
+        EnemyBase eb = GetComponent<EnemyBase>();
+        if (eb != null) dmg = eb.ContactDamage;
+
+        ph.TakeDamage(Mathf.Max(0.01f, dmg));
     }
 }

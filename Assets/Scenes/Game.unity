@@ -204,6 +204,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3552971999875080276, guid: 3d93f4b27d5c30642811c835ed6cd072, type: 3}
+      propertyPath: panelPrefabs.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3552971999875080276, guid: 3d93f4b27d5c30642811c835ed6cd072, type: 3}
+      propertyPath: panelPrefabs.Array.data[1]
+      value: 
+      objectReference: {fileID: 287845476752872038, guid: f4bd2e707490ba846a68292dd492437e, type: 3}
     - target: {fileID: 3962325732129308497, guid: 3d93f4b27d5c30642811c835ed6cd072, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25

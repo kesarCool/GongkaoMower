@@ -130,6 +130,11 @@ public class SpawnerWaves : MonoBehaviour
     private Coroutine _waveRoutine;
     private Coroutine _autoRoutine;
 
+    /// <summary>
+    /// 本实例是否已走完一次爆兵协程并发出 <see cref="BattleWavesCompletedEvent"/>（供 <see cref="BattleOutcomeCoordinator"/> 轮询兜底）。
+    /// </summary>
+    public bool HasReleasedWaveCompletionSignal { get; private set; }
+
     private struct TableWaveRuntime
     {
         public int wave;
@@ -232,6 +237,8 @@ public class SpawnerWaves : MonoBehaviour
 
     private IEnumerator WaveRoutine()
     {
+        HasReleasedWaveCompletionSignal = false;
+
         List<TableWaveRuntime> tableWaves = null;
         int resolvedLevelId = ResolveLevelWaveLevelId();
         if (useLevelWaveTable)
@@ -246,6 +253,8 @@ public class SpawnerWaves : MonoBehaviour
         if (!useTable && (waves == null || waves.Length == 0))
         {
             Debug.LogWarning("SpawnerWaves: 未启用表数据或表为空，且 waves 数组为空。");
+            HasReleasedWaveCompletionSignal = true;
+            EventBus.Publish(new BattleWavesCompletedEvent { spawner = this });
             _waveRoutine = null;
             yield break;
         }
@@ -325,6 +334,10 @@ public class SpawnerWaves : MonoBehaviour
 
         if (pauseNormalDuringWaves) enableNormalSpawn = prevNormal;
         WordMonsterWaveStyle.ClearWaveTint();
+
+        HasReleasedWaveCompletionSignal = true;
+        EventBus.Publish(new BattleWavesCompletedEvent { spawner = this });
+
         _waveRoutine = null;
     }
 

@@ -254,6 +254,7 @@ GameObject:
   - component: {fileID: 9036049177900440436}
   - component: {fileID: 3292460910240852234}
   - component: {fileID: 5356562442776691772}
+  - component: {fileID: 932421029969048788}
   m_Layer: 0
   m_Name: GameLayer
   m_TagString: Untagged
@@ -408,6 +409,20 @@ MonoBehaviour:
     count: 30
     maxInactive: 256
   prewarmInAwake: 1
+--- !u!114 &932421029969048788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9036049177900440394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1b2b3b4b5b6b7b8b9b0b1b2b3b4b5b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameResultPanelPrefab: {fileID: 287845476752872038, guid: f4bd2e707490ba846a68292dd492437e, type: 3}
+  resultParentOverride: {fileID: 9036049177900440395}
 --- !u!1 &9036049178204313973
 GameObject:
   m_ObjectHideFlags: 0

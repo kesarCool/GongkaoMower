@@ -27,3 +27,16 @@ public struct CardSelectionTriggeredEvent
     public int energyLeft;
 }
 
+/// <summary>关卡波次刷怪协程已完整跑完（不代表场上怪物已清空）。</summary>
+public struct BattleWavesCompletedEvent
+{
+    /// <summary>发布事件的 <see cref="SpawnerWaves"/> 实例（便于多刷怪器时区分）。</summary>
+    public Component spawner;
+}
+
+/// <summary>主角血量归零（局内失败入口）。</summary>
+public struct PlayerDiedEvent
+{
+    public PlayerHealth playerHealth;
+}
+

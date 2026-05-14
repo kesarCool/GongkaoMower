@@ -381,6 +381,15 @@ public class PlayerSkills : MonoBehaviour
         return IsMaxLevel(s, def);
     }
 
+    /// <summary>已装备技能 ID（上阵顺序）。</summary>
+    public void GetEquippedSkillIdsOrdered(List<SkillId> into)
+    {
+        if (into == null) return;
+        into.Clear();
+        for (int i = 0; i < _skills.Count; i++)
+            into.Add(_skills[i].Id);
+    }
+
     /// <summary>
     /// 槽位已满且所有技能都满级
     /// </summary>

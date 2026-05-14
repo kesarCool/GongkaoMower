@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Lightweight prefab-based pool for frequent spawn/despawn objects (bullets, pickups).
@@ -17,6 +18,46 @@ public static class GameObjectPool
     }
 
     private static readonly Dictionary<int, Pool> Pools = new Dictionary<int, Pool>(64);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void InstallSceneHook()
+    {
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+    }
+
+    private static void OnSceneUnloaded(Scene scene)
+    {
+        if (scene.name != "Game") return;
+        ClearAllPools();
+    }
+
+    /// <summary>
+    /// 销毁所有池内未借出实例与池根节点，并清空表（离开战斗/Game 场景后应调用，避免残留到 Home）。
+    /// </summary>
+    public static void ClearAllPools()
+    {
+        foreach (var kv in Pools)
+        {
+            Pool p = kv.Value;
+            if (p == null) continue;
+
+            while (p.inactive.Count > 0)
+            {
+                GameObject obj = p.inactive.Pop();
+                if (obj != null)
+                    Object.Destroy(obj);
+            }
+
+            if (p.root != null)
+            {
+                Object.Destroy(p.root.gameObject);
+                p.root = null;
+            }
+        }
+
+        Pools.Clear();
+    }
 
     private static Pool GetPool(GameObject prefab)
     {

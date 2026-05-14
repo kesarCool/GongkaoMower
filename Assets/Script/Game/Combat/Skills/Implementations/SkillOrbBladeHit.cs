@@ -9,6 +9,7 @@ public class SkillOrbBladeHit : MonoBehaviour
 {
     public float damagePerTick = 1f;
     public float tickInterval = 0.15f;
+    public SkillId damageSourceSkillId = SkillId.OrbitingBlades;
 
     private float _nextTick;
 
@@ -27,6 +28,6 @@ public class SkillOrbBladeHit : MonoBehaviour
         if (Time.time < _nextTick) return;
         _nextTick = Time.time + Mathf.Max(0.05f, tickInterval);
 
-        eb.TakeDamage(Mathf.Max(0.01f, damagePerTick));
+        eb.TakeDamage(Mathf.Max(0.01f, damagePerTick), damageSourceSkillId);
     }
 }
