@@ -82,6 +82,9 @@ public class GameResultPanel : UIPanelBase
 
     public override void OnOpen(object payload)
     {
+        // 结算弹出时清空 DDOL 下的局内对象池，避免残留占用与脏状态。
+        GameObjectPool.ClearAllPools();
+
         _vm = payload as GameResultViewModel;
         if (_vm == null)
             _vm = new GameResultViewModel { victory = false, battleDurationUnscaled = 0f, killCount = 0 };
@@ -105,7 +108,7 @@ public class GameResultPanel : UIPanelBase
             int total = Mathf.FloorToInt(_vm.battleDurationUnscaled);
             int mm = total / 60;
             int ss = total % 60;
-            _textTime.text = $"{mm:00}:{ss:00}";
+            _textTime.text = $"时长：{mm:00}:{ss:00}";
         }
 
         if (_textKillNum != null)
@@ -196,6 +199,19 @@ public class GameResultPanel : UIPanelBase
     private void OnAgainClicked()
     {
         Time.timeScale = 1f;
+
+        // 本关重开：保持选关上下文与局内「当前关卡」一致，再清池并重载 Game。
+        if (SelectedLevelContext.HasSelection)
+        {
+            int lv = SelectedLevelContext.LevelId;
+            if (RoguelikeCardManager.Instance != null)
+                RoguelikeCardManager.Instance.CurrentLevel = lv;
+            var css = FindObjectOfType<CardSelectionSystem>();
+            if (css != null)
+                css.currentLevel = lv;
+        }
+
+        GameObjectPool.ClearAllPools();
         SceneManager.LoadScene("Game");
     }
 

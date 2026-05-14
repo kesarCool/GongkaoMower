@@ -29,6 +29,7 @@ Common 内部建议（按需建立子文件夹）：
 - `Common/Config/`：配置读取（CSV/JSON/ScriptableObject 的读取与解析）
 - `Common/Utils/`：纯工具方法（Math、String、集合扩展等）
 - `Common/Diagnostics/`：调试开关、日志工具、性能采样（可选）
+- `Common/Pooling/`：对象池（如 `GameObjectPool`、借出登记与 `ClearAllPools` 约定，见 **5.2**）
 
 ---
 
@@ -129,6 +130,12 @@ Common 内部建议（按需建立子文件夹）：
 | `quantityBoss` | Boss 数量或配额（按策划规则） |
 
 **整行备注（单列粘贴）**：`ID=行主键 | levelId=关卡ID对齐CurrentLevel | wave=波次顺序 | waveTimeContinue=timeStart后的刷怪总秒数到点强制下波不满不补 | monsterId=怪ID | attack/maxHp=实例覆盖0可默认 | exp/prop=扩展 | timeStart=首怪前等待秒不吃战斗窗 | intervalSpawn=刷怪间隔 | totalMonster=计划只数上限 | lineSpawn:0环玩家1上2下3左4右 | iscirculate/isBoss/quantityBoss=玩法标记`
+
+### 5.2 对象池 `GameObjectPool`（借出登记）
+
+`Common/Pooling/GameObjectPool.cs` 在 **`Get`** 时把实例记入 **`LeasedObjects`**（`HashSet<GameObject>`），在 **`Release`** 开头移除；**`ClearAllPools`** 时仅对该集合与池内 inactive / 池根做销毁，**不再** `FindObjectsOfType` 全场景扫描。
+
+**约定**：局内借出对象须走 **`Release`** 回池或依赖 **`ClearAllPools`**（如结算、离局场景）；不要 **`Get` 后去掉 `PooledObject`** 或长期占用不归还，否则清池可能漏网或逻辑不一致。
 
 ---
 

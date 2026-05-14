@@ -30,6 +30,9 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void Start()
     {
+        if (!string.IsNullOrEmpty(nextSceneName))
+            GameObjectPool.BattleSceneNameForPoolClear = nextSceneName;
+
         EnsureMinimalUi();
         if (retryButton != null)
         {
