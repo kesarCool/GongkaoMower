@@ -407,19 +407,40 @@ public class SpawnerWaves : MonoBehaviour
     {
         var result = new List<TableWaveRuntime>();
         if (TableManager.Instance == null)
+        {
+            Debug.Log("[SpawnerWaves] BuildTableWaves: TableManager.Instance is null");
             return result;
+        }
 
         var dict = TableManager.Instance.GetTable<LevelWave>();
         if (dict == null || dict.Count == 0)
+        {
+            Debug.Log($"[SpawnerWaves] BuildTableWaves: dict empty. dictNull={dict == null} count={dict?.Count ?? 0}");
             return result;
+        }
 
+        Debug.Log($"[SpawnerWaves] BuildTableWaves: dict.Count={dict.Count}, targetLevelId={levelId}");
         foreach (var kv in dict)
         {
-            if (kv.Value is LevelWave lw && lw.levelId == levelId)
-                result.Add(TableWaveRuntime.From(lw));
+            if (kv.Value is LevelWave lw)
+            {
+                if (lw.levelId == levelId)
+                {
+                    result.Add(TableWaveRuntime.From(lw));
+                }
+                else if (result.Count == 0 && kv.Key < 100) // 仅在前几条且未命中时打印
+                {
+                    Debug.Log($"[SpawnerWaves]   miss: key={kv.Key}, lw.levelId={lw.levelId}, target={levelId}");
+                }
+            }
+            else
+            {
+                Debug.Log($"[SpawnerWaves]   type mismatch: key={kv.Key}, type={kv.Value?.GetType().Name ?? "null"}");
+            }
         }
 
         result.Sort((a, b) => a.wave.CompareTo(b.wave));
+        Debug.Log($"[SpawnerWaves] BuildTableWaves: result.Count={result.Count}");
 
         return result;
     }

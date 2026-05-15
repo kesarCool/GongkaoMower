@@ -61,6 +61,14 @@ public class TableManager : MonoSingleton<TableManager>
         return string.Format("{0}.bytes", Combine(kTablePath, type.Name));
     }
 
+    public void EnsureLoaded()
+    {
+        if (!bInit)
+        {
+            Init();
+        }
+    }
+
     /// <summary>
     /// 游戏表格初始化（异步）
     /// </summary>
@@ -99,9 +107,12 @@ public class TableManager : MonoSingleton<TableManager>
                 data = textAssetFB.bytes;
             else
             {
-                string altBytes = Path.Combine(Application.dataPath, "Res", "Data", "table_fb", type.Name + ".bytes");
-                if (File.Exists(altBytes))
-                    data = File.ReadAllBytes(altBytes);
+#if UNITY_EDITOR
+                Debug.LogWarning($"@kesar TableManager _loadTable: {filepath} not found");
+                    string altBytes = Path.Combine(Application.dataPath, "Resources", "Data", "table_fb", type.Name + ".bytes");
+                    if (File.Exists(altBytes))
+                        data = File.ReadAllBytes(altBytes);
+#endif
             }
 
             if (data == null || data.Length == 0)
@@ -122,19 +133,31 @@ public class TableManager : MonoSingleton<TableManager>
         ftable.bb = buffer;
 
         int length = ftable.__vector_len(0);
+        int vec0 = ftable.__vector(0);
+
+        // 预先获取 ID 属性的 GetMethod（可能被 IL2CPP 裁剪，用 try-catch 兜底）
+        MethodInfo idGetter = null;
+        try { idGetter = type.GetProperty("ID")?.GetGetMethod(); } catch { }
 
         for (int index = 0; index < length; ++index)
         {
-            int offset = ftable.__vector(index);
-            var fobj = Activator.CreateInstance(type);
-            MethodInfo __assign = type.GetMethod("__assign");
-            var IDMap = type.GetProperty("ID").GetGetMethod();
+            int rowPos = ftable.__indirect(vec0 + index * 4);
+            var fobj = (FlatBuffers.IFlatbufferObject)Activator.CreateInstance(type);
+            fobj.__init(rowPos, ftable.bb); // 通过接口直接调用，不依赖反射
 
-            BindingFlags flag = BindingFlags.Public | BindingFlags.Instance;
-            object[] parameters = new object[] { ftable.__indirect(ftable.__vector(0) + index * 4), ftable.bb };
-            __assign.Invoke(fobj, flag, Type.DefaultBinder, parameters, null);
+            int id = index; // 兜底：用行号作 key
+            if (idGetter != null)
+            {
+                try { id = (int)idGetter.Invoke(fobj, null); }
+                catch { /* IL2CPP 裁剪时回退到 index */ }
+            }
 
-            int id = (int)IDMap.Invoke(fobj, null);
+            // WebGL 诊断：LevelWave 表打印前 2 行
+            if (type == typeof(LevelWave) && index < 2)
+            {
+                var lw = fobj as ProtoTable.LevelWave;
+                Debug.Log($"[TableManager] LevelWave row[{index}]: ID={id}, levelId={lw.levelId}, wave={lw.wave}, dataLen={data.Length}");
+            }
 
             if (!table.ContainsKey(id))
                 table.Add(id, fobj);
@@ -154,6 +177,8 @@ public class TableManager : MonoSingleton<TableManager>
 
     public Dictionary<int, object> GetTable(Type curType)
     {
+        EnsureLoaded();
+
         Dictionary<int, object> NullTable = new Dictionary<int, object>();
 
         if (!mTypeTableDict.ContainsKey(curType))

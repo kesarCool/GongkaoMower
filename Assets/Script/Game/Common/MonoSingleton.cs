@@ -16,6 +16,7 @@ public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
                 {
                     instance = new GameObject().AddComponent<T>();
                     instance.gameObject.name = instance.GetType().Name;
+                    DontDestroyOnLoad(instance.gameObject);
                 }
             }
             return instance;
@@ -32,12 +33,14 @@ public class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
         return (instance != null);
     }
 
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+    }
+
     private void OnDestroy()
     {
-        if (instance != null)
-        {
-            Destroy(instance);
+        if (instance == this)
             instance = null;
-        }
     }
 }

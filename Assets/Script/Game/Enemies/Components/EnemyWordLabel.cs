@@ -324,9 +324,11 @@ public class EnemyWordLabel : MonoBehaviour
         ApplyVisualVariation();
         CaptureStrikeBaselines();
 
+        #if UNITY_EDITOR
         #region agent log
         AgentDbgTmpFontCoverage(transform, worldText, uiText, s);
         #endregion
+        #endif
     }
 
     /// <summary>供死亡碎字：解析世界空间 TMP；无字或仅 UI 字则 false。</summary>
