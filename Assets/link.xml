@@ -1,0 +1,7 @@
+<linker>
+  <!-- Preserve all ProtoTable types: Methods accessed via reflection in TableManager._fillTableFromFlatBufferBytes -->
+  <assembly fullname="Assembly-CSharp">
+    <namespace fullname="ProtoTable" preserve="all" />
+    <namespace fullname="FlatBuffers" preserve="all" />
+  </assembly>
+</linker>

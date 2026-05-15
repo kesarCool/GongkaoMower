@@ -27,7 +27,7 @@
 
 4. **运行时**
    - **`TableManager`**（`MonoSingleton`）：`Resources.Load<TextAsset>("Data/table_fb/" + 类型名)`，用 **`FlatBuffers.Table` + `ByteBuffer`** 解根向量，反射调用每行类型的 **`__assign`**，按 **`ID`** 填入字典。
-   - 因此 **二进制资源** 必须出现在 **`Assets/Resources/Data/table_fb/{表名}.bytes`**（无后缀传参），与当前写出目录 **`Assets/Res/Data/table_fb/`** 若未做拷贝或改路径，会导致 **加载不到**——见下文「需注意」。
+   - 因此 **二进制资源** 必须出现在 **`Assets/Resources/Data/table_fb/{表名}.bytes`**（无后缀传参），与当前写出目录 **`Assets/Resources/Data/table_fb/`** 若未做拷贝或改路径，会导致 **加载不到**——见下文「需注意」。
 
 5. **另存批处理（少用）**
    - `Xls2FB.GenerateFbs()`（`Xls2FB.cs`）曾用于扫 **`../Share/xls/`**；与窗口用的 **`../client/Share/table/xls/`** 不是同一路径，避免混用。
@@ -118,7 +118,7 @@ LightKnowledge:1:轻知识
 | `.fbs` | `Assets/Editor/XlsToFb/fbs/{表名}.fbs` |
 | `flatc` 工作目录 | `Assets/Editor/XlsToFb`（进程内 `SetCurrentDirectory`） |
 | 生成 C# | `Assets/Script/Table/ProtoTable/{表名}.cs` |
-| `.bytes`（当前代码） | `Assets/Res/Data/table_fb/{表名}.bytes` |
+| `.bytes`（当前代码） | `Assets/Resources/Data/table_fb/{表名}.bytes` |
 | **运行时 Resources** | `TableManager` 使用 **`Data/table_fb/{表名}`** → 应对应 **`Assets/Resources/Data/table_fb/{表名}.bytes`** |
 
 **依赖**：`Assets/Editor/XlsToFb/flatc.exe` 须存在且可执行；`cmd.cs` 调 `cmd.exe` 承载 `flatc`。

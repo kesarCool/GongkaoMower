@@ -12,6 +12,9 @@ namespace xls
     {
         //./flatc.exe  --csharp -o ../fblib ./fb/BuffDrugConfigInfoTable.fbs
 
+        /// <summary>与 <see cref="TableManager"/> 的 Resources 路径 Data/table_fb/ 一致。</summary>
+        private const string TableFbBytesResourcesDir = "Assets/Resources/Data/table_fb/";
+
         private static Dictionary<string, string> typemap = new Dictionary<string, string>();
 
         private static string TypeMapping(string type)
@@ -621,8 +624,10 @@ namespace xls
 //                 output.Close();
 //             }
 
-            // asset 文件
-            string target = "Assets/Res/Data/table_fb/" + table.tablename + ".bytes"; 
+            // asset 文件（运行时 Resources.Load: Data/table_fb/{表名}）
+            if (!Directory.Exists(TableFbBytesResourcesDir))
+                Directory.CreateDirectory(TableFbBytesResourcesDir);
+            string target = TableFbBytesResourcesDir + table.tablename + ".bytes";
             if (File.Exists(target))
             {
                 File.Delete(target);
