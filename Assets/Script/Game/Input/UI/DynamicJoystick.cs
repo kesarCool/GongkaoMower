@@ -81,6 +81,8 @@ public class DynamicJoystick : MonoBehaviour
 
         if (playerRigidbody == null)
             TryFindPlayerRigidbody();
+        else
+            EnsurePlayerRotationFrozen();
     }
 
     private void Update()
@@ -527,6 +529,14 @@ public class DynamicJoystick : MonoBehaviour
         GameObject p = GameObject.FindGameObjectWithTag(playerTag);
         if (p == null) return;
         playerRigidbody = p.GetComponent<Rigidbody2D>();
+        EnsurePlayerRotationFrozen();
+    }
+
+    private void EnsurePlayerRotationFrozen()
+    {
+        if (playerRigidbody == null) return;
+        playerRigidbody.constraints |= RigidbodyConstraints2D.FreezeRotation;
+        playerRigidbody.angularVelocity = 0f;
     }
 }
 

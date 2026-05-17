@@ -15,11 +15,14 @@ public class PlayerEnergy : MonoBehaviour
     [Tooltip("当前能量")]
     public int energy = 0;
 
-    [Tooltip("触发一次选卡所需能量")]
-    public int energyToTriggerCard = 10;
-
     [Tooltip("触发后是否扣除能量（通常为 true，表示消耗一轮能量进入选卡）")]
     public bool consumeEnergyOnTrigger = true;
+
+    /// <summary>本局已触发选卡次数（0 表示尚未触发过）。</summary>
+    public int CompletedCardSelectionCount => _triggerCount;
+
+    /// <summary>下次选卡所需能量：第 1 次 1、第 2 次 2……即 <c>已完成次数 + 1</c>。</summary>
+    public int EnergyRequiredForNextCard => Mathf.Max(1, _triggerCount + 1);
 
     [Header("事件")]
     [Tooltip("能量变化时触发（参数为当前能量）")]
@@ -47,27 +50,38 @@ public class PlayerEnergy : MonoBehaviour
         TryTriggerCardSelection();
     }
 
+    /// <summary>新局重置选卡次数与能量（可选，由关卡入口调用）。</summary>
+    public void ResetForNewRun()
+    {
+        energy = 0;
+        _triggerCount = 0;
+        OnEnergyChanged.Invoke(energy);
+    }
+
     private void TryTriggerCardSelection()
     {
-        int need = Mathf.Max(1, energyToTriggerCard);
-        if (energy < need) return;
-
-        _triggerCount += 1;
-
-        if (consumeEnergyOnTrigger)
-            energy -= need;
-
-        Debug.Log($"[PlayerEnergy] 触发选卡：第{_triggerCount}次（剩余能量={energy}）");
-        OnEnergyChanged.Invoke(energy);
-        OnCardSelectionTriggered.Invoke(_triggerCount);
-
-        // 发布全局事件，后续“肉鸽选卡 UI”只需订阅这个事件即可弹出
-        EventBus.Publish(new CardSelectionTriggeredEvent
+        while (energy >= EnergyRequiredForNextCard)
         {
-            player = transform,
-            triggerCount = _triggerCount,
-            energyLeft = energy
-        });
+            int need = EnergyRequiredForNextCard;
+
+            _triggerCount += 1;
+
+            if (consumeEnergyOnTrigger)
+                energy -= need;
+
+            if (energy < 0) energy = 0;
+
+            Debug.Log($"[PlayerEnergy] 触发选卡：第{_triggerCount}次，消耗能量={need}，剩余={energy}，下次需要={EnergyRequiredForNextCard}");
+            OnEnergyChanged.Invoke(energy);
+            OnCardSelectionTriggered.Invoke(_triggerCount);
+
+            EventBus.Publish(new CardSelectionTriggeredEvent
+            {
+                player = transform,
+                triggerCount = _triggerCount,
+                energyLeft = energy
+            });
+        }
     }
 }
 

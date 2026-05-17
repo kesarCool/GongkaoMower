@@ -74,6 +74,6 @@ public class EnemyAI : MonoBehaviour
         EnemyBase eb = GetComponent<EnemyBase>();
         if (eb != null) dmg = eb.ContactDamage;
 
-        ph.TakeDamage(Mathf.Max(0.01f, dmg));
+        ph.TakeDamage(Mathf.Max(0.01f, dmg), transform);
     }
 }

@@ -116,8 +116,8 @@ public static class WebGLBuild
         // Strip Engine Code：已启用
         PlayerSettings.stripEngineCode = true;
 
-        // Managed Stripping Level：Medium（平衡体积和稳定性）
-        PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Medium);
+        // Managed Stripping Level：High（减小包体；ProtoTable/FlatBuffers 反射已由 link.xml 保护）
+        PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.High);
 
         // WebGL 画布大小（通过模板 index.html 控制更灵活，这里设默认值）
         PlayerSettings.WebGL.analyzeBuildSize = true;

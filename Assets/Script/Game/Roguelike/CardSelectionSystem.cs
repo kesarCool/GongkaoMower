@@ -251,6 +251,8 @@ public class CardSelectionSystem : MonoBehaviour
                 Time.timeScale = 1f;
         }
 
+        EventBus.Publish(new CardSelectionEndedEvent());
+
         // 检查队列中是否有待处理请求
         if (_pendingRequests.Count > 0)
         {

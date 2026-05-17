@@ -86,9 +86,9 @@ public static class WeChatSubpackagePlaceholder
         onSuccess?.Invoke();
         yield break;
 #elif UNITY_WEBGL
-        // TODO: 接入微信 Unity 插件后在此调用 wx.loadSubpackage({ name })，在成功/失败回调里继续协程。
+        // 微信小游戏：分包由 game.json 配置，运行时自动加载（WX-WASM-SDK v2023.02 无需手动 LoadSubpackage）
         onProgress?.Invoke(1f);
-        Debug.Log("[WeChatSubpackagePlaceholder] WebGL 占位：未接插件，视为分包成功。分包名=" + name);
+        Debug.Log("[WeChatSubpackagePlaceholder] WebGL 分包由微信运行时自动管理，分包名=" + name);
         onSuccess?.Invoke();
         yield break;
 #else

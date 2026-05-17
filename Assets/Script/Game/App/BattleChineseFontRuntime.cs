@@ -18,6 +18,10 @@ public static class BattleChineseFontRuntime
     public static TMP_FontAsset LoadedFont => _loaded;
 
     /// <summary>从 Resources 加载一次（与当前场景无关；敌人仅应在 Game 中创建）。</summary>
+    /// <remarks>
+    /// 微信小游戏优化（Phase 3）：可改为 <c>WX.GetSystemFont()</c> 使用微信内置系统字体，
+    /// 省去 ~1-2MB 中文字体打包体积。当前 Resources.Load 方案已验证可行。
+    /// </remarks>
     public static void EnsureLoaded()
     {
         if (_loaded != null)

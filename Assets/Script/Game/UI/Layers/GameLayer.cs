@@ -22,6 +22,16 @@ public class GameLayer : MonoBehaviour
     [Tooltip("暂停按钮（点击切换 Time.timeScale 0/1）")]
     public Button pauseButton;
 
+    [Header("Energy → Card Selection")]
+    [Tooltip("能量进度条（预制体 SliderProgress）")]
+    public Slider energyProgressSlider;
+
+    [Tooltip("能量进度文字（预制体 Textprogress，如 70%）")]
+    public Text energyProgressText;
+
+    [Tooltip("留空则在场景中查找 PlayerEnergy")]
+    public PlayerEnergy playerEnergy;
+
     [Header("Game Data")]
     public int targetKills = 100;
 
@@ -31,6 +41,7 @@ public class GameLayer : MonoBehaviour
     private int _kills;
     private float _timeLeft;
     private bool _paused;
+    private PlayerEnergy _playerEnergy;
 
     public int CurrentKills => _kills;
     public int TargetKills => targetKills;
@@ -49,13 +60,21 @@ public class GameLayer : MonoBehaviour
         if (pauseButton != null)
             pauseButton.onClick.AddListener(TogglePause);
 
+        ResolveEnergyProgressRefs();
+        BindPlayerEnergy();
+        RefreshEnergyProgress();
+
         // 订阅怪物死亡事件：更新击杀数
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
+        EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEnded, owner: this);
     }
 
     private void OnDestroy()
     {
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+        EventBus.Unsubscribe<CardSelectionEndedEvent>(OnCardSelectionEnded);
+        if (_playerEnergy != null)
+            _playerEnergy.OnEnergyChanged.RemoveListener(OnPlayerEnergyChanged);
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
@@ -131,6 +150,66 @@ public class GameLayer : MonoBehaviour
         int mm = total / 60;
         int ss = total % 60;
         timerText.text = $"{mm:00}:{ss:00}";
+    }
+
+    private void ResolveEnergyProgressRefs()
+    {
+        if (energyProgressSlider == null)
+        {
+            Transform t = transform.Find("SliderProgress");
+            if (t != null)
+                energyProgressSlider = t.GetComponent<Slider>();
+        }
+
+        if (energyProgressSlider != null)
+            energyProgressSlider.interactable = false;
+
+        if (energyProgressText == null && energyProgressSlider != null)
+        {
+            Transform t = energyProgressSlider.transform.Find("Textprogress");
+            if (t != null)
+                energyProgressText = t.GetComponent<Text>();
+        }
+    }
+
+    private void BindPlayerEnergy()
+    {
+        _playerEnergy = playerEnergy != null ? playerEnergy : FindObjectOfType<PlayerEnergy>();
+        if (_playerEnergy == null)
+            return;
+
+        _playerEnergy.OnEnergyChanged.AddListener(OnPlayerEnergyChanged);
+    }
+
+    private void OnPlayerEnergyChanged(int _)
+    {
+        RefreshEnergyProgress();
+    }
+
+    private void OnCardSelectionEnded(CardSelectionEndedEvent _)
+    {
+        RefreshEnergyProgress();
+    }
+
+    /// <summary>根据 <see cref="PlayerEnergy"/> 刷新选卡能量进度条与文字。</summary>
+    public void RefreshEnergyProgress()
+    {
+        if (_playerEnergy == null)
+            return;
+
+        int need = _playerEnergy.EnergyRequiredForNextCard;
+        int cur = Mathf.Max(0, _playerEnergy.energy);
+        float ratio = Mathf.Clamp01((float)cur / need);
+
+        if (energyProgressSlider != null)
+        {
+            energyProgressSlider.minValue = 0f;
+            energyProgressSlider.maxValue = 1f;
+            energyProgressSlider.value = ratio;
+        }
+
+        if (energyProgressText != null)
+            energyProgressText.text = $"{Mathf.RoundToInt(ratio * 100f)}%";
     }
 
     /// <summary>

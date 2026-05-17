@@ -69,6 +69,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     {
         _gameLayer = FindObjectOfType<GameLayer>(true);
         TryCachePlayerHealth();
+        ResetPlayerEnergyForNewRun();
+        ResetPlayerHealthForNewRun();
 
         if (SelectedLevelContext.HasSelection && RoguelikeCardManager.Instance != null)
             RoguelikeCardManager.Instance.CurrentLevel = SelectedLevelContext.LevelId;
@@ -154,6 +156,31 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             return;
 
         _playerHealth = FindObjectOfType<PlayerHealth>(true);
+    }
+
+    private void ResetPlayerEnergyForNewRun()
+    {
+        var pe = FindObjectOfType<PlayerEnergy>(true);
+        if (pe == null)
+            return;
+
+        pe.ResetForNewRun();
+        _gameLayer?.RefreshEnergyProgress();
+    }
+
+    private void ResetPlayerHealthForNewRun()
+    {
+        if (_playerHealth == null)
+            _playerHealth = FindObjectOfType<PlayerHealth>(true);
+
+        if (_playerHealth == null)
+            return;
+
+        _playerHealth.ResetToFull();
+
+        var hpBar = FindObjectOfType<PlayerWorldHpBar>(true);
+        if (hpBar != null)
+            hpBar.Refresh();
     }
 
     private void ApplyKillQuotaToHud()

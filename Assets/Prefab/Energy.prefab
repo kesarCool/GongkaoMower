@@ -100,7 +100,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   amount: 1
   playerTag: Player
-  lifeTime: 15
+  lifeTime: 30
 --- !u!58 &1853812826985892657
 CircleCollider2D:
   m_ObjectHideFlags: 0

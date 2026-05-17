@@ -374,6 +374,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 3962325732289477286}
     m_Modifications:
+    - target: {fileID: 480280963665667251, guid: 4585185cbe6c2d64fb8601f0e7344efd, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3292460910240852234, guid: 4585185cbe6c2d64fb8601f0e7344efd, type: 3}
       propertyPath: target
       value: 
@@ -1021,7 +1025,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -6722639037895721023, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
       propertyPath: energyToTriggerCard
-      value: 1
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 6186490287265628212, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
       propertyPath: m_Name
@@ -1037,11 +1041,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8105927056559153167, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 10.96
       objectReference: {fileID: 0}
     - target: {fileID: 8105927056559153167, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 6.8
       objectReference: {fileID: 0}
     - target: {fileID: 8105927056559153167, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
       propertyPath: m_LocalPosition.z

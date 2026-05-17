@@ -27,11 +27,23 @@ public struct CardSelectionTriggeredEvent
     public int energyLeft;
 }
 
+/// <summary>选卡流程结束（面板关闭、可继续战斗）时发布，供 HUD 等刷新能量进度。</summary>
+public struct CardSelectionEndedEvent { }
+
 /// <summary>关卡波次刷怪协程已完整跑完（不代表场上怪物已清空）。</summary>
 public struct BattleWavesCompletedEvent
 {
     /// <summary>发布事件的 <see cref="SpawnerWaves"/> 实例（便于多刷怪器时区分）。</summary>
     public Component spawner;
+}
+
+/// <summary>主角受到伤害（扣血与 <see cref="PlayerHealth.OnDamaged"/> 之后发布）。</summary>
+public struct PlayerDamagedEvent
+{
+    public PlayerHealth playerHealth;
+    public float damage;
+    public float hpLeft;
+    public Transform damageSource;
 }
 
 /// <summary>主角血量归零（局内失败入口）。</summary>
