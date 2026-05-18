@@ -8,6 +8,7 @@ public class SkillAutoProjectile : SkillBase
     public GameObject bulletPrefab;
     public float bulletSpeed = 10f;
     public float interval = 0.5f;
+    public float damage = 50f;
     public int projectileCount = 1;
     public float spreadDegrees = 10f;
 
@@ -73,7 +74,7 @@ public class SkillAutoProjectile : SkillBase
             Bullet b = bullet.GetComponent<Bullet>();
             if (b != null)
             {
-                b.damageSourceSkillId = SkillId.AutoProjectile;
+                b.ApplySkillShot(SkillId.AutoProjectile, damage);
                 b.SetDirection(d, bulletSpeed);
             }
             else

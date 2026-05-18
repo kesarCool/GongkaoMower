@@ -117,29 +117,20 @@ public class CardView : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    /// <summary>
-    /// 获取升级预览文本（简单版）
-    /// </summary>
+    /// <summary>选卡描述：各等级一行（数据来自 SkillDefinitionBase.levelDescriptions 或数值表自动生成）。</summary>
     private string GetLevelUpPreview(CardDeck.DrawResult data)
     {
+        if (data.skillDef == null)
+            return data.currentLevel == 0 ? "新技能！" : $"升级到 Lv.{data.targetLevel}";
+
+        int max = Mathf.Max(1, data.skillDef.maxLevel);
         if (data.currentLevel == 0)
-            return "新技能！";
+            return data.skillDef.FormatAllLevelDescriptions(highlightLevel: 1);
 
-        if (data.targetLevel >= 5)
-            return "升级到顶级！";
+        if (data.targetLevel >= max)
+            return data.skillDef.FormatAllLevelDescriptions(highlightLevel: max);
 
-        // 根据技能类型显示不同预览
-        switch (data.skillId)
-        {
-            case SkillId.AutoProjectile:
-                return $"Lv.{data.targetLevel}：攻速+10%";
-            case SkillId.LineBeam:
-                return $"Lv.{data.targetLevel}：伤害+20%";
-            case SkillId.OrbitingBlades:
-                return $"Lv.{data.targetLevel}：刀片+1";
-            default:
-                return $"升级到 Lv.{data.targetLevel}";
-        }
+        return data.skillDef.FormatAllLevelDescriptions(highlightLevel: data.targetLevel);
     }
 
     /// <summary>

@@ -21,5 +21,10 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
     public float TickIntervalAt(int level) => tickIntervalByLevel[Mathf.Clamp(level, 1, tickIntervalByLevel.Length) - 1];
     public float OrbitRadiusAt(int level) => orbitRadiusByLevel[Mathf.Clamp(level, 1, orbitRadiusByLevel.Length) - 1];
     public float RotateSpeedAt(int level) => rotateSpeedByLevel[Mathf.Clamp(level, 1, rotateSpeedByLevel.Length) - 1];
+
+    protected override string GenerateLevelDescription(int level)
+    {
+        return $"飞刀 ×{BladeCountAt(level)}，每跳伤害 {DamagePerTickAt(level):0.#}，间隔 {TickIntervalAt(level):0.##}s";
+    }
 }
 

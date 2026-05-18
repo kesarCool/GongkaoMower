@@ -20,6 +20,9 @@ public class GameLayer : MonoBehaviour
     [Tooltip("显示倒计时：格式 '分钟:秒'（例如 05:30）")]
     public TextMeshProUGUI timerText;
 
+    [Tooltip("显示当前爆兵波次：波次 n/m（预制体 Textwave）")]
+    public TextMeshProUGUI waveText;
+
     [Tooltip("暂停按钮（点击切换 Time.timeScale 0/1）")]
     public Button pauseButton;
 
@@ -43,6 +46,8 @@ public class GameLayer : MonoBehaviour
     private float _timeLeft;
     private bool _paused;
     private PlayerEnergy _playerEnergy;
+    private int _currentWave;
+    private int _totalWaves;
 
     public int CurrentKills => _kills;
     public int TargetKills => targetKills;
@@ -58,6 +63,10 @@ public class GameLayer : MonoBehaviour
         RefreshKillText();
         RefreshTimerText();
 
+        ResolveWaveTextRef();
+        InitWaveDisplayFromSpawner();
+        RefreshWaveText();
+
         if (pauseButton != null)
             pauseButton.onClick.AddListener(TogglePause);
 
@@ -68,12 +77,14 @@ public class GameLayer : MonoBehaviour
         // 订阅怪物死亡事件：更新击杀数
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
         EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEnded, owner: this);
+        EventBus.Subscribe<BattleWaveChangedEvent>(OnBattleWaveChanged, owner: this);
     }
 
     private void OnDestroy()
     {
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
         EventBus.Unsubscribe<CardSelectionEndedEvent>(OnCardSelectionEnded);
+        EventBus.Unsubscribe<BattleWaveChangedEvent>(OnBattleWaveChanged);
         if (_playerEnergy != null)
             _playerEnergy.OnEnergyChanged.RemoveListener(OnPlayerEnergyChanged);
     }
@@ -151,6 +162,48 @@ public class GameLayer : MonoBehaviour
         int mm = total / 60;
         int ss = total % 60;
         timerText.text = $"{mm:00}:{ss:00}";
+    }
+
+    private void ResolveWaveTextRef()
+    {
+        if (waveText != null)
+            return;
+
+        Transform t = transform.Find("Textwave");
+        if (t != null)
+            waveText = t.GetComponent<TextMeshProUGUI>();
+    }
+
+    private void InitWaveDisplayFromSpawner()
+    {
+        var spawner = FindObjectOfType<SpawnerWaves>();
+        if (spawner == null)
+            return;
+
+        _totalWaves = spawner.GetConfiguredWaveCount();
+        _currentWave = 0;
+    }
+
+    private void OnBattleWaveChanged(BattleWaveChangedEvent e)
+    {
+        _currentWave = Mathf.Max(0, e.currentWave);
+        _totalWaves = Mathf.Max(0, e.totalWaves);
+        RefreshWaveText();
+    }
+
+    private void RefreshWaveText()
+    {
+        if (waveText == null)
+            return;
+
+        if (_totalWaves <= 0)
+        {
+            waveText.text = string.Empty;
+            return;
+        }
+
+        int displayCurrent = _currentWave > 0 ? _currentWave : 0;
+        waveText.text = $"波次{displayCurrent}/{_totalWaves}";
     }
 
     private void ResolveEnergyProgressRefs()

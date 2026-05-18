@@ -5,11 +5,14 @@ public class Bullet : MonoBehaviour
     public float speed = 10f;
     public float lifeTime = 5f;
     public string enemyTag = "monster";
-    [Tooltip("子弹伤害（优先作用于 EnemyBase）")]
-    public float damage = 1f;
 
-    [Tooltip("用于局内伤害统计（技能子弹等）")]
-    public SkillId damageSourceSkillId = SkillId.None;
+    [SerializeField]
+    [Tooltip("Prefab 默认伤害；技能子弹在发射时由 ApplySkillShot 覆盖")]
+    private float damage = 1f;
+
+    [SerializeField]
+    private SkillId damageSourceSkillId = SkillId.None;
+
     private Vector2 direction = Vector2.right;
     private bool hit;
     private Collider2D col;
@@ -33,6 +36,13 @@ public class Bullet : MonoBehaviour
         if (overrideSpeed > 0f) speed = overrideSpeed;
     }
 
+    /// <summary>技能发射时写入伤害与统计来源（覆盖本 Prefab 上的 damage）。</summary>
+    public void ApplySkillShot(SkillId skillId, float skillDamage)
+    {
+        damageSourceSkillId = skillId;
+        damage = Mathf.Max(0.01f, skillDamage);
+    }
+
     private void Update()
     {
         _alive += Time.deltaTime;
@@ -42,45 +52,40 @@ public class Bullet : MonoBehaviour
             GameObjectPool.Release(gameObject);
             return;
         }
+
         transform.position += (Vector3)(direction * speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (hit) return;
-        
-        
+
         if (other.CompareTag(enemyTag))
         {
             hit = true;
-            if (col != null) col.enabled = false; // prevent multi-hit when enemies overlap
+            if (col != null) col.enabled = false;
 
-            // 优先走怪物基类（会触发 OnDied、掉落、击杀数等）
             EnemyBase eb = other.GetComponent<EnemyBase>();
             if (eb == null) eb = other.GetComponentInParent<EnemyBase>();
             if (eb != null)
             {
-                eb.TakeDamage(Mathf.Max(0.01f, damage), damageSourceSkillId);
+                eb.TakeDamage(damage, damageSourceSkillId);
                 SpawnLimiter.Instance?.Unregister("Bullet", gameObject);
                 GameObjectPool.Release(gameObject);
                 return;
             }
 
-            // 兼容旧逻辑：如果敌人没有 EnemyBase，则使用 EnemyAI.hp
             EnemyAI ai = other.GetComponent<EnemyAI>();
             if (ai != null)
             {
                 ai.hp -= 1;
-                Debug.Log("Bullet hit enemy with hp: " + ai.hp);
                 if (ai.hp <= 0)
                 {
-                    // 池化回收或销毁（兼容旧版非池化怪物）
                     var pooled = other.GetComponent<PooledObject>();
                     if (pooled != null && pooled.sourcePrefabId != 0)
                         GameObjectPool.Release(other.gameObject);
                     else
                         Destroy(other.gameObject);
-                    Debug.Log("Enemy destroyed");
                 }
             }
 

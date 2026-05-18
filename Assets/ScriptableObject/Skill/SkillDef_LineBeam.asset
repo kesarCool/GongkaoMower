@@ -17,6 +17,7 @@ MonoBehaviour:
   displayName: "\u4E0A\u5CB8\u5C04\u7EBF"
   description: "\u5C04\u7EBF"
   icon: {fileID: 21300000, guid: 5dd298371bd2dfb4c8e7a2dabad7a462, type: 3}
+  levelDescriptions: []
   intervalByLevel:
   - 0.8
   - 0.75
@@ -24,10 +25,10 @@ MonoBehaviour:
   - 0.65
   - 0.6
   damageByLevel:
-  - 2
-  - 2.5
-  - 3
-  - 3.8
-  - 4.6
+  - 50
+  - 60
+  - 72
+  - 84
+  - 100
   beamCountByLevel: 0100000001000000020000000200000003000000
   spreadDegrees: 14

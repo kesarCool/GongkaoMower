@@ -197,14 +197,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skillCatalog: {fileID: 11400000, guid: 9d0bd947eb4540d479be3c7bce060432, type: 2}
-  startingSkill: 3
+  startingSkill: 1
   disableLegacyAutoShoot: 1
   enemyTag: monster
   bulletPrefab: {fileID: 0}
   bulletSpeed: 10
   autoProjectileInterval: 0.1
   beamLength: 8
-  beamDamage: 10
+  beamDamage: 100
   beamInterval: 0.8
   beamHitMask:
     serializedVersion: 2
@@ -220,7 +220,7 @@ MonoBehaviour:
   bladeCount: 3
   bladeOrbitRadius: 1.2
   bladeRotateSpeed: 180
-  bladeDamagePerTick: 1
+  bladeDamagePerTick: 50
   bladeTickInterval: 1
 --- !u!50 &-9110866368867753895
 Rigidbody2D:

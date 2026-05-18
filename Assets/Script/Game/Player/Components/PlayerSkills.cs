@@ -29,11 +29,14 @@ public class PlayerSkills : MonoBehaviour
     [Tooltip("当没有 SkillCatalog 或未配置 AutoProjectile 定义时使用的回退值")]
     public float autoProjectileInterval = 0.5f;
 
+    [Tooltip("当没有 SkillCatalog 或未配置 AutoProjectile 定义时使用的回退值")]
+    public float autoProjectileDamage = 50f;
+
     [Header("技能参数：射线")]
     [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
     public float beamLength = 8f;
     [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
-    public float beamDamage = 2f;
+    public float beamDamage = 100f;
     [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
     public float beamInterval = 0.8f;
     public LayerMask beamHitMask = ~0;
@@ -63,7 +66,7 @@ public class PlayerSkills : MonoBehaviour
     public int bladeCount = 3;
     public float bladeOrbitRadius = 1.2f;
     public float bladeRotateSpeed = 180f;
-    public float bladeDamagePerTick = 1f;
+    public float bladeDamagePerTick = 10f;
     public float bladeTickInterval = 0.15f;
 
     [Header("肉鸽配置")]
@@ -75,7 +78,9 @@ public class PlayerSkills : MonoBehaviour
 
     private PlayerController _pc;
     private SkillLineBeam2D _lineBeamSkill;
-    private LineRenderer _beamLine;
+    private LineRenderer[] _beamLines;
+
+    private const int MaxLineBeamVisuals = 8;
 
     private void Awake()
     {
@@ -155,6 +160,7 @@ public class PlayerSkills : MonoBehaviour
                 if (skill is SkillAutoProjectile s)
                 {
                     s.interval = Mathf.Max(0.05f, ap.IntervalAt(lv));
+                    s.damage = Mathf.Max(0.01f, ap.DamageAt(lv));
                     s.projectileCount = Mathf.Max(1, ap.ProjectileCountAt(lv));
                     s.spreadDegrees = Mathf.Max(0f, ap.spreadDegrees);
                 }
@@ -167,7 +173,6 @@ public class PlayerSkills : MonoBehaviour
                     s.interval = Mathf.Max(0.05f, lb.IntervalAt(lv));
                     s.damage = Mathf.Max(0.01f, lb.DamageAt(lv));
                     s.beamCount = Mathf.Max(1, lb.BeamCountAt(lv));
-                    s.spreadDegrees = Mathf.Max(0f, lb.spreadDegrees);
                 }
                 break;
             }
@@ -198,6 +203,7 @@ public class PlayerSkills : MonoBehaviour
             {
                 if (bulletPrefab == null) return null;
                 var s = new SkillAutoProjectile(bulletPrefab, bulletSpeed, autoProjectileInterval);
+                s.damage = Mathf.Max(0.01f, autoProjectileDamage);
                 ApplyStatsFromDefinition(s, def);
                 return s;
             }
@@ -273,42 +279,66 @@ public class PlayerSkills : MonoBehaviour
     {
         if (skill == null) return;
 
-        if (_beamLine == null)
+        if (_beamLines == null || _beamLines.Length < MaxLineBeamVisuals)
         {
-            Transform existing = transform.Find("SkillBeamVisual");
-            if (existing != null)
-                _beamLine = existing.GetComponent<LineRenderer>();
+            Transform root = transform.Find("SkillBeamVisuals");
+            if (root == null)
+            {
+                var rootGo = new GameObject("SkillBeamVisuals");
+                rootGo.transform.SetParent(transform, false);
+                rootGo.transform.localPosition = Vector3.zero;
+                root = rootGo.transform;
+            }
+
+            _beamLines = new LineRenderer[MaxLineBeamVisuals];
+            for (int i = 0; i < MaxLineBeamVisuals; i++)
+            {
+                Transform child = root.Find($"Beam_{i}");
+                if (child == null)
+                {
+                    var go = new GameObject($"Beam_{i}");
+                    go.transform.SetParent(root, false);
+                    go.transform.localPosition = Vector3.zero;
+                    child = go.transform;
+                }
+
+                _beamLines[i] = child.GetComponent<LineRenderer>();
+                if (_beamLines[i] == null)
+                    _beamLines[i] = child.gameObject.AddComponent<LineRenderer>();
+
+                ConfigureBeamLineRenderer(_beamLines[i]);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < _beamLines.Length; i++)
+                ConfigureBeamLineRenderer(_beamLines[i]);
         }
 
-        if (_beamLine == null)
-        {
-            GameObject go = new GameObject("SkillBeamVisual");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = Vector3.zero;
-            _beamLine = go.AddComponent<LineRenderer>();
-        }
+        skill.SetBeamLines(_beamLines);
+    }
 
-        _beamLine.useWorldSpace = true;
-        _beamLine.loop = false;
-        _beamLine.widthMultiplier = 1f;
-        _beamLine.startWidth = beamVisualWidth;
-        _beamLine.endWidth = beamVisualWidth;
-        _beamLine.startColor = beamVisualColor;
-        _beamLine.endColor = beamVisualColor;
-        _beamLine.sortingOrder = beamSortingOrder;
-        _beamLine.enabled = false;
-        _beamLine.positionCount = 2;
+    private void ConfigureBeamLineRenderer(LineRenderer lr)
+    {
+        if (lr == null) return;
 
-        // 尽量使用 Sprites/Default（2D 项目通常存在）；失败则退回 Unlit/Color
-        if (_beamLine.sharedMaterial == null)
+        lr.useWorldSpace = true;
+        lr.loop = false;
+        lr.widthMultiplier = 1f;
+        lr.startWidth = beamVisualWidth;
+        lr.endWidth = beamVisualWidth;
+        // 颜色由 SkillLineBeam2D 按射线下标（红橙黄绿青蓝紫）逐条设置
+        lr.sortingOrder = beamSortingOrder;
+        lr.enabled = false;
+        lr.positionCount = 2;
+
+        if (lr.sharedMaterial == null)
         {
             Shader sh = Shader.Find("Sprites/Default");
             if (sh == null) sh = Shader.Find("Unlit/Color");
             if (sh != null)
-                _beamLine.sharedMaterial = new Material(sh);
+                lr.sharedMaterial = new Material(sh);
         }
-
-        skill.SetBeamLine(_beamLine);
     }
 
     /// <summary>

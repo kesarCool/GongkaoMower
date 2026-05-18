@@ -1,22 +1,30 @@
 using UnityEngine;
 
 /// <summary>
-/// 射线/线段技能：从玩家指向最近敌人发射一条 2D 线段，命中多个敌人并造成伤害
+/// 射线技能：感知范围（beamLength）内仅 1 只怪时全部射线指向该怪；
+/// 多只怪时第 1 条（红）指向范围内最近怪，其余 360° 随机散射。
 /// </summary>
 public class SkillLineBeam2D : SkillBase
 {
+    private static readonly Color[] RainbowBeamColors =
+    {
+        new Color(1f, 0.2f, 0.2f, 0.95f),
+        new Color(1f, 0.55f, 0.1f, 0.95f),
+        new Color(1f, 0.92f, 0.15f, 0.95f),
+        new Color(0.25f, 0.95f, 0.35f, 0.95f),
+        new Color(0.2f, 0.95f, 0.95f, 0.95f),
+        new Color(0.3f, 0.5f, 1f, 0.95f),
+        new Color(0.72f, 0.28f, 1f, 0.95f),
+    };
+
     public float beamLength = 8f;
     public float damage = 2f;
     public float interval = 0.8f;
     public LayerMask hitMask;
     public int beamCount = 1;
-    public float spreadDegrees = 14f;
 
     [Header("可视化（可选）")]
-    [Tooltip("用于在 Game 视图显示射线段的 LineRenderer（由 PlayerSkills 自动创建并注入）")]
-    public LineRenderer beamLine;
-
-    [Tooltip("射线可视化持续时间（秒）。每次触发伤害判定时刷新显示窗口。")]
+    public LineRenderer[] beamLines;
     public float visualDuration = 0.08f;
 
     private float _timer;
@@ -31,12 +39,16 @@ public class SkillLineBeam2D : SkillBase
         this.hitMask = hitMask;
     }
 
-    /// <summary>
-    /// 由外部（例如 PlayerSkills）注入 LineRenderer，用于可视化射线。
-    /// </summary>
-    public void SetBeamLine(LineRenderer lr)
+    public void SetBeamLines(LineRenderer[] lines)
     {
-        beamLine = lr;
+        beamLines = lines;
+    }
+
+    public static Color GetRainbowBeamColor(int beamIndex)
+    {
+        if (RainbowBeamColors.Length == 0)
+            return Color.white;
+        return RainbowBeamColors[Mathf.Abs(beamIndex) % RainbowBeamColors.Length];
     }
 
     public override void Tick(float deltaTime)
@@ -49,34 +61,36 @@ public class SkillLineBeam2D : SkillBase
         _timer = 0f;
 
         Vector2 origin = _ctx.player.position;
-        Vector2 dir = Vector2.right;
+        int count = Mathf.Max(1, beamCount);
+
+        GameObject nearest = null;
+        Vector2 aimDir = Vector2.right;
+        int livingEnemies = 0;
+
+        float senseRange = Mathf.Max(0.5f, beamLength);
 
         if (!string.IsNullOrEmpty(_ctx.enemyTag))
         {
-            GameObject enemy = FindNearestEnemy(origin, _ctx.enemyTag);
-            if (enemy != null)
+            livingEnemies = CountActiveEnemiesInRange(origin, _ctx.enemyTag, senseRange);
+            nearest = FindNearestEnemy(origin, _ctx.enemyTag, senseRange);
+            if (nearest != null)
             {
-                Vector2 d = (Vector2)enemy.transform.position - origin;
-                if (d.sqrMagnitude > 0.0001f) dir = d.normalized;
+                Vector2 toEnemy = (Vector2)nearest.transform.position - origin;
+                if (toEnemy.sqrMagnitude > 0.0001f)
+                    aimDir = toEnemy.normalized;
             }
         }
 
-        int count = Mathf.Max(1, beamCount);
-        float total = Mathf.Max(0f, spreadDegrees);
-        float step = count <= 1 ? 0f : total / (count - 1);
-        float start = -total * 0.5f;
+        // 感知范围内仅 1 只：全部集中；否则第 0 条瞄最近，其余 360° 随机
+        bool allAimAtMonster = livingEnemies == 1 && nearest != null;
 
-        // 可视化：先画中间那条（体验更直观），其余射线纯判定
-        UpdateBeamVisual(origin, dir);
-
-        // 很多 2D 敌人会用 Trigger Collider；默认 Raycast 可能忽略 Trigger，这里临时开启命中 Trigger
         bool prev = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
 
         for (int i = 0; i < count; i++)
         {
-            float ang = start + step * i;
-            Vector2 d = Quaternion.Euler(0f, 0f, ang) * dir;
+            Vector2 d = ResolveBeamDirection(i, allAimAtMonster, nearest != null, aimDir);
+            UpdateBeamVisualLine(i, origin, d);
             RaycastHit2D[] hits = Physics2D.RaycastAll(origin, d, beamLength, hitMask);
 
             for (int h = 0; h < hits.Length; h++)
@@ -93,31 +107,64 @@ public class SkillLineBeam2D : SkillBase
         }
 
         Physics2D.queriesHitTriggers = prev;
+        HideExtraBeamVisuals(count);
     }
 
-    private void UpdateBeamVisual(Vector2 origin, Vector2 dir)
+    private static Vector2 ResolveBeamDirection(int beamIndex, bool allAimAtMonster, bool hasNearest, Vector2 aimDir)
     {
-        if (beamLine == null) return;
+        if (allAimAtMonster || (beamIndex == 0 && hasNearest))
+            return aimDir;
+
+        return RandomDirection2D();
+    }
+
+    private void UpdateBeamVisualLine(int index, Vector2 origin, Vector2 dir)
+    {
+        if (beamLines == null || index < 0 || index >= beamLines.Length)
+            return;
+
+        LineRenderer lr = beamLines[index];
+        if (lr == null)
+            return;
+
+        Color c = GetRainbowBeamColor(index);
+        lr.startColor = c;
+        lr.endColor = c;
 
         Vector3 a = new Vector3(origin.x, origin.y, 0f);
-        Vector3 b = a + (Vector3)(dir * beamLength);
+        Vector3 b = a + (Vector3)(dir.normalized * beamLength);
 
-        beamLine.positionCount = 2;
-        beamLine.SetPosition(0, a);
-        beamLine.SetPosition(1, b);
-        beamLine.enabled = true;
+        lr.positionCount = 2;
+        lr.SetPosition(0, a);
+        lr.SetPosition(1, b);
+        lr.enabled = true;
 
         _visualUntil = Time.time + Mathf.Max(0.01f, visualDuration);
     }
 
-    /// <summary>
-    /// 由 PlayerSkills.Update 调用：到时间后隐藏线段，避免一直显示。
-    /// </summary>
+    private void HideExtraBeamVisuals(int activeCount)
+    {
+        if (beamLines == null)
+            return;
+
+        for (int i = activeCount; i < beamLines.Length; i++)
+        {
+            if (beamLines[i] != null)
+                beamLines[i].enabled = false;
+        }
+    }
+
     public void TickVisual()
     {
-        if (beamLine == null) return;
-        if (!beamLine.enabled) return;
-        if (Time.time >= _visualUntil)
-            beamLine.enabled = false;
+        if (beamLines == null)
+            return;
+        if (Time.time < _visualUntil)
+            return;
+
+        for (int i = 0; i < beamLines.Length; i++)
+        {
+            if (beamLines[i] != null)
+                beamLines[i].enabled = false;
+        }
     }
 }

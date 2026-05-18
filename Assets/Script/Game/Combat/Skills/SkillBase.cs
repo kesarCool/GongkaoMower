@@ -61,4 +61,43 @@ public abstract class SkillBase : ISkill
 
         return bestObj;
     }
+
+    protected static int CountActiveEnemiesInRange(Vector3 from, string enemyTag, float maxRange)
+    {
+        if (string.IsNullOrEmpty(enemyTag))
+            return 0;
+
+        GameObject[] enemies;
+        try
+        {
+            enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+        }
+        catch (UnityException)
+        {
+            return 0;
+        }
+
+        if (enemies == null || enemies.Length == 0)
+            return 0;
+
+        float maxSq = maxRange * maxRange;
+        int count = 0;
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            if (enemies[i] == null || !enemies[i].activeInHierarchy)
+                continue;
+
+            float d = (enemies[i].transform.position - from).sqrMagnitude;
+            if (d <= maxSq)
+                count++;
+        }
+
+        return count;
+    }
+
+    protected static Vector2 RandomDirection2D()
+    {
+        float rad = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+        return new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+    }
 }

@@ -135,6 +135,32 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     public bool HasReleasedWaveCompletionSignal { get; private set; }
 
+    /// <summary>当前关卡配置的爆兵总波数（表驱动或 waves 数组）。</summary>
+    public int GetConfiguredWaveCount()
+    {
+        if (useLevelWaveTable)
+        {
+            var tableWaves = BuildTableWavesForLevel(ResolveLevelWaveLevelId());
+            if (tableWaves != null && tableWaves.Count > 0)
+                return tableWaves.Count;
+        }
+
+        return waves != null ? waves.Length : 0;
+    }
+
+    private static void PublishWaveChanged(SpawnerWaves spawner, int currentWave, int totalWaves)
+    {
+        if (totalWaves <= 0)
+            return;
+
+        EventBus.Publish(new BattleWaveChangedEvent
+        {
+            currentWave = currentWave,
+            totalWaves = totalWaves,
+            spawner = spawner,
+        });
+    }
+
     private struct TableWaveRuntime
     {
         public int wave;
@@ -266,12 +292,14 @@ public class SpawnerWaves : MonoBehaviour
 
         if (useTable)
         {
-            for (int w = 0; w < tableWaves.Count; w++)
+            int total = tableWaves.Count;
+            for (int w = 0; w < total; w++)
             {
                 TableWaveRuntime tw = tableWaves[w];
                 if (debugLogs)
-                    Debug.Log($"[SpawnerWaves] LevelWave 波次 {w + 1}/{tableWaves.Count} wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster}");
+                    Debug.Log($"[SpawnerWaves] LevelWave 波次 {w + 1}/{total} wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster}");
 
+                PublishWaveChanged(this, w + 1, total);
                 WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, tw.wave);
                 yield return TableWaveSpawnRoutine(tw, w + 1, tableWaves.Count);
 
@@ -285,14 +313,16 @@ public class SpawnerWaves : MonoBehaviour
         }
         else
         {
-            for (int w = 0; w < waves.Length; w++)
+            int total = waves.Length;
+            for (int w = 0; w < total; w++)
             {
                 WaveConfig cfg = waves[w];
                 int count = Mathf.Max(0, cfg.count);
                 float step = Mathf.Max(0f, cfg.spawnStep);
 
-                if (debugLogs) Debug.Log($"[SpawnerWaves] Wave {w + 1}/{waves.Length} '{cfg.name}' count={count} step={step}");
+                if (debugLogs) Debug.Log($"[SpawnerWaves] Wave {w + 1}/{total} '{cfg.name}' count={count} step={step}");
 
+                PublishWaveChanged(this, w + 1, total);
                 WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, w + 1);
                 int spawned = 0;
                 for (int i = 0; i < count; i++)

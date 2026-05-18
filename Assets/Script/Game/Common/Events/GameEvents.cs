@@ -30,6 +30,15 @@ public struct CardSelectionTriggeredEvent
 /// <summary>选卡流程结束（面板关闭、可继续战斗）时发布，供 HUD 等刷新能量进度。</summary>
 public struct CardSelectionEndedEvent { }
 
+/// <summary>关卡进入某一爆兵波次（1-based，供 HUD 显示「波次 n/m」）。</summary>
+public struct BattleWaveChangedEvent
+{
+    public int currentWave;
+    public int totalWaves;
+    /// <summary>发布事件的 <see cref="SpawnerWaves"/> 实例。</summary>
+    public Component spawner;
+}
+
 /// <summary>关卡波次刷怪协程已完整跑完（不代表场上怪物已清空）。</summary>
 public struct BattleWavesCompletedEvent
 {
