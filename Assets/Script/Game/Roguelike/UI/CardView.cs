@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,9 +11,9 @@ public class CardView : MonoBehaviour
     [Header("UI组件")]
     public Image background;
     public Image icon;
-    public Text titleText;
-    public Text descText;
-    public Text labelText;
+    public TextMeshProUGUI titleText;
+    public TextMeshProUGUI descText;
+    public TextMeshProUGUI labelText;
     public Image labelIcon;
     public Image borderGlow;
 
@@ -29,6 +30,12 @@ public class CardView : MonoBehaviour
     {
         if (clickButton == null)
             clickButton = GetComponent<Button>();
+
+        if (descText != null)
+        {
+            descText.enableWordWrapping = true;
+            descText.overflowMode = TextOverflowModes.Truncate;
+        }
     }
 
     /// <summary>

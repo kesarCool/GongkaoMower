@@ -153,6 +153,10 @@ PrefabInstance:
       propertyPath: joystickParent
       value: 
       objectReference: {fileID: 8905606427929085149}
+    - target: {fileID: 4087950327935560832, guid: 8f7a540c2567dc24c81b45e4721175af, type: 3}
+      propertyPath: autoResizeFromRadius
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4822321286816413778, guid: 8f7a540c2567dc24c81b45e4721175af, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -183,11 +187,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4822321286816413778, guid: 8f7a540c2567dc24c81b45e4721175af, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 216
       objectReference: {fileID: 0}
     - target: {fileID: 4822321286816413778, guid: 8f7a540c2567dc24c81b45e4721175af, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 216
       objectReference: {fileID: 0}
     - target: {fileID: 4822321286816413778, guid: 8f7a540c2567dc24c81b45e4721175af, type: 3}
       propertyPath: m_LocalPosition.x

@@ -304,6 +304,9 @@ public class EnemyWordLabel : MonoBehaviour
     public void SetWord(string text)
     {
         ResolveTargets();
+        // 重新尝试加载 + 应用中文字体（data-package 子包可能此时才加载完成）
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.TryApplyTo(this);
         CaptureBaselines();
         string s = text ?? string.Empty;
 

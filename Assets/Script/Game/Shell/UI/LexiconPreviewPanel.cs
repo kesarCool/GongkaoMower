@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -168,7 +169,7 @@ public class LexiconPreviewPanel : UIPanelBase
         toggle.onValueChanged.RemoveAllListeners();
         toggle.onValueChanged.AddListener(handler);
 
-        var labelTx = toggle.GetComponentInChildren<Text>(true);
+        var labelTx = toggle.GetComponentInChildren<TextMeshProUGUI>(true);
         if (labelTx != null)
             labelTx.text = label;
 

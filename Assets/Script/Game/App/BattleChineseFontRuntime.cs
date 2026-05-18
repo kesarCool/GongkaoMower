@@ -2,13 +2,9 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 局内中文字体：enemy prefab 已改为 LiberationSans，避免对 msyh 的序列化引用；进 <c>Game</c> 后由此从 Resources 加载并赋给 <see cref="EnemyWordLabel"/>。
-/// 资源路径：<c>Assets/Resources/Fonts/msyh SDF</c> → <see cref="Resources.Load{T}"/>(<see cref="DefaultResourcesPath"/>)。
+/// 局内中文字体：仅处理 EnemyWordLabel（TMP_Text）。
+/// UI 层使用 TextMeshProUGUI 时由 <see cref="ApplyToHierarchy"/> / <see cref="TMPChineseFontAutoApply"/> 应用 msyh SDF。
 /// </summary>
-/// <remarks>
-/// Resources 内资源仍会打进 Player 数据包；缩首包的目标是「壳层 prefab/场景不拖 msyh」与「首场景依赖链不含大字库」。
-/// 若需微信首包物理体积再降，应改为分包/Addressables 远程加载后再赋值，而非放在 Resources。
-/// </remarks>
 public static class BattleChineseFontRuntime
 {
     public const string DefaultResourcesPath = "Fonts/msyh SDF";
@@ -17,23 +13,16 @@ public static class BattleChineseFontRuntime
 
     public static TMP_FontAsset LoadedFont => _loaded;
 
-    /// <summary>从 Resources 加载一次（与当前场景无关；敌人仅应在 Game 中创建）。</summary>
-    /// <remarks>
-    /// 微信小游戏优化（Phase 3）：可改为 <c>WX.GetSystemFont()</c> 使用微信内置系统字体，
-    /// 省去 ~1-2MB 中文字体打包体积。当前 Resources.Load 方案已验证可行。
-    /// </remarks>
     public static void EnsureLoaded()
     {
         if (_loaded != null)
             return;
 
         _loaded = Resources.Load<TMP_FontAsset>(DefaultResourcesPath);
-        if (_loaded == null)
-        {
-            Debug.LogWarning(
-                "[BattleChineseFontRuntime] 未找到 Resources 字体 \"" + DefaultResourcesPath +
-                "\"。请将 msyh SDF 放在 Assets/Resources/Fonts/ 下。");
-        }
+        if (_loaded != null)
+            Debug.Log("[BattleChineseFontRuntime] 中文字体已加载: " + _loaded.name);
+        else
+            Debug.LogWarning("[BattleChineseFontRuntime] 未找到: " + DefaultResourcesPath);
     }
 
     public static void TryApplyTo(EnemyWordLabel label)
@@ -42,5 +31,31 @@ public static class BattleChineseFontRuntime
             return;
 
         label.ApplyBattleChineseFont(_loaded);
+    }
+
+    /// <summary>直接给单个 TMP_Text 应用中文字体（Login/Home 等场景的 UI Text 转为 TMP 后使用）。</summary>
+    public static void ApplyToTMP(TMP_Text tmp)
+    {
+        if (tmp == null || _loaded == null) return;
+
+        if (tmp.font != _loaded)
+        {
+            tmp.font = _loaded;
+            tmp.SetAllDirty();
+        }
+    }
+
+    public static void ApplyToHierarchy(Transform root)
+    {
+        if (root == null)
+            return;
+
+        EnsureLoaded();
+        if (_loaded == null)
+            return;
+
+        var tmps = root.GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < tmps.Length; i++)
+            ApplyToTMP(tmps[i]);
     }
 }

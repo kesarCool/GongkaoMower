@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -29,8 +30,8 @@ public class GameResultPanel : UIPanelBase
     [SerializeField] private string skillRowPrefabResourcesPath = string.Empty;
 
     private Image _bannerImage;
-    private Text _textTime;
-    private Text _textKillNum;
+    private TextMeshProUGUI _textTime;
+    private TextMeshProUGUI _textKillNum;
     private Transform _scrollContent;
     private Button _btnExit;
     private Button _btnAgain;
@@ -42,8 +43,8 @@ public class GameResultPanel : UIPanelBase
     private void Awake()
     {
         _bannerImage = transform.Find("Image")?.GetComponent<Image>();
-        _textTime = transform.Find("TextTime")?.GetComponent<Text>();
-        _textKillNum = transform.Find("TextKillNum")?.GetComponent<Text>();
+        _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
+        _textKillNum = transform.Find("TextKillNum")?.GetComponent<TextMeshProUGUI>();
         _scrollContent = transform.Find("Scroll View/Viewport/Content");
         _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
         _btnAgain = transform.Find("ButtonAgain")?.GetComponent<Button>();

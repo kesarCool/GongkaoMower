@@ -78,6 +78,12 @@ public class UIManager : MonoBehaviour
 
         if (stackBackdrop != null)
             stackBackdrop.gameObject.SetActive(false);
+
+        EnsureCanvasScalerForMobile();
+        EnsureFullScreenRect(stackRoot);
+        EnsureFullScreenRect(overlayRoot);
+        if (stackBackdrop != null)
+            EnsureFullScreenRect(stackBackdrop.rectTransform);
     }
 
     private void OnDestroy()
@@ -160,6 +166,8 @@ public class UIManager : MonoBehaviour
 
         ApplyOpenOptions(panel, options);
         panel.OnOpen(payload);
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToHierarchy(panel.transform);
         RefreshStackBackdrop();
         RefreshStackSorting();
         return panel;
@@ -268,6 +276,40 @@ public class UIManager : MonoBehaviour
         if (t == null || parent == null) return;
         t.SetParent(parent, false);
         t.localScale = Vector3.one;
+        if (t is RectTransform rt)
+            EnsureFullScreenRect(rt);
+    }
+
+    /// <summary>竖屏手游常用：按宽度等比缩放，设计分辨率 1080×1920。</summary>
+    private static void EnsureCanvasScalerForMobile()
+    {
+        var canvas = Instance != null ? Instance.GetComponentInParent<Canvas>() : null;
+        if (canvas == null) return;
+
+        var scaler = canvas.GetComponent<CanvasScaler>();
+        if (scaler == null) return;
+
+        if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
+        {
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080f, 1920f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0f;
+        }
+    }
+
+    private static void EnsureFullScreenRect(RectTransform rt)
+    {
+        if (rt == null) return;
+
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = Vector2.zero;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        rt.localScale = Vector3.one;
     }
 
     private void ApplyOpenOptions(UIPanelBase panel, UiOpenOptions options)

@@ -1,5 +1,5 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// 词汇预览虚拟列表单行：展示「序号 + DisplayText」，由 <see cref="LexiconPreviewLoopScrollDriver"/> 池化并 <see cref="Bind"/>。
@@ -7,16 +7,16 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LexiconPreviewEntryRowCell : MonoBehaviour
 {
-    [SerializeField] private Text bodyText;
+    [SerializeField] private TextMeshProUGUI bodyText;
 
     private void Reset()
     {
         if (bodyText == null)
-            bodyText = GetComponentInChildren<Text>(true);
+            bodyText = GetComponentInChildren<TextMeshProUGUI>(true);
     }
 
     /// <summary>运行时由 Driver 在 Instantiate 模板之后调用。</summary>
-    public void AssignBodyText(Text text)
+    public void AssignBodyText(TextMeshProUGUI text)
     {
         bodyText = text;
     }

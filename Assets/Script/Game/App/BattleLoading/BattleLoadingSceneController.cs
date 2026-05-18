@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -19,7 +20,7 @@ public class BattleLoadingSceneController : MonoBehaviour
     [Tooltip("局内场景名，须在 Build Settings 中。")]
     [SerializeField] private string nextSceneName = "Game";
 
-    [SerializeField] private Text statusText;
+    [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Slider progressSlider;
     [SerializeField] private Button retryButton;
 
@@ -157,17 +158,18 @@ public class BattleLoadingSceneController : MonoBehaviour
 
         if (statusText == null)
         {
-            var textGo = new GameObject("Status", typeof(RectTransform), typeof(Text));
+            var textGo = new GameObject("Status", typeof(RectTransform), typeof(TextMeshProUGUI));
             textGo.transform.SetParent(panelGo.transform, false);
             var tr = textGo.GetComponent<RectTransform>();
             tr.anchorMin = new Vector2(0.1f, 0.55f);
             tr.anchorMax = new Vector2(0.9f, 0.75f);
             tr.offsetMin = tr.offsetMax = Vector2.zero;
-            statusText = textGo.GetComponent<Text>();
-            statusText.alignment = TextAnchor.MiddleCenter;
+            statusText = textGo.GetComponent<TextMeshProUGUI>();
+            statusText.alignment = TextAlignmentOptions.Center;
             statusText.fontSize = 28;
             statusText.color = Color.white;
             statusText.text = "Loading…";
+            BattleChineseFontRuntime.ApplyToTMP(statusText);
         }
 
         if (progressSlider == null)
@@ -194,17 +196,18 @@ public class BattleLoadingSceneController : MonoBehaviour
             brt.offsetMin = brt.offsetMax = Vector2.zero;
             btnGo.GetComponent<Image>().color = new Color(0.25f, 0.45f, 0.75f, 1f);
             retryButton = btnGo.GetComponent<Button>();
-            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
             labelGo.transform.SetParent(btnGo.transform, false);
             var lrt = labelGo.GetComponent<RectTransform>();
             lrt.anchorMin = Vector2.zero;
             lrt.anchorMax = Vector2.one;
             lrt.offsetMin = lrt.offsetMax = Vector2.zero;
-            var lt = labelGo.GetComponent<Text>();
-            lt.alignment = TextAnchor.MiddleCenter;
+            var lt = labelGo.GetComponent<TextMeshProUGUI>();
+            lt.alignment = TextAlignmentOptions.Center;
             lt.fontSize = 24;
             lt.color = Color.white;
             lt.text = "重试";
+            BattleChineseFontRuntime.ApplyToTMP(lt);
         }
     }
 }

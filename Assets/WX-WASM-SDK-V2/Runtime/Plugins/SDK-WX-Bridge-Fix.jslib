@@ -2,7 +2,10 @@ var WXBridgeFixLibrary = {
   SetUnityUIType: function() {
   },
   WXHideLoadingPage: function() {
-    // Called by CheckFrame.Update -> WXSDKManagerHandler.HideLoadingPage
+  },
+  WXGetFontRawData: function() {
+  },
+  WXShareFontBuffer: function() {
   },
 };
 

@@ -15,8 +15,8 @@ MonoBehaviour:
   ProjectConf:
     projectName: GongkaoMower
     Appid: wx27c7354ddadf45da
-    CDN: http://192.168.1.103:8089/
-    assetLoadType: 0
+    CDN: 
+    assetLoadType: 1
     compressDataPackage: 1
     VideoUrl: 
     relativeDST: G:/Demo/GongkaoMower/Build/minigame
@@ -45,7 +45,7 @@ MonoBehaviour:
     UseFriendRelation: 0
     UseCompressedTexture: 0
     UseMiniGameChat: 0
-    PreloadWXFont: 0
+    PreloadWXFont: 1
     disableMultiTouch: 0
   CompileOptions:
     DevelopBuild: 1

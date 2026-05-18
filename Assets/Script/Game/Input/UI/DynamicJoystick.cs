@@ -43,7 +43,7 @@ public class DynamicJoystick : MonoBehaviour
     public float hideDelay = 1f;
 
     [Tooltip("是否根据半径自动调整外圈/内点的 UI 尺寸（直径=半径*2）。如果你已在 prefab 里做了尺寸，建议关闭。")]
-    public bool autoResizeFromRadius = true;
+    public bool autoResizeFromRadius = false;
 
     public bool JoystickActive => _isTouching;
 

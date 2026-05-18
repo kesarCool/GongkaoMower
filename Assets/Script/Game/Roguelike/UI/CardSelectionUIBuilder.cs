@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -48,9 +49,10 @@ public class CardSelectionUIBuilder : MonoBehaviour
         SetRect(titleGO.GetComponent<RectTransform>(),
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
             new Vector2(-200f, -100f), new Vector2(200f, -40f));
-        Text titleText = titleGO.GetComponent<Text>();
+        var titleText = titleGO.GetComponent<TextMeshProUGUI>();
         titleText.fontSize = 48;
-        titleText.alignment = TextAnchor.MiddleCenter;
+        titleText.alignment = TextAlignmentOptions.Center;
+        BattleChineseFontRuntime.ApplyToTMP(titleText);
 
         // 创建3个卡牌槽位容器
         GameObject cardsContainer = new GameObject("CardsContainer", typeof(RectTransform));
@@ -92,8 +94,9 @@ public class CardSelectionUIBuilder : MonoBehaviour
         // 刷新按钮文字
         GameObject refreshTextGO = CreateText(refreshGO.transform, "Text", "刷新(1)");
         refreshTextGO.GetComponent<RectTransform>().sizeDelta = new Vector2(200f, 60f);
-        panel.refreshCountText = refreshTextGO.GetComponent<Text>();
+        panel.refreshCountText = refreshTextGO.GetComponent<TextMeshProUGUI>();
         panel.refreshCountText.fontSize = 28;
+        BattleChineseFontRuntime.ApplyToTMP(panel.refreshCountText);
 
         // 绑定按钮事件
         refreshBtn.onClick.AddListener(() => {
@@ -154,10 +157,11 @@ public class CardSelectionUIBuilder : MonoBehaviour
         SetRect(labelTextGO.GetComponent<RectTransform>(),
             new Vector2(0f, 1f), new Vector2(0f, 1f),
             new Vector2(10f, -40f), new Vector2(70f, -10f));
-        cardView.labelText = labelTextGO.GetComponent<Text>();
+        cardView.labelText = labelTextGO.GetComponent<TextMeshProUGUI>();
         cardView.labelText.fontSize = 24;
         cardView.labelText.color = Color.yellow;
         cardView.labelText.raycastTarget = false;
+        BattleChineseFontRuntime.ApplyToTMP(cardView.labelText);
 
         // 技能图标
         GameObject iconGO = new GameObject("Icon", typeof(RectTransform), typeof(Image));
@@ -175,21 +179,23 @@ public class CardSelectionUIBuilder : MonoBehaviour
         SetRect(titleGO.GetComponent<RectTransform>(),
             new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f),
             new Vector2(-120f, -30f), new Vector2(120f, 30f));
-        cardView.titleText = titleGO.GetComponent<Text>();
+        cardView.titleText = titleGO.GetComponent<TextMeshProUGUI>();
         cardView.titleText.fontSize = 32;
-        cardView.titleText.fontStyle = FontStyle.Bold;
+        cardView.titleText.fontStyle = FontStyles.Bold;
         cardView.titleText.raycastTarget = false;
+        BattleChineseFontRuntime.ApplyToTMP(cardView.titleText);
 
         // 描述文字
         GameObject descGO = CreateText(cardGO.transform, "Desc", "技能描述\n升级预览");
         SetRect(descGO.GetComponent<RectTransform>(),
             new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.4f),
             new Vector2(-120f, -20f), new Vector2(120f, 20f));
-        cardView.descText = descGO.GetComponent<Text>();
+        cardView.descText = descGO.GetComponent<TextMeshProUGUI>();
         cardView.descText.fontSize = 20;
         cardView.descText.raycastTarget = false;
-        cardView.descText.horizontalOverflow = HorizontalWrapMode.Wrap;
-        cardView.descText.verticalOverflow = VerticalWrapMode.Truncate;
+        cardView.descText.enableWordWrapping = true;
+        cardView.descText.overflowMode = TextOverflowModes.Truncate;
+        BattleChineseFontRuntime.ApplyToTMP(cardView.descText);
 
         // 添加按钮（具体监听由 CardView.Bind → WireButton 绑定，避免与子 Graphic 射线冲突）
         Button btn = cardGO.AddComponent<Button>();
@@ -201,17 +207,15 @@ public class CardSelectionUIBuilder : MonoBehaviour
 
     private static GameObject CreateText(Transform parent, string name, string defaultText)
     {
-        GameObject go = new GameObject(name, typeof(RectTransform));
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
 
-        Text text = go.AddComponent<Text>();
+        var text = go.GetComponent<TextMeshProUGUI>();
         text.text = defaultText;
-        text.alignment = TextAnchor.MiddleCenter;
+        text.alignment = TextAlignmentOptions.Center;
         text.color = Color.white;
         text.raycastTarget = false;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (text.font == null)
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        BattleChineseFontRuntime.ApplyToTMP(text);
 
         return go;
     }

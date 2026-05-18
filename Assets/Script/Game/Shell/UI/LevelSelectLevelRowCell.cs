@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LevelSelectLevelRowCell : MonoBehaviour
 {
-    [SerializeField] private Text titleText;
+    [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private Button clickButton;
 
     private LevelSelectFlatRow _row;
@@ -15,7 +16,7 @@ public class LevelSelectLevelRowCell : MonoBehaviour
     private void Reset()
     {
         if (titleText == null)
-            titleText = GetComponentInChildren<Text>(true);
+            titleText = GetComponentInChildren<TextMeshProUGUI>(true);
         if (clickButton == null)
             clickButton = GetComponent<Button>();
     }

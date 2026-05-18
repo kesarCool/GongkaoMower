@@ -1,5 +1,5 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// 章节大标签 Cell：<see cref="LevelSelectSimpleScrollList"/> / <see cref="LevelSelectLoopScrollDriver"/> 的章节 Prefab 配套。
@@ -7,12 +7,12 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LevelSelectChapterHeaderCell : MonoBehaviour
 {
-    [SerializeField] private Text titleText;
+    [SerializeField] private TextMeshProUGUI titleText;
 
     private void Reset()
     {
         if (titleText == null)
-            titleText = GetComponentInChildren<Text>(true);
+            titleText = GetComponentInChildren<TextMeshProUGUI>(true);
     }
 
     public void Bind(in LevelSelectFlatRow row)

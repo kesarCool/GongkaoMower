@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,10 +15,10 @@ public class GameLayer : MonoBehaviour
 {
     [Header("UI Refs (Optional)")]
     [Tooltip("显示击杀数：格式 '当前击杀/目标'（例如 12/100）")]
-    public Text killText;
+    public TextMeshProUGUI killText;
 
     [Tooltip("显示倒计时：格式 '分钟:秒'（例如 05:30）")]
-    public Text timerText;
+    public TextMeshProUGUI timerText;
 
     [Tooltip("暂停按钮（点击切换 Time.timeScale 0/1）")]
     public Button pauseButton;
@@ -27,7 +28,7 @@ public class GameLayer : MonoBehaviour
     public Slider energyProgressSlider;
 
     [Tooltip("能量进度文字（预制体 Textprogress，如 70%）")]
-    public Text energyProgressText;
+    public TextMeshProUGUI energyProgressText;
 
     [Tooltip("留空则在场景中查找 PlayerEnergy")]
     public PlayerEnergy playerEnergy;
@@ -131,7 +132,7 @@ public class GameLayer : MonoBehaviour
         // 可选：更新按钮文字
         if (pauseButton != null)
         {
-            Text t = pauseButton.GetComponentInChildren<Text>();
+            var t = pauseButton.GetComponentInChildren<TextMeshProUGUI>();
             if (t != null) t.text = _paused ? "Resume" : "Pause";
         }
     }
@@ -168,7 +169,7 @@ public class GameLayer : MonoBehaviour
         {
             Transform t = energyProgressSlider.transform.Find("Textprogress");
             if (t != null)
-                energyProgressText = t.GetComponent<Text>();
+                energyProgressText = t.GetComponent<TextMeshProUGUI>();
         }
     }
 
@@ -225,37 +226,34 @@ public class GameLayer : MonoBehaviour
             return;
         }
 
-        Font font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-
         if (killText == null)
         {
-            killText = CreateText("KillText", canvas.transform, font, new Vector2(10, -10), TextAnchor.UpperLeft);
+            killText = CreateHudText("KillText", canvas.transform, new Vector2(10, -10), TextAnchor.UpperLeft);
             killText.text = "0/100";
         }
 
         if (timerText == null)
         {
-            timerText = CreateText("TimerText", canvas.transform, font, new Vector2(-10, -10), TextAnchor.UpperRight);
+            timerText = CreateHudText("TimerText", canvas.transform, new Vector2(-10, -10), TextAnchor.UpperRight);
             timerText.text = "00:00";
         }
 
         if (pauseButton == null)
         {
-            pauseButton = CreateButton("PauseButton", canvas.transform, font, new Vector2(-10, 10), TextAnchor.LowerRight);
-            Text t = pauseButton.GetComponentInChildren<Text>();
+            pauseButton = CreateButton("PauseButton", canvas.transform, new Vector2(-10, 10), TextAnchor.LowerRight);
+            var t = pauseButton.GetComponentInChildren<TextMeshProUGUI>();
             if (t != null) t.text = "Pause";
         }
     }
 
-    private Text CreateText(string name, Transform parent, Font font, Vector2 anchoredPos, TextAnchor anchor)
+    private TextMeshProUGUI CreateHudText(string name, Transform parent, Vector2 anchoredPos, TextAnchor anchor)
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Text));
+        GameObject go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         go.transform.SetParent(parent, false);
 
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(300, 60);
 
-        // 根据 anchor 放到角落
         switch (anchor)
         {
             case TextAnchor.UpperLeft:
@@ -278,16 +276,16 @@ public class GameLayer : MonoBehaviour
 
         rt.anchoredPosition = anchoredPos;
 
-        Text txt = go.GetComponent<Text>();
-        txt.font = font;
+        var txt = go.GetComponent<TextMeshProUGUI>();
         txt.fontSize = 32;
-        txt.alignment = anchor;
+        txt.alignment = UITextMeshProUtil.ToAlignment(anchor);
         txt.color = Color.white;
         txt.raycastTarget = false;
+        BattleChineseFontRuntime.ApplyToTMP(txt);
         return txt;
     }
 
-    private Button CreateButton(string name, Transform parent, Font font, Vector2 anchoredPos, TextAnchor corner)
+    private Button CreateButton(string name, Transform parent, Vector2 anchoredPos, TextAnchor corner)
     {
         GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(parent, false);
@@ -312,7 +310,7 @@ public class GameLayer : MonoBehaviour
         Image img = go.GetComponent<Image>();
         img.color = new Color(0f, 0f, 0f, 0.5f);
 
-        GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
+        GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         textGo.transform.SetParent(go.transform, false);
         RectTransform textRt = textGo.GetComponent<RectTransform>();
         textRt.anchorMin = Vector2.zero;
@@ -320,12 +318,12 @@ public class GameLayer : MonoBehaviour
         textRt.offsetMin = Vector2.zero;
         textRt.offsetMax = Vector2.zero;
 
-        Text t = textGo.GetComponent<Text>();
-        t.font = font;
+        var t = textGo.GetComponent<TextMeshProUGUI>();
         t.fontSize = 28;
-        t.alignment = TextAnchor.MiddleCenter;
+        t.alignment = TextAlignmentOptions.Center;
         t.color = Color.white;
         t.raycastTarget = false;
+        BattleChineseFontRuntime.ApplyToTMP(t);
 
         return go.GetComponent<Button>();
     }

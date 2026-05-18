@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,14 +9,14 @@ using UnityEngine.UI;
 public class GameResultSkillDamageCell : MonoBehaviour
 {
     [SerializeField] private Image icon;
-    [SerializeField] private Text nameText;
-    [SerializeField] private Text damageText;
+    [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private TextMeshProUGUI damageText;
 
     private void Awake()
     {
         if (icon == null) icon = transform.Find("Image")?.GetComponent<Image>();
-        if (nameText == null) nameText = transform.Find("TextName")?.GetComponent<Text>();
-        if (damageText == null) damageText = transform.Find("TextDamage")?.GetComponent<Text>();
+        if (nameText == null) nameText = transform.Find("TextName")?.GetComponent<TextMeshProUGUI>();
+        if (damageText == null) damageText = transform.Find("TextDamage")?.GetComponent<TextMeshProUGUI>();
     }
 
     public void Bind(Sprite sprite, string displayName, float damage)

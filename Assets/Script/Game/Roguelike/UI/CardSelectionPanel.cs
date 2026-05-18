@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,7 +16,7 @@ public class CardSelectionPanel : UIPanelBase
     public GameObject refreshButton;
 
     [Tooltip("剩余刷新次数显示文本")]
-    public Text refreshCountText;
+    public TextMeshProUGUI refreshCountText;
 
     [Tooltip("面板根物体（控制显示/隐藏）")]
     public GameObject panelRoot;

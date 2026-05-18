@@ -16,8 +16,10 @@ using UnityEditor;
 public sealed class BattleOutcomeCoordinator : MonoBehaviour
 {
     private const string GameResultPrefabAssetPath = "Assets/Prefab/Result/GameResultPanel.prefab";
+    private const string GameRevivePrefabAssetPath = "Assets/Prefab/Result/GameRevivePanel.prefab";
 
     [SerializeField] private GameObject gameResultPanelPrefab;
+    [SerializeField] private GameObject gameRevivePanelPrefab;
 
     [Tooltip("结算实例父节点；空则挂到场景中第一个 Screen Space Canvas 下")]
     [SerializeField] private RectTransform resultParentOverride;
@@ -26,7 +28,10 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private PlayerHealth _playerHealth;
     private bool _spawnWavesFullyFinished;
     private bool _battleEnded;
+    private bool _reviveOfferUsed;
+    private bool _reviveFlowActive;
     private GameObject _resultUiInstance;
+    private GameObject _reviveUiInstance;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoCreateInGameScene()
@@ -63,6 +68,11 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 #endif
         if (gameResultPanelPrefab == null)
             gameResultPanelPrefab = Resources.Load<GameObject>("GameResultPanel");
+
+#if UNITY_EDITOR
+        if (gameRevivePanelPrefab == null)
+            gameRevivePanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameRevivePrefabAssetPath);
+#endif
     }
 
     private void OnEnable()
@@ -71,6 +81,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         TryCachePlayerHealth();
         ResetPlayerEnergyForNewRun();
         ResetPlayerHealthForNewRun();
+        _reviveOfferUsed = false;
+        _reviveFlowActive = false;
 
         if (SelectedLevelContext.HasSelection && RoguelikeCardManager.Instance != null)
             RoguelikeCardManager.Instance.CurrentLevel = SelectedLevelContext.LevelId;
@@ -92,13 +104,13 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void Update()
     {
-        if (_battleEnded) return;
+        if (_battleEnded || _reviveFlowActive) return;
 
         TryCachePlayerHealth();
 
         if (_playerHealth != null && !_playerHealth.IsAlive)
         {
-            EndBattleDefeat();
+            TryHandlePlayerDeath();
             return;
         }
 
@@ -198,8 +210,137 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void OnPlayerDied(PlayerDiedEvent e)
     {
-        if (_battleEnded) return;
+        TryHandlePlayerDeath();
+    }
+
+    private void TryHandlePlayerDeath()
+    {
+        if (_battleEnded || _reviveFlowActive) return;
+
+        if (!_reviveOfferUsed)
+        {
+            BeginReviveOffer();
+            return;
+        }
+
         EndBattleDefeat();
+    }
+
+    private void BeginReviveOffer()
+    {
+        _reviveFlowActive = true;
+
+        var payload = new GameRevivePanelPayload
+        {
+            countdownSeconds = 10f,
+            adProvider = DefaultReviveAdProvider.Instance,
+            onGiveUp = OnReviveGiveUp,
+            onRevived = OnReviveAccepted
+        };
+
+        ShowReviveUi(payload);
+    }
+
+    private void OnReviveGiveUp()
+    {
+        if (_battleEnded) return;
+
+        _reviveOfferUsed = true;
+        _reviveFlowActive = false;
+        CloseReviveUi();
+        EndBattleDefeat();
+    }
+
+    private void OnReviveAccepted()
+    {
+        if (_battleEnded) return;
+
+        _reviveOfferUsed = true;
+        _reviveFlowActive = false;
+        CloseReviveUi();
+
+        TryCachePlayerHealth();
+        if (_playerHealth != null)
+            _playerHealth.ResetToFull();
+
+        var hpBar = FindObjectOfType<PlayerWorldHpBar>(true);
+        if (hpBar != null)
+            hpBar.Refresh();
+
+        if (Time.timeScale == 0f)
+            Time.timeScale = 1f;
+    }
+
+    private void ShowReviveUi(GameRevivePanelPayload payload)
+    {
+        if (UIManager.Instance != null)
+        {
+            GameRevivePanel panel = UIManager.Instance.Open<GameRevivePanel>(payload, UiOpenOptions.ModalDefault);
+            if (panel != null)
+            {
+                _reviveUiInstance = null;
+                return;
+            }
+
+            Debug.LogWarning("[BattleOutcomeCoordinator] UIManager 未能打开 GameRevivePanel，将回退为 Instantiate。");
+        }
+
+        if (gameRevivePanelPrefab == null)
+        {
+            Debug.LogError("[BattleOutcomeCoordinator] 未配置 gameRevivePanelPrefab。");
+            OnReviveGiveUp();
+            return;
+        }
+
+        Transform parent = resultParentOverride;
+        if (parent == null)
+        {
+            Canvas c = FindObjectOfType<Canvas>(true);
+            parent = c != null ? c.transform as RectTransform : null;
+        }
+
+        if (parent == null)
+        {
+            Debug.LogError("[BattleOutcomeCoordinator] 找不到 Canvas，无法显示复活面板。");
+            OnReviveGiveUp();
+            return;
+        }
+
+        if (_reviveUiInstance != null)
+            Destroy(_reviveUiInstance);
+
+        _reviveUiInstance = Instantiate(gameRevivePanelPrefab, parent, false);
+        var fallback = _reviveUiInstance.GetComponent<GameRevivePanel>();
+        if (fallback == null)
+        {
+            Debug.LogError("[BattleOutcomeCoordinator] GameRevivePanel 预制体缺少 GameRevivePanel 组件。");
+            OnReviveGiveUp();
+            return;
+        }
+
+        Time.timeScale = 0f;
+        fallback.OnOpen(payload);
+    }
+
+    private void CloseReviveUi()
+    {
+        if (UIManager.Instance != null && UIManager.Instance.Top is GameRevivePanel)
+        {
+            UIManager.Instance.CloseTop();
+            _reviveUiInstance = null;
+            return;
+        }
+
+        if (_reviveUiInstance != null)
+        {
+            var panel = _reviveUiInstance.GetComponent<GameRevivePanel>();
+            panel?.OnClose();
+            Destroy(_reviveUiInstance);
+            _reviveUiInstance = null;
+        }
+
+        if (Time.timeScale == 0f)
+            Time.timeScale = 1f;
     }
 
     private static int CountMonstersAlive()
