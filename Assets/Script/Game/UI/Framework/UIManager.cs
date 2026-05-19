@@ -29,6 +29,12 @@ public class UIManager : MonoBehaviour
     [Tooltip("弱 B 确认框 Prefab（挂 UiConfirmDialog）")]
     [SerializeField] private UiConfirmDialog confirmDialogPrefab;
 
+    [Tooltip("轻提示 Toast Prefab（挂 UiToastPanel）；CodeDisplay=1 时需要")]
+    [SerializeField] private UiToastPanel toastPanelPrefab;
+
+    [Tooltip("Toast 默认显示秒数（ShowToast 未指定时长时）")]
+    [SerializeField] private float defaultToastDuration = 2.5f;
+
     [Header("排序（子物体带 Canvas 且 Override Sorting 时有效）")]
     [SerializeField] private int stackSortingBase = 200;
 
@@ -45,6 +51,7 @@ public class UIManager : MonoBehaviour
     private readonly List<UIPanelBase> _stack = new List<UIPanelBase>(8);
 
     private UiConfirmDialog _confirmInstance;
+    private UiToastPanel _toastInstance;
 
     private int _pauseLocks;
     private float _storedTimeScale = 1f;
@@ -190,8 +197,55 @@ public class UIManager : MonoBehaviour
         RefreshStackBackdrop();
     }
 
+    /// <summary>单按钮告警（CodeDisplay=2，隐藏取消）。</summary>
+    public void ShowAlert(string title, string message, Action onClosed = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            title = "提示";
+
+        ShowConfirm(title, message, _ =>
+        {
+            if (_) onClosed?.Invoke();
+        }, UiOpenOptions.ModalDefault, showCancel: false);
+    }
+
+    /// <summary>轻提示（CodeDisplay=1，不暂停）。</summary>
+    public void ShowToast(string message, float durationSeconds = 0f)
+    {
+        if (string.IsNullOrEmpty(message))
+            return;
+
+        if (toastPanelPrefab == null)
+        {
+            Debug.LogWarning("[UIManager] toastPanelPrefab 未配置，Toast 降级为 Log：" + message);
+            Debug.Log("[Toast] " + message);
+            return;
+        }
+
+        if (_toastInstance == null)
+        {
+            _toastInstance = Instantiate(toastPanelPrefab, overlayRoot, false);
+            _toastInstance.gameObject.SetActive(false);
+            BattleChineseFontRuntime.EnsureLoaded();
+            BattleChineseFontRuntime.ApplyToHierarchy(_toastInstance.transform);
+        }
+
+        ParentTo(_toastInstance.transform, overlayRoot);
+        float duration = durationSeconds > 0f ? durationSeconds : defaultToastDuration;
+        _toastInstance.Show(message, duration);
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToHierarchy(_toastInstance.transform);
+        RefreshOverlaySorting();
+    }
+
     /// <summary>弱 B：在主栈之上显示确认框</summary>
     public void ShowConfirm(string title, string message, Action<bool> onResult, UiOpenOptions options = default)
+    {
+        ShowConfirm(title, message, onResult, options, showCancel: true);
+    }
+
+    /// <summary>弱 B：在主栈之上显示确认框（可隐藏取消按钮）。</summary>
+    public void ShowConfirm(string title, string message, Action<bool> onResult, UiOpenOptions options, bool showCancel)
     {
         if (confirmDialogPrefab == null)
         {
@@ -200,11 +254,7 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        if (_confirmInstance == null)
-        {
-            _confirmInstance = Instantiate(confirmDialogPrefab, overlayRoot, false);
-            _confirmInstance.gameObject.SetActive(false);
-        }
+        EnsureConfirmInstance();
 
         var o = options.PauseTime || options.UseUnscaledTime || options.CloseOnBack
             ? options
@@ -212,8 +262,21 @@ public class UIManager : MonoBehaviour
 
         ApplyOpenOptions(_confirmInstance, o);
         ParentTo(_confirmInstance.transform, overlayRoot);
-        _confirmInstance.Show(title, message, onResult);
+        _confirmInstance.Show(title, message, onResult, showCancel);
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToHierarchy(_confirmInstance.transform);
         RefreshOverlaySorting();
+    }
+
+    private void EnsureConfirmInstance()
+    {
+        if (_confirmInstance != null)
+            return;
+
+        _confirmInstance = Instantiate(confirmDialogPrefab, overlayRoot, false);
+        _confirmInstance.gameObject.SetActive(false);
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToHierarchy(_confirmInstance.transform);
     }
 
     /// <summary>关闭确认框并触发 onResult(false)（与点「取消」一致）。</summary>

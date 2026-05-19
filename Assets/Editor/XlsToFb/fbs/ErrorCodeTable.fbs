@@ -1,0 +1,14 @@
+namespace ProtoTable.ErrorCodeTable;
+enum eCrypt :int{
+	code = 130819679,}
+
+namespace ProtoTable;
+table ErrorCodeTable{
+	ID:int32;
+	ErrorCode:string;
+	CodeText:string;
+	CodeDisplay:int32;
+	Note:string;
+}
+
+root_type ErrorCodeTable;

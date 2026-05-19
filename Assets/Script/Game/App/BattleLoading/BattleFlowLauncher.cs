@@ -13,7 +13,15 @@ public static class BattleFlowLauncher
     {
         if (!SelectedLevelContext.HasSelection)
         {
-            Debug.LogWarning("[BattleFlowLauncher] 未选择关卡（SelectedLevelContext.HasSelection == false）。");
+            GameErrorPresenter.Show(GameErrorCodes.LevelNotSelected);
+            return false;
+        }
+
+        PlayerProfileService.Instance.LoadOrCreate();
+        int levelId = SelectedLevelContext.LevelId;
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId))
+        {
+            GameErrorPresenter.Show(GameErrorCodes.LevelLocked,null, levelId);
             return false;
         }
 

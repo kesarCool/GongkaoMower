@@ -20,6 +20,7 @@ public class TableManager : MonoSingleton<TableManager>
         typeof(LevelWave),
         typeof(Monster),
         typeof(ChapterLevel),
+        typeof(ErrorCodeTable),
     };
 
     private Dictionary<Type, Dictionary<int, object>> mTypeTableDict = new Dictionary<Type, Dictionary<int, object>>();

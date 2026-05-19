@@ -22,12 +22,25 @@ public class UiConfirmDialog : UIPanelBase
     public Button cancelButton;
 
     private Action<bool> _callback;
+    private bool _singleButtonMode;
 
-    public void Show(string title, string message, Action<bool> onClosed)
+    /// <summary>单按钮告警（隐藏取消）；返回键等同点确认。</summary>
+    public bool IsSingleButtonMode => _singleButtonMode;
+
+    public void Show(string title, string message, Action<bool> onClosed, bool showCancel = true)
     {
+        _singleButtonMode = !showCancel;
         _callback = onClosed;
-        if (titleText != null) titleText.text = title ?? "";
+        if (titleText != null)
+        {
+            titleText.gameObject.SetActive(!string.IsNullOrEmpty(title));
+            titleText.text = title ?? "";
+        }
         if (messageText != null) messageText.text = message ?? "";
+
+        if (cancelButton != null)
+            cancelButton.gameObject.SetActive(showCancel);
+
         gameObject.SetActive(true);
 
         if (okButton != null)
@@ -35,24 +48,36 @@ public class UiConfirmDialog : UIPanelBase
             okButton.onClick.RemoveListener(OnOk);
             okButton.onClick.AddListener(OnOk);
         }
-        if (cancelButton != null)
+        if (cancelButton != null && showCancel)
         {
             cancelButton.onClick.RemoveListener(OnCancel);
             cancelButton.onClick.AddListener(OnCancel);
         }
     }
 
+    public void Show(string title, string message, Action<bool> onClosed)
+    {
+        Show(title, message, onClosed, showCancel: true);
+    }
+
     public override void OnClose()
     {
         _callback = null;
+        _singleButtonMode = false;
         if (okButton != null) okButton.onClick.RemoveListener(OnOk);
         if (cancelButton != null) cancelButton.onClick.RemoveListener(OnCancel);
     }
 
-    /// <summary>返回键 / Escape：视为取消，触发 false（与点取消一致）。</summary>
+    /// <summary>返回键 / Escape：双按钮视为取消；单按钮告警视为确认。</summary>
     internal void InvokeCancelIfPending()
     {
         if (_callback == null) return;
+        if (_singleButtonMode)
+        {
+            OnOk();
+            return;
+        }
+
         var cb = _callback;
         _callback = null;
         cb.Invoke(false);

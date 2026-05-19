@@ -121,12 +121,14 @@ public class GameResultPanel : UIPanelBase
             _btnNext.gameObject.SetActive(win);
             if (win)
             {
+                PlayerProfileService.Instance.LoadOrCreate();
                 bool hasNext = SelectedLevelContext.HasSelection &&
                                ChapterLevelNavigation.TryGetNext(
                                    SelectedLevelContext.ChapterId,
                                    SelectedLevelContext.LevelId,
                                    out _,
-                                   out _);
+                                   out int nextLv) &&
+                               PlayerProfileService.Instance.IsLevelUnlocked(nextLv);
                 _btnNext.interactable = hasNext;
             }
         }
@@ -201,17 +203,7 @@ public class GameResultPanel : UIPanelBase
     {
         Time.timeScale = 1f;
 
-        // 本关重开：保持选关上下文与局内「当前关卡」一致，再清池并重载 Game。
-        if (SelectedLevelContext.HasSelection)
-        {
-            int lv = SelectedLevelContext.LevelId;
-            if (RoguelikeCardManager.Instance != null)
-                RoguelikeCardManager.Instance.CurrentLevel = lv;
-            var css = FindObjectOfType<CardSelectionSystem>();
-            if (css != null)
-                css.currentLevel = lv;
-        }
-
+        // 本关重开：SelectedLevelContext 不变，直接重载 Game。
         GameObjectPool.ClearAllPools();
         SceneManager.LoadScene("Game");
     }
@@ -220,7 +212,7 @@ public class GameResultPanel : UIPanelBase
     {
         if (!SelectedLevelContext.HasSelection)
         {
-            Debug.LogWarning("[GameResultPanel] 无选关上下文，无法进入下一关。");
+            GameErrorPresenter.Show(GameErrorCodes.LevelNoContext);
             return;
         }
 
@@ -228,13 +220,18 @@ public class GameResultPanel : UIPanelBase
         int lv = SelectedLevelContext.LevelId;
         if (!ChapterLevelNavigation.TryGetNext(ch, lv, out int nch, out int nlv))
         {
-            Debug.LogWarning("[GameResultPanel] 没有下一关配置。");
+            GameErrorPresenter.Show(GameErrorCodes.LevelNoNext);
+            return;
+        }
+
+        PlayerProfileService.Instance.LoadOrCreate();
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(nlv))
+        {
+            GameErrorPresenter.Show(GameErrorCodes.LevelLocked, null, nlv);
             return;
         }
 
         SelectedLevelContext.Set(nch, nlv);
-        if (RoguelikeCardManager.Instance != null)
-            RoguelikeCardManager.Instance.CurrentLevel = nlv;
 
         Time.timeScale = 1f;
         SceneManager.LoadScene(BattleFlowLauncher.BattleLoadingSceneName);

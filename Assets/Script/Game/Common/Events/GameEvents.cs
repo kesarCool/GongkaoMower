@@ -39,7 +39,7 @@ public struct BattleWaveChangedEvent
     public Component spawner;
 }
 
-/// <summary>关卡波次刷怪协程已完整跑完（不代表场上怪物已清空）。</summary>
+/// <summary>关卡波次刷怪协程已完整跑完（胜利以最后一波 Boss 死亡为准，不要求清场）。</summary>
 public struct BattleWavesCompletedEvent
 {
     /// <summary>发布事件的 <see cref="SpawnerWaves"/> 实例（便于多刷怪器时区分）。</summary>

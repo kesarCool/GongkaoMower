@@ -15,9 +15,6 @@ public class CardSelectionSystem : MonoBehaviour
     [Tooltip("技能目录（用于读取技能详情显示）")]
     public SkillCatalog skillCatalog;
 
-    [Tooltip("当前关卡进度（由外部更新）")]
-    public int currentLevel = 1;
-
     [Header("UI引用")]
     [Tooltip("选卡面板（含3个卡槽位）")]
     public CardSelectionPanel panel;
@@ -49,16 +46,6 @@ public class CardSelectionSystem : MonoBehaviour
         _playerSkills = GetComponent<PlayerSkills>();
         if (_playerSkills == null)
             _playerSkills = FindObjectOfType<PlayerSkills>();
-    }
-
-    /// <summary>
-    /// 外部调用：设置当前关卡（由SpawnerWaves或GameLayer更新）
-    /// </summary>
-    public void SetCurrentLevel(int level)
-    {
-        currentLevel = level;
-        if (RoguelikeCardManager.Instance != null)
-            RoguelikeCardManager.Instance.CurrentLevel = level;
     }
 
     /// <summary>
@@ -109,14 +96,14 @@ public class CardSelectionSystem : MonoBehaviour
 
     private void DrawCards()
     {
+        int levelId = BattleLevelContext.LevelId;
         if (RoguelikeCardManager.Instance != null)
         {
-            RoguelikeCardManager.Instance.CurrentLevel = currentLevel;
-            _currentCards = RoguelikeCardManager.Instance.DrawFromPool(currentLevel, _playerSkills, _excludedSkills);
+            _currentCards = RoguelikeCardManager.Instance.DrawFromPool(levelId, _playerSkills, _excludedSkills);
         }
         else if (deck != null)
         {
-            _currentCards = deck.Draw(currentLevel, _playerSkills, _excludedSkills);
+            _currentCards = deck.Draw(levelId, _playerSkills, _excludedSkills);
         }
         else
         {

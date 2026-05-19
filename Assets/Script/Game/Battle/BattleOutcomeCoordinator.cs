@@ -7,6 +7,7 @@ using UnityEditor;
 
 /// <summary>
 /// 局内胜负判定与拉起结算 UI。
+/// 胜利：击杀最后一波配表 Boss（<c>LevelWave.isBoss</c>）；无 Boss 配置时回退为「波次刷完且场上无怪」。
 /// - 本组件<strong>不是</strong>结算面板的父节点：父节点由 <see cref="UIManager"/> 的 <c>stackRoot</c>（优先）
 ///   或 <see cref="resultParentOverride"/> / 场景内首个 <see cref="Canvas"/>（回退）决定。
 /// - 结算 UI 优先走 <see cref="UIManager.Open{T}"/>（需在场景的 UIManager 上注册 <see cref="GameResultPanel"/> 预制体）；
@@ -30,6 +31,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private bool _battleEnded;
     private bool _reviveOfferUsed;
     private bool _reviveFlowActive;
+    private bool _battleWaveConfigInvalid;
+    private bool _waveConfigErrorShown;
     private GameObject _resultUiInstance;
     private GameObject _reviveUiInstance;
 
@@ -84,22 +87,23 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         _reviveOfferUsed = false;
         _reviveFlowActive = false;
 
-        if (SelectedLevelContext.HasSelection && RoguelikeCardManager.Instance != null)
-            RoguelikeCardManager.Instance.CurrentLevel = SelectedLevelContext.LevelId;
-
         BattleRunMetrics.BeginBattle();
+        BattleVictoryBossTracker.Reset();
+        _battleWaveConfigInvalid = false;
+        _waveConfigErrorShown = false;
 
-        if (!AnyRelevantSpawnerInScene())
-            Debug.LogWarning("[BattleOutcomeCoordinator] 场景中未找到已启用的 SpawnerWaves，将无法通过「波次结束」判定胜利。");
+        ValidateBattleWaveConfig();
 
         ApplyKillQuotaToHud();
 
         EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied, owner: this);
+        EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
     }
 
     private void OnDisable()
     {
         EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
+        EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
     }
 
     private void Update()
@@ -114,12 +118,91 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             return;
         }
 
+        if (_battleWaveConfigInvalid)
+            return;
+
+        if (BattleVictoryBossTracker.IsBossVictoryReady)
+        {
+            EndBattleVictory();
+            return;
+        }
+
+        if (BattleVictoryBossTracker.UsesBossVictory)
+            return;
+
         RefreshSpawnWavesFinishedFromSpawners();
         if (!_spawnWavesFullyFinished) return;
 
         if (CountMonstersAlive() > 0) return;
 
         EndBattleVictory();
+    }
+
+    private void OnEnemyDied(EnemyDiedEvent e)
+    {
+        if (_battleEnded || _reviveFlowActive || _battleWaveConfigInvalid) return;
+        if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
+
+        if (BattleVictoryBossTracker.TryRegisterKill())
+            EndBattleVictory();
+    }
+
+    private void ValidateBattleWaveConfig()
+    {
+        int levelId = BattleLevelContext.LevelId;
+        SpawnerWaves[] arr = FindObjectsOfType<SpawnerWaves>(true);
+        if (arr == null || arr.Length == 0)
+        {
+            _battleWaveConfigInvalid = true;
+            ShowWaveConfigErrorOnce(GameErrorCodes.BattleSpawnerMissing);
+            return;
+        }
+
+        int relevant = 0;
+        for (int i = 0; i < arr.Length; i++)
+        {
+            SpawnerWaves s = arr[i];
+            if (!IsSpawnerRelevantForWaveProgress(s))
+                continue;
+
+            relevant++;
+            if (s.useLevelWaveTable && !LevelWaveCatalog.IsTableLoaded())
+            {
+                _battleWaveConfigInvalid = true;
+                ShowWaveConfigErrorOnce(GameErrorCodes.LevelWaveTableMissing);
+                return;
+            }
+
+            if (!s.HasValidLevelWaveConfiguration())
+            {
+                _battleWaveConfigInvalid = true;
+                ShowWaveConfigErrorOnce(GameErrorCodes.LevelWaveConfigMissing, levelId);
+                return;
+            }
+        }
+
+        if (relevant == 0)
+        {
+            _battleWaveConfigInvalid = true;
+            ShowWaveConfigErrorOnce(GameErrorCodes.BattleSpawnerMissing);
+        }
+    }
+
+    private void ShowWaveConfigErrorOnce(string errorCode, params object[] formatArgs)
+    {
+        if (_waveConfigErrorShown)
+            return;
+        _waveConfigErrorShown = true;
+        GameErrorPresenter.Show(errorCode, ExitBattleToHome, formatArgs);
+    }
+
+    private static void ExitBattleToHome()
+    {
+        if (Time.timeScale == 0f)
+            Time.timeScale = 1f;
+
+        GameObjectPool.ClearAllPools();
+        SceneManager.LoadScene("Home");
     }
 
     private static bool AnyRelevantSpawnerInScene()
@@ -199,9 +282,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     {
         if (_gameLayer == null) return;
 
-        int levelId = RoguelikeCardManager.Instance != null
-            ? RoguelikeCardManager.Instance.CurrentLevel
-            : 1;
+        int levelId = BattleLevelContext.LevelId;
 
         int quota = LevelWaveKillQuota.SumTotalMonstersForLevel(levelId);
         if (quota > 0)
@@ -359,11 +440,13 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private void EndBattleVictory()
     {
         if (_battleEnded) return;
+        if (_battleWaveConfigInvalid) return;
         if (_playerHealth != null && !_playerHealth.IsAlive) return;
 
         _battleEnded = true;
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
+        TryRecordVictoryProgress(dur, kills);
         ShowResultUi(new GameResultViewModel { victory = true, battleDurationUnscaled = dur, killCount = kills });
     }
 
@@ -422,5 +505,21 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         }
 
         panel.OnOpen(vm);
+    }
+
+    private static void TryRecordVictoryProgress(float durationSec, int killCount)
+    {
+        if (!SelectedLevelContext.HasSelection) return;
+
+        PlayerProfileService.Instance.LoadOrCreate();
+        int levelId = SelectedLevelContext.LevelId;
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId))
+            return;
+
+        var health = FindObjectOfType<PlayerHealth>();
+        int stars = health != null
+            ? LevelStarRules.ComputeStars(health.Hp, health.MaxHp)
+            : 1;
+        PlayerProfileService.Instance.RecordVictory(levelId, durationSec, killCount, stars);
     }
 }

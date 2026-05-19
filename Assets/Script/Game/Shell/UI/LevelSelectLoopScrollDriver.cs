@@ -53,7 +53,7 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
     {
         if (TableManager.Instance == null)
         {
-            Debug.LogWarning("[LevelSelectLoopScrollDriver] TableManager.Instance 为空。");
+            GameErrorPresenter.Show(GameErrorCodes.TableManagerMissing);
             _rows = new List<LevelSelectFlatRow>();
             ApplyToLoop();
             return;

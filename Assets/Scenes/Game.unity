@@ -68039,7 +68039,9 @@ MonoBehaviour:
   - {fileID: 6775079129782722412, guid: 34540c3dfa0f02d44bf16e07444c6ba0, type: 3}
   - {fileID: 287845476752872038, guid: f4bd2e707490ba846a68292dd492437e, type: 3}
   - {fileID: 287845476752872038, guid: 0cdf69ee228a19348bb327a34b1be3cd, type: 3}
-  confirmDialogPrefab: {fileID: 0}
+  confirmDialogPrefab: {fileID: 7028428122260665049, guid: 582e1c8e316586047b2a6185d0094b7d, type: 3}
+  toastPanelPrefab: {fileID: 7971915058314420757, guid: 8d28d6898686d1544bf92e8b491bbb18, type: 3}
+  defaultToastDuration: 2.5
   stackSortingBase: 200
   overlaySortingBase: 800
   respondToEscape: 1
@@ -68057,7 +68059,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deck: {fileID: 11400000, guid: 5fc3f4c9ad0eac24e81c9021755a98cc, type: 2}
   skillCatalog: {fileID: 11400000, guid: 9d0bd947eb4540d479be3c7bce060432, type: 2}
-  currentLevel: 1
   panel: {fileID: 2943579901192963805, guid: 34540c3dfa0f02d44bf16e07444c6ba0, type: 3}
   freeRefreshCount: 1
   allowPaidRefresh: 0
@@ -68228,7 +68229,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardDeck: {fileID: 11400000, guid: 5fc3f4c9ad0eac24e81c9021755a98cc, type: 2}
-  _currentLevel: 1
   cardSelectionSystem: {fileID: 0}
 --- !u!224 &5787009489028492807
 RectTransform:

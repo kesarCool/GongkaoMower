@@ -23,6 +23,9 @@ public class GameLayer : MonoBehaviour
     [Tooltip("显示当前爆兵波次：波次 n/m（预制体 Textwave）")]
     public TextMeshProUGUI waveText;
 
+    [Tooltip("显示当前关卡（预制体 TextLevel，读选关上下文）")]
+    public TextMeshProUGUI levelText;
+
     [Tooltip("暂停按钮（点击切换 Time.timeScale 0/1）")]
     public Button pauseButton;
 
@@ -64,8 +67,10 @@ public class GameLayer : MonoBehaviour
         RefreshTimerText();
 
         ResolveWaveTextRef();
+        ResolveLevelTextRef();
         InitWaveDisplayFromSpawner();
         RefreshWaveText();
+        RefreshLevelText();
 
         if (pauseButton != null)
             pauseButton.onClick.AddListener(TogglePause);
@@ -172,6 +177,25 @@ public class GameLayer : MonoBehaviour
         Transform t = transform.Find("Textwave");
         if (t != null)
             waveText = t.GetComponent<TextMeshProUGUI>();
+    }
+
+    private void ResolveLevelTextRef()
+    {
+        if (levelText != null)
+            return;
+
+        Transform t = transform.Find("TextLevel");
+        if (t != null)
+            levelText = t.GetComponent<TextMeshProUGUI>();
+    }
+
+    private void RefreshLevelText()
+    {
+        if (levelText == null)
+            return;
+
+        BattleLevelContext.LogMissingSelectionOnce(nameof(GameLayer));
+        levelText.text = BattleLevelContext.GetDisplayText();
     }
 
     private void InitWaveDisplayFromSpawner()

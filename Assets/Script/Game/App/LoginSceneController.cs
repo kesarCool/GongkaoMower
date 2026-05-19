@@ -32,9 +32,11 @@ public class LoginSceneController : MonoBehaviour
 
     private void OnStartGameClicked()
     {
+        PlayerProfileService.Instance.LoadOrCreate();
+
         if (string.IsNullOrWhiteSpace(homeSceneName))
         {
-            Debug.LogWarning("[LoginSceneController] homeSceneName 为空，无法切换场景。");
+            GameErrorPresenter.Show(GameErrorCodes.LoginSceneNameEmpty);
             return;
         }
 

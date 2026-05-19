@@ -46,7 +46,7 @@ public class HomeHubController : MonoBehaviour
 
         if (UIManager.Instance == null)
         {
-            Debug.LogWarning("[HomeHubController] UIManager.Instance 为空，请在 Home 场景配置 UIManager 并注册 LevelSelectPanel Prefab。");
+            GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing);
             return;
         }
 
@@ -62,7 +62,7 @@ public class HomeHubController : MonoBehaviour
 
         if (UIManager.Instance == null)
         {
-            Debug.LogWarning("[HomeHubController] UIManager.Instance 为空，无法打开词汇预览。");
+            GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing);
             return;
         }
 

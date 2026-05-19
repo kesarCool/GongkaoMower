@@ -47,7 +47,7 @@ public class LevelSelectSimpleScrollList : MonoBehaviour
 
         if (TableManager.Instance == null)
         {
-            Debug.LogWarning("[LevelSelectSimpleScrollList] TableManager.Instance 为空。");
+            GameErrorPresenter.Show(GameErrorCodes.TableManagerMissing);
             return;
         }
 

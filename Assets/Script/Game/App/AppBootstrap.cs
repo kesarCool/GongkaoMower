@@ -20,6 +20,8 @@ public class AppBootstrap : MonoBehaviour
 
         DontDestroyOnLoad(root.gameObject);
 
+        PlayerProfileService.Instance.LoadOrCreate();
+
         if (!string.IsNullOrWhiteSpace(loadSceneOnStart))
             SceneManager.LoadSceneAsync(loadSceneOnStart, LoadSceneMode.Single);
     }

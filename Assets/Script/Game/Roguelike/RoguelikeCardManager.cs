@@ -13,9 +13,6 @@ public class RoguelikeCardManager : MonoBehaviour
     [Tooltip("卡组（ScriptableObject，内含 SkillCatalog/解锁表/抽卡规则）")]
     public CardDeck cardDeck;
 
-    [Header("卡池：当前关卡（硬性解锁用）")]
-    [SerializeField] private int _currentLevel = 1001;
-
     [Header("场景引用（可自动查找）")]
     [SerializeField] private CardSelectionSystem cardSelectionSystem;
 
@@ -45,11 +42,8 @@ public class RoguelikeCardManager : MonoBehaviour
         EventBus.Unsubscribe<CardSelectionTriggeredEvent>(OnCardSelectionTriggered);
     }
 
-    public int CurrentLevel
-    {
-        get => _currentLevel;
-        set => _currentLevel = value;
-    }
+    /// <summary>与 <see cref="BattleLevelContext.LevelId"/> 一致（选关上下文）。</summary>
+    public int CurrentLevel => BattleLevelContext.LevelId;
 
     private void OnCardSelectionTriggered(CardSelectionTriggeredEvent e)
     {

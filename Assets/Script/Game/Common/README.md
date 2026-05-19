@@ -144,6 +144,7 @@ Common 内部建议（按需建立子文件夹）：
 - `DynamicJoystick`：`Input/UI/`（输入模块的 UI 控件）
 - `TouchLayer`：`UI/Layers/`（全屏触摸层属于 UI Layer）
 - `UIManager` / `UIPanelBase` / `UiConfirmDialog`：`UI/Framework/`（全局弹窗栈，**不放 Common**）
+- `BattleChineseFontRuntime` / `TMPChineseFontAutoApply`：`App/`（TMP 中文字体加载与 UI 兜底，见 **7.6**）
 - 大厅/选关/词汇预览等壳业务 Panel：`Shell/UI/`（与 `Roguelike/UI/` 对称：前者局外，后者局内）
 - `SpawnerWaves`：`Spawning/Systems/`
 - `EnemyBase/EnemyAI/EnemyRanged`：`Enemies/Components/`
@@ -188,6 +189,48 @@ Common 内部建议（按需建立子文件夹）：
 - 当前实现为 **Inspector 拖 Prefab 注册**，适合原型与首包可控的中型项目。
 - 若需 **微信小游戏压首包 / 远程热更**，可后续接入 **Addressables** 等异步加载，在框架侧扩展「按类型解析 Prefab」即可；**不建议**把大量弹窗长期堆在 `Resources/`。
 
+### 7.6 TextMeshPro 中文显示（`BattleChineseFontRuntime`）
+
+**核心结论**：能否显示中文，取决于 **`TMP_Text.font` 是否为含汉字的 SDF 字体**（工程默认 `Resources/Fonts/msyh SDF`），**不是**有没有挂 `TMPChineseFontAutoApply`。该组件只是在 `Start` 时做一次字体替换的**兜底**，不能代替框架或预制体上的正确配置。
+
+**相关代码（`App/` + `UI/Framework/`）**
+
+| 类型 | 路径 | 作用 |
+|------|------|------|
+| 运行时加载与替换 | `App/BattleChineseFontRuntime.cs` | `EnsureLoaded()` 加载 msyh SDF；`ApplyToTMP` / `ApplyToHierarchy` 批量替换子树字体 |
+| 单节点兜底 | `App/TMPChineseFontAutoApply.cs` | `Start` 时对同物体 `TMP_Text` 调用 `ApplyToTMP` |
+| 主栈弹窗 | `UI/Framework/UIManager.Open<T>()` | `OnOpen` 之后对 **整棵 Panel 子树** 执行 `ApplyToHierarchy` |
+| 确认框 | `UI/Framework/UIManager.ShowConfirm()` | 首次实例化与每次 `Show` 时同样对确认框子树 `ApplyToHierarchy`（**勿**用 `Open<UiConfirmDialog>()`） |
+
+**为何有的预制体不挂 `TMPChineseFontAutoApply` 也能显示中文？**
+
+1. **经 `UIManager.Open<T>()` 打开**：例如 `LevelSelectPanel`、`GameResultPanel`；打开时框架已批量换字体。预制体里即使用 TMP 默认 **Liberation Sans SDF**（guid `8f586378…`），运行时仍会被改成 msyh。
+2. **预制体 Inspector 已指定 msyh SDF**：不依赖运行时替换。
+3. **代码里显式 `ApplyToTMP`**：例如 `GameLayer` 动态创建 HUD、`BattleLoadingSceneController` 文案等。
+4. **挂了 `TMPChineseFontAutoApply`**：适用于未走 `UIManager.Open`、或 `Open` 之后才动态生成的 `TMP_Text`（见下）。
+
+**为何 `PopConfirmPanel` 等容易「不挂就不显示」？**
+
+- 确认框走 **`ShowConfirm`**，挂在 **Overlay**，**不进主栈**；若历史上未对确认框执行 `ApplyToHierarchy`，会一直沿用预制体上的 Liberation Sans，中文显示为 □ / 空白 / 乱码。
+- 挂 `TMPChineseFontAutoApply` 后 `Start` 会换字体，所以看起来「只有挂了才行」——根因是**缺一次字体应用**，不是组件本身有魔法。
+
+**推荐做法（按优先级）**
+
+1. **弹窗 / 重要 UI 预制体**：在 Inspector 把 **Font Asset** 直接设为 `msyh SDF`（`Assets/Resources/Fonts/msyh SDF`），减少对运行时替换的依赖。
+2. **经 `UIManager` 打开的 Panel**：依赖 `Open` / `ShowConfirm` 内的 `ApplyToHierarchy` 即可，**不必**每个 `TextMeshProUGUI` 都挂 `TMPChineseFontAutoApply`。
+3. **`TMPChineseFontAutoApply` 仅作兜底**：不经 `UIManager` 实例化的 UI、运行时 `new GameObject` + `TextMeshProUGUI`、或在 `Open`/`Show` **之后**才创建且父级当时不在已应用子树上的 TMP。
+4. **动态列表 Cell**：若在 `OnOpen` 里已生成且为 Panel 子物体，一般已被 `ApplyToHierarchy` 覆盖；若在打开后才异步生成，需在生成后对子树再调一次 `ApplyToHierarchy`，或给 Cell 挂 `TMPChineseFontAutoApply`。
+
+**局内文字怪**：`EnemyWordLabel` 走 `BattleChineseFontRuntime.TryApplyTo`，与 UI 的 `TextMeshProUGUI` 路径分开，勿混用。
+
+### 7.7 错误码提示（`ErrorCodeTable` + `GameErrorPresenter`）
+
+- 配表：`Share/table/xls/c错误码c.xls` → `ErrorCodeTable.bytes`；字段 `ErrorCode`（键）、`CodeText`（文案，可 `{0}`）、`CodeDisplay`（0 不显示 / 1 Toast / 2 对话框）。
+- 代码常量：`UI/Framework/GameErrorCodes.cs`；统一入口 **`GameErrorPresenter.Show(errorCode, args…)`**。
+- **Toast**：`UIManager.toastPanelPrefab`（挂 `UiToastPanel`），需单独做预制体并绑定 Home 场景 UIManager。
+- **对话框**：复用 `confirmDialogPrefab`（`ShowAlert` / `CodeDisplay=2`）。
+- 填表示例见 `Share/table/xls/错误码填表示例.md`。
+
 ---
 
 ## 8. 代码评审清单（提交前自检）
@@ -198,3 +241,5 @@ Common 内部建议（按需建立子文件夹）：
 - 是否避免了不必要的 `Update()`（可以用协程/事件就别每帧轮询）？
 - 是否避免在运行时频繁 `FindObjectOfType`（能缓存就缓存）？
 - **弹窗**：新模态是否继承 `UIPanelBase` 并通过 `UIManager` 打开？局外壳是否落在 **`Shell/UI/`**？是否误把业务逻辑写进 `UI/Framework/`？
+- **TMP 中文**：新 UI 预制体是否使用 **msyh SDF**，或确认会经 `UIManager.Open` / `ShowConfirm` 触发 `ApplyToHierarchy`？动态创建的 TMP 是否补了字体应用？
+- **错误码**：新增玩家可见失败是否已在 `c错误码c.xls` 加行，且 `GameErrorCodes` 有对应常量？

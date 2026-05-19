@@ -26,33 +26,37 @@ public enum eCrypt : int
 
   public int ID { get { int o = __p.__offset(4); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int chapterId { get { int o = __p.__offset(6); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int levelId { get { int o = __p.__offset(8); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public string mapName { get { int o = __p.__offset(10); return o != 0 ? __p.__string(o + __p.bb_pos) : FlatBufferConstants.DefaultString; } }
-  public ArraySegment<byte>? GetMapNameBytes() { return __p.__vector_as_arraysegment(10); }
-  public string mapPath { get { int o = __p.__offset(12); return o != 0 ? __p.__string(o + __p.bb_pos) : FlatBufferConstants.DefaultString; } }
-  public ArraySegment<byte>? GetMapPathBytes() { return __p.__vector_as_arraysegment(12); }
+  public int unlockChapterId { get { int o = __p.__offset(8); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public int levelId { get { int o = __p.__offset(10); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public string mapName { get { int o = __p.__offset(12); return o != 0 ? __p.__string(o + __p.bb_pos) : FlatBufferConstants.DefaultString; } }
+  public ArraySegment<byte>? GetMapNameBytes() { return __p.__vector_as_arraysegment(12); }
+  public string mapPath { get { int o = __p.__offset(14); return o != 0 ? __p.__string(o + __p.bb_pos) : FlatBufferConstants.DefaultString; } }
+  public ArraySegment<byte>? GetMapPathBytes() { return __p.__vector_as_arraysegment(14); }
 
   public static Offset<ChapterLevel> CreateChapterLevel(FlatBufferBuilder builder,
       int ID = 0,
       int chapterId = 0,
+      int unlockChapterId = 0,
       int levelId = 0,
       StringOffset mapNameOffset = default(StringOffset),
       StringOffset mapPathOffset = default(StringOffset)) {
-    builder.StartObject(5);
+    builder.StartObject(6);
     ChapterLevel.AddMapPath(builder, mapPathOffset);
     ChapterLevel.AddMapName(builder, mapNameOffset);
     ChapterLevel.AddLevelId(builder, levelId);
+    ChapterLevel.AddUnlockChapterId(builder, unlockChapterId);
     ChapterLevel.AddChapterId(builder, chapterId);
     ChapterLevel.AddID(builder, ID);
     return ChapterLevel.EndChapterLevel(builder);
   }
 
-  public static void StartChapterLevel(FlatBufferBuilder builder) { builder.StartObject(5); }
+  public static void StartChapterLevel(FlatBufferBuilder builder) { builder.StartObject(6); }
   public static void AddID(FlatBufferBuilder builder, int ID) { builder.AddInt(0, ID, 0); }
   public static void AddChapterId(FlatBufferBuilder builder, int chapterId) { builder.AddInt(1, chapterId, 0); }
-  public static void AddLevelId(FlatBufferBuilder builder, int levelId) { builder.AddInt(2, levelId, 0); }
-  public static void AddMapName(FlatBufferBuilder builder, StringOffset mapNameOffset) { builder.AddOffset(3, mapNameOffset.Value, 0); }
-  public static void AddMapPath(FlatBufferBuilder builder, StringOffset mapPathOffset) { builder.AddOffset(4, mapPathOffset.Value, 0); }
+  public static void AddUnlockChapterId(FlatBufferBuilder builder, int unlockChapterId) { builder.AddInt(2, unlockChapterId, 0); }
+  public static void AddLevelId(FlatBufferBuilder builder, int levelId) { builder.AddInt(3, levelId, 0); }
+  public static void AddMapName(FlatBufferBuilder builder, StringOffset mapNameOffset) { builder.AddOffset(4, mapNameOffset.Value, 0); }
+  public static void AddMapPath(FlatBufferBuilder builder, StringOffset mapPathOffset) { builder.AddOffset(5, mapPathOffset.Value, 0); }
   public static Offset<ChapterLevel> EndChapterLevel(FlatBufferBuilder builder) {
     int o = builder.EndObject();
     return new Offset<ChapterLevel>(o);

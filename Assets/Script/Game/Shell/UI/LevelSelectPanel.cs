@@ -11,10 +11,6 @@ public class LevelSelectPanel : UIPanelBase
     [Tooltip("点击后关闭本层弹窗（委托 UIManager.CloseTop）。")]
     [SerializeField] private Button closeButton;
 
-    [Header("进局")]
-    [Tooltip("确认已选关卡后进入 BattleLoading（须已在 Build Settings 中加入 BattleLoading、Game）。")]
-    [SerializeField] private Button enterBattleButton;
-
     public override void OnOpen(object payload)
     {
         var simple = GetComponentInChildren<LevelSelectSimpleScrollList>(true);
@@ -33,21 +29,12 @@ public class LevelSelectPanel : UIPanelBase
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(OnCloseClicked);
-        if (enterBattleButton != null)
-            enterBattleButton.onClick.AddListener(OnEnterBattleClicked);
     }
 
     private void OnDisable()
     {
         if (closeButton != null)
             closeButton.onClick.RemoveListener(OnCloseClicked);
-        if (enterBattleButton != null)
-            enterBattleButton.onClick.RemoveListener(OnEnterBattleClicked);
-    }
-
-    private void OnEnterBattleClicked()
-    {
-        BattleFlowLauncher.TryStartBattleLoading();
     }
 
     private void OnCloseClicked()

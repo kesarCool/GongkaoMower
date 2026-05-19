@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 关卡行 Cell：展示「序号 + 关卡名/ID」（序号见 <see cref="LevelSelectFlatRow.levelOrdinalInList"/>），点击写入 <see cref="SelectedLevelContext"/>。
+/// 关卡行 Cell：展示「序号 + 关卡名/ID」；点击已解锁关卡弹出二次确认，确认后进入战斗。
 /// </summary>
 [DisallowMultipleComponent]
 public class LevelSelectLevelRowCell : MonoBehaviour
@@ -39,13 +39,31 @@ public class LevelSelectLevelRowCell : MonoBehaviour
         if (row.Kind != LevelSelectRowKind.Level)
             return;
 
+        PlayerProfileService.Instance.LoadOrCreate();
+        bool unlocked = PlayerProfileService.Instance.IsLevelUnlocked(row.levelId);
+
+        if (clickButton != null)
+            clickButton.interactable = unlocked;
+
         if (titleText != null)
         {
             var prefix = row.levelOrdinalInList > 0 ? $"{row.levelOrdinalInList}. " : string.Empty;
+            string name;
             if (!string.IsNullOrEmpty(row.mapName))
-                titleText.text = prefix + row.mapName;
+                name = prefix + row.mapName;
             else
-                titleText.text = $"{prefix}关卡 {row.levelId}";
+                name = $"{prefix}关卡 {row.levelId}";
+
+            if (!unlocked)
+                name += "（未解锁）";
+            else if (PlayerProfileService.Instance.TryGetProgress(row.levelId, out var prog) && prog.cleared)
+            {
+                string starStr = prog.stars > 0 ? new string('★', prog.stars) : string.Empty;
+                if (!string.IsNullOrEmpty(starStr))
+                    name += " " + starStr;
+            }
+
+            titleText.text = name;
         }
     }
 
@@ -53,6 +71,41 @@ public class LevelSelectLevelRowCell : MonoBehaviour
     {
         if (_row.Kind != LevelSelectRowKind.Level)
             return;
+
+        PlayerProfileService.Instance.LoadOrCreate();
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(_row.levelId))
+            return;
+
+        string message = BuildConfirmMessage();
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowConfirm("进入关卡", message, OnEnterConfirmResult, UiOpenOptions.ModalDefault);
+            return;
+        }
+
         SelectedLevelContext.Set(_row.chapterId, _row.levelId);
+        BattleFlowLauncher.TryStartBattleLoading();
+    }
+
+    private void OnEnterConfirmResult(bool confirmed)
+    {
+        if (!confirmed)
+            return;
+
+        SelectedLevelContext.Set(_row.chapterId, _row.levelId);
+        BattleFlowLauncher.TryStartBattleLoading();
+    }
+
+    private string BuildConfirmMessage()
+    {
+        int id = _row.levelId;
+        int chapter = id / 100;
+        int stage = id % 100;
+        string name = !string.IsNullOrEmpty(_row.mapName)
+            ? _row.mapName
+            : chapter > 0 && stage > 0
+                ? $"关卡{chapter}-{stage}"
+                : $"关卡 {id}";
+        return $"是否进入「{name}」？";
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using ProtoTable;
-
+using UnityEngine.SceneManagement;
 /// <summary>
 /// SpawnerWaves
 /// - 常规刷怪：按 interval 周期性生成（可关）
@@ -119,9 +119,6 @@ public class SpawnerWaves : MonoBehaviour
     [Tooltip("为 true 时优先从 TableManager 的 LevelWave 表按关卡取波次；无数据则回退到上方 waves 数组。")]
     public bool useLevelWaveTable = false;
 
-    [Tooltip("关卡 ID，与 LevelWave.levelId 一致。0 = 自动：RoguelikeCardManager.CurrentLevel，再尝试 CardSelectionSystem.currentLevel，最后为 1。")]
-    public int levelWaveLevelId = 0;
-
     [Header("文字怪整波底色")]
     [Tooltip("每波开始时刷新一次「整波统一」面色；EnemyWordLabel 上 preferWaveSharedTint 为真时才会用")]
     [SerializeField] private WordMonsterWaveTintMode wordMonsterWaveTintMode = WordMonsterWaveTintMode.RandomPerWave;
@@ -140,12 +137,22 @@ public class SpawnerWaves : MonoBehaviour
     {
         if (useLevelWaveTable)
         {
-            var tableWaves = BuildTableWavesForLevel(ResolveLevelWaveLevelId());
-            if (tableWaves != null && tableWaves.Count > 0)
-                return tableWaves.Count;
+            int levelId = ResolveLevelWaveLevelId();
+            int n = LevelWaveCatalog.CountWavesForLevel(levelId);
+            if (n > 0)
+                return n;
         }
 
         return waves != null ? waves.Length : 0;
+    }
+
+    /// <summary>表驱动时本关有 LevelWave 行，或未开表时 Inspector waves 非空。</summary>
+    public bool HasValidLevelWaveConfiguration()
+    {
+        if (useLevelWaveTable)
+            return LevelWaveCatalog.HasWavesForLevel(ResolveLevelWaveLevelId());
+
+        return waves != null && waves.Length > 0;
     }
 
     private static void PublishWaveChanged(SpawnerWaves spawner, int currentWave, int totalWaves)
@@ -172,6 +179,8 @@ public class SpawnerWaves : MonoBehaviour
         public int lineSpawn;
         public int attack;
         public int maxHp;
+        public bool isBoss;
+        public int quantityBoss;
 
         public static TableWaveRuntime From(LevelWave lw)
         {
@@ -186,6 +195,8 @@ public class SpawnerWaves : MonoBehaviour
                 lineSpawn = lw.lineSpawn,
                 attack = lw.attack,
                 maxHp = lw.maxHp,
+                isBoss = lw.isBoss,
+                quantityBoss = lw.quantityBoss,
             };
         }
     }
@@ -278,9 +289,18 @@ public class SpawnerWaves : MonoBehaviour
 
         if (!useTable && (waves == null || waves.Length == 0))
         {
-            Debug.LogWarning("SpawnerWaves: 未启用表数据或表为空，且 waves 数组为空。");
-            HasReleasedWaveCompletionSignal = true;
-            EventBus.Publish(new BattleWavesCompletedEvent { spawner = this });
+            if (useLevelWaveTable){
+
+                GameErrorPresenter.Show(GameErrorCodes.LevelWaveConfigMissing, () =>
+                {
+                    SceneManager.LoadScene("Home");
+                },resolvedLevelId);
+                Debug.LogWarning($"[SpawnerWaves] 关卡 {resolvedLevelId} 缺少 LevelWave 波次配置，不触发波次完成信号。");
+            }
+            else{
+                GameErrorPresenter.Show(GameErrorCodes.LevelWaveTableMissing);
+                Debug.LogWarning("SpawnerWaves: 未启用表数据且 waves 数组为空。");
+            }
             _waveRoutine = null;
             yield break;
         }
@@ -301,7 +321,8 @@ public class SpawnerWaves : MonoBehaviour
 
                 PublishWaveChanged(this, w + 1, total);
                 WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, tw.wave);
-                yield return TableWaveSpawnRoutine(tw, w + 1, tableWaves.Count);
+                bool isLastWave = w == total - 1;
+                yield return TableWaveSpawnRoutine(tw, w + 1, tableWaves.Count, isLastWave);
 
                 if (w < tableWaves.Count - 1)
                 {
@@ -374,8 +395,12 @@ public class SpawnerWaves : MonoBehaviour
     /// <summary>
     /// 模型 II：先 timeStart，再在整个 waveTimeContinue 内按 interval 刷，最多 totalMonster；时间到即停（1.A）。
     /// </summary>
-    private IEnumerator TableWaveSpawnRoutine(TableWaveRuntime tw, int displayIndex, int displayTotal)
+    private IEnumerator TableWaveSpawnRoutine(TableWaveRuntime tw, int displayIndex, int displayTotal, bool isLastWave)
     {
+        int bossMarkBudget = 0;
+        if (isLastWave && tw.isBoss)
+            bossMarkBudget = tw.quantityBoss > 0 ? tw.quantityBoss : 1;
+
         int pre = Mathf.Max(0, tw.timeStart);
         if (pre > 0)
         {
@@ -414,7 +439,13 @@ public class SpawnerWaves : MonoBehaviour
                 }
             }
 
-            SpawnOne(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp);
+            bool markBoss = bossMarkBudget > 0;
+            if (markBoss)
+                bossMarkBudget--;
+
+            GameObject spawnedGo = SpawnOne(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp);
+            if (markBoss && spawnedGo != null)
+                TryMarkLastWaveBoss(spawnedGo);
             spawned++;
 
             if (spawned >= cap)
@@ -477,25 +508,24 @@ public class SpawnerWaves : MonoBehaviour
 
     private int ResolveLevelWaveLevelId()
     {
-        if (levelWaveLevelId > 0)
-            return levelWaveLevelId;
-
-        if (RoguelikeCardManager.Instance != null)
-            return RoguelikeCardManager.Instance.CurrentLevel;
-
-        CardSelectionSystem css = FindObjectOfType<CardSelectionSystem>();
-        if (css != null)
-            return css.currentLevel;
-
-        return 1;
+        BattleLevelContext.LogMissingSelectionOnce(nameof(SpawnerWaves));
+        return BattleLevelContext.LevelId;
     }
 
-    private void SpawnOne(int enemyId)
+    private static void TryMarkLastWaveBoss(GameObject enemy)
     {
-        SpawnOne(enemyId, 0, 0, 0);
+        if (enemy == null) return;
+        if (enemy.GetComponent<LastWaveBossMarker>() == null)
+            enemy.AddComponent<LastWaveBossMarker>();
+        BattleVictoryBossTracker.RegisterBossSpawned();
     }
 
-    private void SpawnOne(int enemyId, int lineSpawn, int attackOverride, int maxHpOverride)
+    private GameObject SpawnOne(int enemyId)
+    {
+        return SpawnOne(enemyId, 0, 0, 0);
+    }
+
+    private GameObject SpawnOne(int enemyId, int lineSpawn, int attackOverride, int maxHpOverride)
     {
         if (SpawnLimiter.Instance != null)
         {
@@ -503,23 +533,23 @@ public class SpawnerWaves : MonoBehaviour
             {
                 if (debugLogs && cfg != null && !cfg.recycleOldest)
                     Debug.Log($"[SpawnerWaves] 达到怪物上限，暂不生成 enemyId={enemyId}");
-                return;
+                return null;
             }
         }
 
         if (target == null) TryFindTarget();
-        if (target == null) return;
+        if (target == null) return null;
 
         Vector2 center = target.position;
         int ls = NormalizeLineSpawn(lineSpawn);
         if (!TryGetSpawnPos(ls, center, out Vector2 pos))
-            return;
+            return null;
 
         GameObject prefabToSpawn = ResolvePrefab(enemyId, out EnemyDefinition def);
         if (prefabToSpawn == null)
         {
             if (debugLogs) Debug.LogWarning($"[SpawnerWaves] 找不到 enemyId={enemyId} 的配置或prefab。");
-            return;
+            return null;
         }
 
         GameObject enemy = GameObjectPool.Get(prefabToSpawn, pos, Quaternion.identity);
@@ -532,7 +562,7 @@ public class SpawnerWaves : MonoBehaviour
             if (attackOverride > 0 || maxHpOverride > 0)
                 eb.ApplyWaveStatOverrides(attackOverride, maxHpOverride);
             MonsterWordSpawnBinding.TryApply(enemy, enemyId);
-            return;
+            return enemy;
         }
 
         if (applyMoveSpeed)
@@ -560,6 +590,7 @@ public class SpawnerWaves : MonoBehaviour
         }
 
         MonsterWordSpawnBinding.TryApply(enemy, enemyId);
+        return enemy;
     }
 
     private GameObject ResolvePrefab(int enemyId, out EnemyDefinition def)
@@ -699,5 +730,6 @@ public class SpawnerWaves : MonoBehaviour
         GameObject go = GameObject.FindGameObjectWithTag(targetTag);
         if (go != null) target = go.transform;
     }
+
 }
 
