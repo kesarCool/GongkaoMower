@@ -38,7 +38,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -65}
+  m_AnchoredPosition: {x: 0, y: -180}
   m_SizeDelta: {x: 1000, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2236578660081287842
@@ -128,7 +128,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 537, y: -161.99988}
+  m_AnchoredPosition: {x: 547, y: -294}
   m_SizeDelta: {x: 200, y: 42.4969}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3848059024935884943
@@ -713,7 +713,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 137, y: -162}
+  m_AnchoredPosition: {x: 147, y: -294.00012}
   m_SizeDelta: {x: 200, y: 42.4969}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1397795080894222211
@@ -995,7 +995,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 337, y: -162}
+  m_AnchoredPosition: {x: 347, y: -294.00012}
   m_SizeDelta: {x: 200, y: 42.4969}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9036049177331913053
@@ -1130,7 +1130,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 164, y: -162}
+  m_AnchoredPosition: {x: 174, y: -294.00012}
   m_SizeDelta: {x: 200, y: 42.4969}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9036049177459272177
@@ -1370,7 +1370,7 @@ MonoBehaviour:
   enemyHpRange: {x: 3, y: 10}
   waves: []
   waveInterval: 10
-  autoTriggerWavesOnStart: 0
+  autoTriggerWavesOnStart: 1
   autoTriggerDelay: 2
   useRealtimeForWaves: 0
   pauseNormalDuringWaves: 0
@@ -1458,7 +1458,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 960, y: -162}
+  m_AnchoredPosition: {x: 970, y: -294.00012}
   m_SizeDelta: {x: 160, y: 42.4969}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9036049178204313969

@@ -119,25 +119,10 @@ public class PlayerHitFeedback : MonoBehaviour
                 return d.normalized;
         }
 
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        float bestSq = float.MaxValue;
-        Vector2 bestDir = Vector2.right;
         Vector2 self = transform.position;
-
-        for (int i = 0; i < enemies.Length; i++)
-        {
-            if (enemies[i] == null) continue;
-            Vector2 d = self - (Vector2)enemies[i].transform.position;
-            float sq = d.sqrMagnitude;
-            if (sq < bestSq && sq > 0.0001f)
-            {
-                bestSq = sq;
-                bestDir = d.normalized;
-            }
-        }
-
-        if (bestSq < float.MaxValue)
-            return bestDir;
+        GameObject nearest = CombatTargetRegistry.FindNearest(enemyTag, self);
+        if (nearest != null)
+            return ((Vector2)self - (Vector2)nearest.transform.position).normalized;
 
         Vector2 rnd = Random.insideUnitCircle;
         return rnd.sqrMagnitude > 0.0001f ? rnd.normalized : Vector2.right;

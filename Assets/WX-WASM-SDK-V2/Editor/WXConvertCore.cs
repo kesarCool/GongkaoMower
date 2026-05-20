@@ -741,6 +741,66 @@ namespace WeChatWASM
             return output.ToString();
         }
 
+        /// <summary>
+        /// 修复 _WXStorage* stub 函数：原框架中存储类 bridge 为 abort() 占位，
+        /// 改为直接调用 window.WXWASMSDK.WXStorage* 实现，与 TCPSocket/Touch 等函数模式一致。
+        /// </summary>
+        private static void FixWXStorageStubs(ref string text)
+        {
+            // 按 stub 源码精确匹配替换，避免误伤
+            var replacements = new (string oldStub, string newImpl)[]
+            {
+                (
+                    "function _WXStorageDeleteAllSync() {\n err(\"missing function: WXStorageDeleteAllSync\");\n abort(-1);\n}",
+                    "function _WXStorageDeleteAllSync() {\n window.WXWASMSDK.WXStorageDeleteAllSync();\n}"
+                ),
+                (
+                    "function _WXStorageDeleteKeySync() {\n err(\"missing function: WXStorageDeleteKeySync\");\n abort(-1);\n}",
+                    "function _WXStorageDeleteKeySync(keyPtr) {\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXStorageDeleteKeySync(key);\n}"
+                ),
+                (
+                    "function _WXStorageGetFloatSync() {\n err(\"missing function: WXStorageGetFloatSync\");\n abort(-1);\n}",
+                    "function _WXStorageGetFloatSync(keyPtr, defaultValue) {\n var key = UTF8ToString(keyPtr);\n return window.WXWASMSDK.WXStorageGetFloatSync(key, String(defaultValue));\n}"
+                ),
+                (
+                    "function _WXStorageGetIntSync() {\n err(\"missing function: WXStorageGetIntSync\");\n abort(-1);\n}",
+                    "function _WXStorageGetIntSync(keyPtr, defaultValue) {\n var key = UTF8ToString(keyPtr);\n return window.WXWASMSDK.WXStorageGetIntSync(key, String(defaultValue));\n}"
+                ),
+                (
+                    "function _WXStorageGetStringSync() {\n err(\"missing function: WXStorageGetStringSync\");\n abort(-1);\n}",
+                    "function _WXStorageGetStringSync(keyPtr, defaultValPtr) {\n var key = UTF8ToString(keyPtr);\n var defaultValue = UTF8ToString(defaultValPtr);\n var res = window.WXWASMSDK.WXStorageGetStringSync(key, defaultValue);\n var bufferSize = lengthBytesUTF8(res || \"\") + 1;\n var buffer = _malloc(bufferSize);\n stringToUTF8(res, buffer, bufferSize);\n return buffer;\n}"
+                ),
+                (
+                    "function _WXStorageHasKeySync() {\n err(\"missing function: WXStorageHasKeySync\");\n abort(-1);\n}",
+                    "function _WXStorageHasKeySync(keyPtr) {\n var key = UTF8ToString(keyPtr);\n return window.WXWASMSDK.WXStorageHasKeySync(key) ? 1 : 0;\n}"
+                ),
+                (
+                    "function _WXStorageSetFloatSync() {\n err(\"missing function: WXStorageSetFloatSync\");\n abort(-1);\n}",
+                    "function _WXStorageSetFloatSync(keyPtr, value) {\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXStorageSetFloatSync(key, value);\n}"
+                ),
+                (
+                    "function _WXStorageSetIntSync() {\n err(\"missing function: WXStorageSetIntSync\");\n abort(-1);\n}",
+                    "function _WXStorageSetIntSync(keyPtr, value) {\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXStorageSetIntSync(key, value);\n}"
+                ),
+                (
+                    "function _WXStorageSetStringSync() {\n err(\"missing function: WXStorageSetStringSync\");\n abort(-1);\n}",
+                    "function _WXStorageSetStringSync(keyPtr, valuePtr) {\n var key = UTF8ToString(keyPtr);\n var value = UTF8ToString(valuePtr);\n window.WXWASMSDK.WXStorageSetStringSync(key, value);\n}"
+                ),
+            };
+
+            foreach (var (oldStub, newImpl) in replacements)
+            {
+                if (text.Contains(oldStub))
+                {
+                    text = text.Replace(oldStub, newImpl);
+                }
+                else
+                {
+                    Debug.LogWarning($"[WXConvertCore] FixWXStorageStubs: stub not found, skip. First 40 chars: {oldStub.Substring(0, Math.Min(40, oldStub.Length))}...");
+                }
+            }
+        }
+
         private static bool CheckBuildTemplate()
         {
             string[] res = BuildTemplate.CheckCustomCoverBaseConflict(
@@ -929,6 +989,8 @@ namespace WeChatWASM
 
                 text = "GameGlobal.unityNamespace.UnityModule = " + text;
             }
+
+            FixWXStorageStubs(ref text);
 
             if (!Directory.Exists(Path.Combine(config.ProjectConf.DST, miniGameDir)))
             {

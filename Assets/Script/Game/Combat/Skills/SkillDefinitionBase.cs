@@ -57,5 +57,19 @@ public abstract class SkillDefinitionBase : ScriptableObject
 
     /// <summary>无手写文案时，根据 per-level 数值数组生成简短说明（子类实现）。</summary>
     protected abstract string GenerateLevelDescription(int level);
+
+    /// <summary>由 SkillDef + Inspector 回退创建运行时技能，并套用 Lv.1 数值。</summary>
+    public ISkill CreateRuntimeSkill(SkillRuntimeBindings bindings)
+    {
+        ISkill skill = CreateRuntimeSkillInternal(bindings);
+        if (skill != null)
+            ApplyStatsToSkill(skill, ClampLevel(skill.Level));
+        return skill;
+    }
+
+    protected abstract ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings);
+
+    /// <summary>按等级把 Def 数值写入已有技能实例（升级 / 创建后调用）。</summary>
+    public abstract void ApplyStatsToSkill(ISkill skill, int level);
 }
 

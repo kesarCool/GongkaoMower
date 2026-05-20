@@ -11,6 +11,8 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
     public float[] rotateSpeedByLevel = { 180f, 200f, 220f, 240f, 260f };
 
     [Header("Visual")]
+    [Tooltip("环绕刀片战斗体 Prefab（含碰撞、SkillOrbBladeHit、OrbitingBladeVisual）；为空则回退代码拼 Sprite")]
+    public GameObject bladePrefab;
     public Sprite bladeSprite;
     public Color bladeTint = Color.white;
     public int sortingOrder = 50;
@@ -25,6 +27,47 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
     protected override string GenerateLevelDescription(int level)
     {
         return $"飞刀 ×{BladeCountAt(level)}，每跳伤害 {DamagePerTickAt(level):0.#}，间隔 {TickIntervalAt(level):0.##}s";
+    }
+
+    protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
+    {
+        if (bindings == null) return null;
+
+        GameObject prefab = bindings.bladePrefab ?? bladePrefab;
+        Sprite sprite = bindings.bladeSprite ?? bladeSprite;
+        Color tint = bindings.bladeSpriteTint;
+        if (tint == default) tint = bladeTint;
+        int order = bindings.bladeSpriteSortingOrder;
+        if (order == 50) order = sortingOrder;
+        float scale = bindings.bladeVisualScale;
+        if (Mathf.Approximately(scale, 1f)) scale = visualScale;
+
+        int lv = 1;
+        return new SkillOrbitingBlades(
+            prefab,
+            sprite,
+            BladeCountAt(lv),
+            OrbitRadiusAt(lv),
+            RotateSpeedAt(lv),
+            DamagePerTickAt(lv),
+            TickIntervalAt(lv),
+            order,
+            tint,
+            scale);
+    }
+
+    public override void ApplyStatsToSkill(ISkill skill, int level)
+    {
+        var s = skill as SkillOrbitingBlades;
+        if (s == null) return;
+
+        level = ClampLevel(level);
+        s.ApplyRuntimeStats(
+            Mathf.Max(1, BladeCountAt(level)),
+            OrbitRadiusAt(level),
+            RotateSpeedAt(level),
+            DamagePerTickAt(level),
+            TickIntervalAt(level));
     }
 }
 

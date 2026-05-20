@@ -159,7 +159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 6
-  disableLegacyAutoShoot: 0
+  disableLegacyAutoShoot: 1
   attackSpeed: 0.5
   bulletPrefab: {fileID: 6234684193253506922, guid: 1601bf4980ce6814dad60eacd60afb69, type: 3}
   bulletSpeed: 10
@@ -200,28 +200,16 @@ MonoBehaviour:
   startingSkill: 1
   disableLegacyAutoShoot: 1
   enemyTag: monster
-  bulletPrefab: {fileID: 0}
-  bulletSpeed: 10
-  autoProjectileInterval: 0.1
-  beamLength: 8
-  beamDamage: 100
-  beamInterval: 0.8
-  beamHitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
   beamVisualWidth: 0.08
-  beamVisualColor: {r: 1, g: 0, b: 0.38871145, a: 0.95}
   beamSortingOrder: 200
   beamVisualDuration: 0.08
-  bladeSprite: {fileID: 21300000, guid: 6c923e9c81a2af1428fe02ebd8041ecc, type: 3}
+  bladePrefab: {fileID: 8012345678901234001, guid: b1c2d3e4f5a6789012345678c9def012, type: 3}
+  bladeSprite: {fileID: 21300000, guid: 1e2cf2470cccd4441a1ead8b8e80034e, type: 3}
   bladeSpriteSortingOrder: 50
   bladeSpriteTint: {r: 1, g: 1, b: 1, a: 1}
   bladeVisualScale: 1
-  bladeCount: 3
-  bladeOrbitRadius: 1.2
-  bladeRotateSpeed: 180
-  bladeDamagePerTick: 50
-  bladeTickInterval: 1
+  grenadePrefab: {fileID: 9012345678901235001, guid: a7b77da3f4e2c1b09876543210fedcba, type: 3}
+  grenadeExplosionFxPrefab: {fileID: 0}
 --- !u!50 &-9110866368867753895
 Rigidbody2D:
   serializedVersion: 4

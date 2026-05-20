@@ -1,6 +1,4 @@
 using System.Collections;
-using System.IO;
-using System.Text;
 using TMPro;
 using UnityEngine;
 
@@ -326,12 +324,6 @@ public class EnemyWordLabel : MonoBehaviour
 
         ApplyVisualVariation();
         CaptureStrikeBaselines();
-
-        #if UNITY_EDITOR
-        #region agent log
-        AgentDbgTmpFontCoverage(transform, worldText, uiText, s);
-        #endregion
-        #endif
     }
 
     /// <summary>供死亡碎字：解析世界空间 TMP；无字或仅 UI 字则 false。</summary>
@@ -341,90 +333,6 @@ public class EnemyWordLabel : MonoBehaviour
         tmp = worldText;
         return tmp != null && !string.IsNullOrEmpty(tmp.text);
     }
-
-    #region agent log
-    private const string AgentDbgSession = "a7b77d";
-
-    private static void AgentDbgTmpFontCoverage(Transform host, TextMeshPro world, TextMeshProUGUI ui, string s)
-    {
-        try
-        {
-            var sb = new StringBuilder(256);
-            void One(TMP_Text tmp, string slot)
-            {
-                if (tmp == null || tmp.font == null)
-                {
-                    sb.Append(",\"").Append(slot).Append("\":null");
-                    return;
-                }
-
-                TMP_FontAsset fa = tmp.font;
-                uint[] missing;
-                bool ok = fa.HasCharacters(s, out missing, true, false);
-                int missLen = missing != null ? missing.Length : 0;
-                sb.Append(",\"").Append(slot).Append("\":{");
-                sb.Append("\"font\":\"").Append(EscapeJson(fa.name)).Append("\"");
-                sb.Append(",\"atlasMode\":").Append((int)fa.atlasPopulationMode);
-                sb.Append(",\"multiAtlas\":").Append(fa.isMultiAtlasTexturesEnabled ? "true" : "false");
-                sb.Append(",\"atlasTexCount\":").Append(fa.atlasTextureCount);
-                sb.Append(",\"fallbacksOnAsset\":").Append(fa.fallbackFontAssetTable != null ? fa.fallbackFontAssetTable.Count : 0);
-                sb.Append(",\"globalFallbacks\":").Append(TMP_Settings.fallbackFontAssets != null ? TMP_Settings.fallbackFontAssets.Count : 0);
-                sb.Append(",\"hasAll\":").Append(ok ? "true" : "false");
-                sb.Append(",\"missingCount\":").Append(missLen);
-                if (missLen > 0 && missing != null && missLen <= 8)
-                {
-                    sb.Append(",\"missingSample\":\"");
-                    for (int i = 0; i < missLen; i++)
-                    {
-                        if (i > 0) sb.Append(',');
-                        sb.Append(missing[i].ToString("X"));
-                    }
-                    sb.Append('"');
-                }
-                sb.Append('}');
-            }
-
-            var ts = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            sb.Append("{\"sessionId\":\"").Append(AgentDbgSession).Append('"');
-            sb.Append(",\"hypothesisId\":\"H1-H3\"");
-            sb.Append(",\"location\":\"EnemyWordLabel.SetWord\"");
-            sb.Append(",\"message\":\"TMP font coverage after SetWord\"");
-            sb.Append(",\"timestamp\":").Append(ts);
-            sb.Append(",\"data\":{\"path\":\"").Append(EscapeJson(BuildPathForTransform(host))).Append('"');
-            sb.Append(",\"textLen\":").Append(s != null ? s.Length : 0);
-            One(world, "world");
-            One(ui, "ui");
-            sb.Append("}}");
-
-            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "debug-a7b77d.log"));
-            File.AppendAllText(path, sb.ToString() + "\n");
-        }
-        catch
-        {
-            /* ignore debug log failures */
-        }
-    }
-
-    private static string EscapeJson(string v)
-    {
-        if (string.IsNullOrEmpty(v)) return "";
-        return v.Replace("\\", "\\\\").Replace("\"", "\\\"");
-    }
-
-    private static string BuildPathForTransform(Transform t)
-    {
-        if (t == null) return "";
-        var stack = new System.Collections.Generic.List<string>();
-        int guard = 0;
-        while (t != null && guard++ < 24)
-        {
-            stack.Add(t.name);
-            t = t.parent;
-        }
-        stack.Reverse();
-        return string.Join("/", stack);
-    }
-    #endregion
 
     private void ApplyVisualVariation()
     {

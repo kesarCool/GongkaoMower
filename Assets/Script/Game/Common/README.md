@@ -30,6 +30,7 @@ Common 内部建议（按需建立子文件夹）：
 - `Common/Utils/`：纯工具方法（Math、String、集合扩展等）
 - `Common/Diagnostics/`：调试开关、日志工具、性能采样（可选）
 - `Common/Pooling/`：对象池（如 `GameObjectPool`、借出登记与 `ClearAllPools` 约定，见 **5.2**）
+- `Common/Targeting/`：索敌/目标注册表（如 `CombatTargetRegistry`，见 **5.3**）
 
 ---
 
@@ -137,6 +138,55 @@ Common 内部建议（按需建立子文件夹）：
 
 **约定**：局内借出对象须走 **`Release`** 回池或依赖 **`ClearAllPools`**（如结算、离局场景）；不要 **`Get` 后去掉 `PooledObject`** 或长期占用不归还，否则清池可能漏网或逻辑不一致。
 
+### 5.3 索敌注册表 `CombatTargetRegistry`（禁止技能内 `FindGameObjectsWithTag`）
+
+`Common/Targeting/CombatTargetRegistry.cs` 按 **Tag** 维护当前活跃、可被索敌/统计的 `Transform` 列表，供技能、战斗结算等模块查询，**替代** `GameObject.FindGameObjectsWithTag` 的全场景扫描（避免 GC 与重复遍历）。
+
+**注册约定**
+
+- 带 **`EnemyBase`** 的怪物在 **`OnEnable`** 时 `Register`，**`OnDisable`** 时 `Unregister`（池化借出/归还、死亡 Disable 会自动进出表）。
+- 新怪物 Prefab 须挂 `EnemyBase` 且 Tag 正确（如 `monster`），否则不会进入注册表。
+- 离局清表与 `GameObjectPool.ClearAllPools` 对齐：离开局内场景（`BattleSceneNameForPoolClear`，默认 `Game`）时 **`ClearAll`**。
+
+**查询 API（常用）**
+
+| 方法 | 用途 |
+|------|------|
+| `FindNearest(tag, from, maxRange)` | 范围内最近敌人（自动剔除已销毁/未激活） |
+| `CountInRange(tag, from, maxRange)` | 范围内活跃敌数量 |
+| `CountActive(tag)` | 该 Tag 当前注册总数（如胜利判定清怪） |
+
+**调用方示例**
+
+- 技能：`SkillBase.FindNearestEnemy` / `CountActiveEnemiesInRange`（内部走注册表；`SkillAutoProjectile`、`SkillThrowGrenade`、`SkillLineBeam2D` 等沿用即可）
+- 战斗：`BattleOutcomeCoordinator.CountMonstersAlive`
+- Legacy：`PlayerController` 自动射击索敌
+
+**禁止 / 注意**
+
+- **禁止**在技能、战斗逻辑里对敌人使用 **`FindGameObjectsWithTag`** / **`FindGameObjectWithTag`** 做索敌或计数（找**玩家**的 Tag 查询另议，可后续做 `PlayerRegistry` 或事件注入）。
+- 不要手动 `Register` 非战斗目标或 Untagged 对象；注册表只服务于「按 Tag 批量查询活跃 Transform」这一件事。
+- 查询时会惰性剔除列表中的 null / 未激活项；**Unregister 仍应在 `OnDisable` 正常调用**，不要依赖惰性清理代替生命周期。
+
+### 5.4 技能 Def 工厂（`PlayerSkills` 不再 switch）
+
+各 `*SkillDefinition`（ScriptableObject）负责：
+
+| 方法 | 时机 |
+|------|------|
+| `CreateRuntimeSkillInternal(bindings)` | 用 Def 资源 + `SkillRuntimeBindings`（Player 仅 Prefab 覆盖 / 射线表现钩子）构造 `ISkill` |
+| `ApplyStatsToSkill(skill, level)` | 创建后 / 升级时写入 per-level 数值 |
+
+`PlayerSkills.CreateSkill` 流程：
+
+```
+GetDef(id) → def.CreateRuntimeSkill(_bindings)   // 内含 ApplyStats Lv.1；无 Def 则告警并失败
+```
+
+**新增技能 checklist**：`SkillId` → `*SkillDefinition` 两方法 → `SkillCatalog` 挂 SO → （P1 前）Player 上可选 Prefab 覆盖 / 射线表现字段。
+
+**P0 约定**：技能数值与 AutoProjectile 的 `bulletPrefab` 均在 SkillDef；Player 不再存 interval/damage 等回退字段。
+
 ---
 
 ## 6. 常见落位示例
@@ -147,7 +197,9 @@ Common 内部建议（按需建立子文件夹）：
 - `BattleChineseFontRuntime` / `TMPChineseFontAutoApply`：`App/`（TMP 中文字体加载与 UI 兜底，见 **7.6**）
 - 大厅/选关/词汇预览等壳业务 Panel：`Shell/UI/`（与 `Roguelike/UI/` 对称：前者局外，后者局内）
 - `SpawnerWaves`：`Spawning/Systems/`
-- `EnemyBase/EnemyAI/EnemyRanged`：`Enemies/Components/`
+- `CombatVfxSpawner` / `PooledCombatVfx`：`Combat/Visuals/`（一次性池化战斗特效统一走 **`CombatVfxSpawner.TryPlayPooled`**；Prefab 挂 **`PooledCombatVfx`**；SpawnLimiter key = `CombatVfx`）
+- `SkillDefinitionBase` / `SkillRuntimeBindings` / `SkillRuntimeFallback`：`Combat/Skills/`（**Def 自注册**：各 `*SkillDefinition` 实现 `CreateRuntimeSkillInternal` + `ApplyStatsToSkill`；`PlayerSkills` 只调 `def.CreateRuntimeSkill(bindings)`，见下）
+- `EnemyBase/EnemyAI/EnemyRanged`：`Enemies/Components/`（怪物 **`OnEnable/OnDisable`** 向 `CombatTargetRegistry` 注册，见 **5.3**）
 - `EnemyCatalog/EnemyDefinition`：`Enemies/Data/`
 
 ---
@@ -240,6 +292,8 @@ Common 内部建议（按需建立子文件夹）：
 - 是否所有 Inspector 字段都有清晰中文 Tooltip？
 - 是否避免了不必要的 `Update()`（可以用协程/事件就别每帧轮询）？
 - 是否避免在运行时频繁 `FindObjectOfType`（能缓存就缓存）？
+- **索敌**：技能/战斗是否通过 **`CombatTargetRegistry`** 查询敌人，而非 **`FindGameObjectsWithTag`**（见 **5.3**）？
+- **战斗 VFX**：一次性粒子/特效是否经 **`CombatVfxSpawner.TryPlayPooled`**，Prefab 是否含 **`PooledCombatVfx`**？
 - **弹窗**：新模态是否继承 `UIPanelBase` 并通过 `UIManager` 打开？局外壳是否落在 **`Shell/UI/`**？是否误把业务逻辑写进 `UI/Framework/`？
 - **TMP 中文**：新 UI 预制体是否使用 **msyh SDF**，或确认会经 `UIManager.Open` / `ShowConfirm` 触发 `ApplyToHierarchy`？动态创建的 TMP 是否补了字体应用？
 - **错误码**：新增玩家可见失败是否已在 `c错误码c.xls` 加行，且 `GameErrorCodes` 有对应常量？

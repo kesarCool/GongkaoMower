@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e7d6c5b4a39281706f5e4d3c2b1a09, type: 3}
+  m_Name: SkillDef_ThrowGrenade
+  m_EditorClassIdentifier: 
+  id: 4
+  maxLevel: 5
+  displayName: "\u624B\u96F7"
+  description: "\u5411\u6700\u8FD1\u654C\u4EBA\u6295\u63B7\uFF0C\u843D\u5730\u7206\u70B8"
+  icon: {fileID: 21300000, guid: 0b25cdfe49f9383429503e454ae4a157, type: 3}
+  levelDescriptions: []
+  cooldownByLevel:
+  - 2
+  - 1.85
+  - 1.7
+  - 1.55
+  - 1.4
+  damageByLevel:
+  - 80
+  - 95
+  - 112
+  - 132
+  - 155
+  aoeRadiusByLevel:
+  - 1.2
+  - 1.35
+  - 1.5
+  - 1.65
+  - 1.85
+  arcHeightByLevel:
+  - 1
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+  baseFlightTime: 0.45
+  flightTimePerUnitDistance: 0.06
+  minFlightTime: 0.35
+  maxFlightTime: 1.1
+  maxTargetRange: 14
+  grenadePrefab: {fileID: 9012345678901235001, guid: a7b77da3f4e2c1b09876543210fedcba, type: 3}
+  explosionFxPrefab: {fileID: 8181609617876284249, guid: 9c7728f10508409408e49929d92b2de7, type: 3}

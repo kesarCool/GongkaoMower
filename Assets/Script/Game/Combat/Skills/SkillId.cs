@@ -10,4 +10,6 @@ public enum SkillId
     LineBeam = 2,
     /// <summary>环绕刀片（子物体旋转 + Trigger 伤害）</summary>
     OrbitingBlades = 3,
+    /// <summary>固定 CD 向最近敌人抛物线投掷，落地圆形 AOE</summary>
+    ThrowGrenade = 4,
 }

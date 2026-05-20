@@ -31,35 +31,7 @@ public abstract class SkillBase : ISkill
 
     protected static GameObject FindNearestEnemy(Vector3 from, string enemyTag, float maxRange = 9999f)
     {
-        GameObject[] enemies;
-        try
-        {
-            enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        }
-        catch (UnityException)
-        {
-            return null;
-        }
-
-        if (enemies == null || enemies.Length == 0) return null;
-
-        float best = float.PositiveInfinity;
-        GameObject bestObj = null;
-        float maxSq = maxRange * maxRange;
-
-        for (int i = 0; i < enemies.Length; i++)
-        {
-            if (enemies[i] == null) continue;
-            float d = (enemies[i].transform.position - from).sqrMagnitude;
-            if (d > maxSq) continue;
-            if (d < best)
-            {
-                best = d;
-                bestObj = enemies[i];
-            }
-        }
-
-        return bestObj;
+        return CombatTargetRegistry.FindNearest(enemyTag, from, maxRange);
     }
 
     protected static int CountActiveEnemiesInRange(Vector3 from, string enemyTag, float maxRange)
@@ -67,32 +39,7 @@ public abstract class SkillBase : ISkill
         if (string.IsNullOrEmpty(enemyTag))
             return 0;
 
-        GameObject[] enemies;
-        try
-        {
-            enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        }
-        catch (UnityException)
-        {
-            return 0;
-        }
-
-        if (enemies == null || enemies.Length == 0)
-            return 0;
-
-        float maxSq = maxRange * maxRange;
-        int count = 0;
-        for (int i = 0; i < enemies.Length; i++)
-        {
-            if (enemies[i] == null || !enemies[i].activeInHierarchy)
-                continue;
-
-            float d = (enemies[i].transform.position - from).sqrMagnitude;
-            if (d <= maxSq)
-                count++;
-        }
-
-        return count;
+        return CombatTargetRegistry.CountInRange(enemyTag, from, maxRange);
     }
 
     protected static Vector2 RandomDirection2D()

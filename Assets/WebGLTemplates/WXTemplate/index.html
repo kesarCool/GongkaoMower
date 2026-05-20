@@ -441,6 +441,16 @@
         WX_ClassOneWayNoFunction_vt() {},
         WX_ClassOnEventFunction() {},
         WX_ClassOffEventFunction() {},      };
+      // 将 WXWASMSDK 的存储方法暴露到全局，供 _WXStorage* 桥函数调用
+      window.WXStorageGetStringSync = WXWASMSDK.WXStorageGetStringSync;
+      window.WXStorageSetStringSync = WXWASMSDK.WXStorageSetStringSync;
+      window.WXStorageGetIntSync    = WXWASMSDK.WXStorageGetIntSync;
+      window.WXStorageSetIntSync    = WXWASMSDK.WXStorageSetIntSync;
+      window.WXStorageGetFloatSync  = WXWASMSDK.WXStorageGetFloatSync;
+      window.WXStorageSetFloatSync  = WXWASMSDK.WXStorageSetFloatSync;
+      window.WXStorageDeleteAllSync = WXWASMSDK.WXStorageDeleteAllSync;
+      window.WXStorageDeleteKeySync = WXWASMSDK.WXStorageDeleteKeySync;
+      window.WXStorageHasKeySync    = WXWASMSDK.WXStorageHasKeySync;
       var downloadedTextures = {};
       var downloadingTextures = {};
       var textureHandler = {

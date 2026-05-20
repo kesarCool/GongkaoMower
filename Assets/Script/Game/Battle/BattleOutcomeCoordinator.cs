@@ -36,12 +36,29 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private GameObject _resultUiInstance;
     private GameObject _reviveUiInstance;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void InstallSceneHook()
+    {
+        SceneManager.sceneLoaded -= OnGameSceneLoaded;
+        SceneManager.sceneLoaded += OnGameSceneLoaded;
+    }
+
+    private static void OnGameSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (!scene.IsValid() || scene.name != "Game") return;
+        EnsureCoordinatorInScene();
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoCreateInGameScene()
     {
         Scene s = SceneManager.GetActiveScene();
         if (!s.IsValid() || s.name != "Game") return;
+        EnsureCoordinatorInScene();
+    }
 
+    private static void EnsureCoordinatorInScene()
+    {
         var all = FindObjectsOfType<BattleOutcomeCoordinator>(true);
         for (int i = 0; i < all.Length; i++)
         {
@@ -92,12 +109,14 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         _battleWaveConfigInvalid = false;
         _waveConfigErrorShown = false;
 
-        ValidateBattleWaveConfig();
-
-        ApplyKillQuotaToHud();
-
         EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied, owner: this);
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
+    }
+
+    private void Start()
+    {
+        ValidateBattleWaveConfig();
+        ApplyKillQuotaToHud();
     }
 
     private void OnDisable()
@@ -149,6 +168,9 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void ValidateBattleWaveConfig()
     {
+        if (TableManager.Instance != null)
+            TableManager.Instance.Init();
+
         int levelId = BattleLevelContext.LevelId;
         SpawnerWaves[] arr = FindObjectsOfType<SpawnerWaves>(true);
         if (arr == null || arr.Length == 0)
@@ -158,14 +180,14 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             return;
         }
 
-        int relevant = 0;
+        int configured = 0;
         for (int i = 0; i < arr.Length; i++)
         {
             SpawnerWaves s = arr[i];
-            if (!IsSpawnerRelevantForWaveProgress(s))
+            if (!IsSpawnerPresentForValidation(s))
                 continue;
 
-            relevant++;
+            configured++;
             if (s.useLevelWaveTable && !LevelWaveCatalog.IsTableLoaded())
             {
                 _battleWaveConfigInvalid = true;
@@ -181,7 +203,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             }
         }
 
-        if (relevant == 0)
+        if (configured == 0)
         {
             _battleWaveConfigInvalid = true;
             ShowWaveConfigErrorOnce(GameErrorCodes.BattleSpawnerMissing);
@@ -214,6 +236,12 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         }
 
         return false;
+    }
+
+    /// <summary>配置校验：场景内存在 SpawnerWaves 即可（不要求已 OnEnable）。</summary>
+    private static bool IsSpawnerPresentForValidation(SpawnerWaves s)
+    {
+        return s != null;
     }
 
     private static bool IsSpawnerRelevantForWaveProgress(SpawnerWaves s)
@@ -426,15 +454,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private static int CountMonstersAlive()
     {
-        try
-        {
-            GameObject[] arr = GameObject.FindGameObjectsWithTag("monster");
-            return arr != null ? arr.Length : 0;
-        }
-        catch (UnityException)
-        {
-            return 0;
-        }
+        return CombatTargetRegistry.CountActive("monster");
     }
 
     private void EndBattleVictory()

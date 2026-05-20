@@ -17,7 +17,14 @@ MonoBehaviour:
   displayName: "\u7C89\u7B14\u5B50\u5F39"
   description: "\u98DE\u9556"
   icon: {fileID: 21300000, guid: 6af5e4fce4ef1f8449f4a78779f24b92, type: 3}
-  levelDescriptions: []
+  levelDescriptions:
+  - "\u53D1\u5C04\u5B50\u5F39\u81EA\u52A8\u653B\u51FB"
+  - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  bulletPrefab: {fileID: 6234684193253506922, guid: 1601bf4980ce6814dad60eacd60afb69, type: 3}
+  bulletSpeed: 10
   intervalByLevel:
   - 0.5
   - 0.45

@@ -5,13 +5,17 @@ using UnityEngine;
 /// </summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Collider2D))]
-public class SkillOrbBladeHit : MonoBehaviour
+public class SkillOrbBladeHit : MonoBehaviour, IPoolReceiver
 {
     public float damagePerTick = 1f;
     public float tickInterval = 0.15f;
     public SkillId damageSourceSkillId = SkillId.OrbitingBlades;
 
     private float _nextTick;
+
+    public void OnPoolGet() => _nextTick = 0f;
+
+    public void OnPoolRelease() { }
 
     private void Reset()
     {

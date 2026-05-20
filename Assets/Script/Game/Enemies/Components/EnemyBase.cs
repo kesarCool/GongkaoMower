@@ -177,6 +177,12 @@ public class EnemyBase : MonoBehaviour
     private void OnEnable()
     {
         if (hp <= 0f) ResetForPool();
+        CombatTargetRegistry.Register(gameObject);
+    }
+
+    private void OnDisable()
+    {
+        CombatTargetRegistry.Unregister(gameObject);
     }
 }
 

@@ -23,39 +23,21 @@ public class PlayerSkills : MonoBehaviour
     [Tooltip("索敌用的敌人 Tag（与 Bullet / PlayerController 保持一致）")]
     public string enemyTag = "monster";
 
-    [Header("技能参数：自动子弹")]
-    public GameObject bulletPrefab;
-    public float bulletSpeed = 10f;
-    [Tooltip("当没有 SkillCatalog 或未配置 AutoProjectile 定义时使用的回退值")]
-    public float autoProjectileInterval = 0.5f;
-
-    [Tooltip("当没有 SkillCatalog 或未配置 AutoProjectile 定义时使用的回退值")]
-    public float autoProjectileDamage = 50f;
-
-    [Header("技能参数：射线")]
-    [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
-    public float beamLength = 8f;
-    [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
-    public float beamDamage = 100f;
-    [Tooltip("当没有 SkillCatalog 或未配置 LineBeam 定义时使用的回退值")]
-    public float beamInterval = 0.8f;
-    public LayerMask beamHitMask = ~0;
-
+    [Header("技能表现：射线")]
     [Tooltip("射线可视化线段宽度（世界单位）")]
     public float beamVisualWidth = 0.08f;
-
-    [Tooltip("射线可视化颜色")]
-    public Color beamVisualColor = new Color(0.2f, 0.85f, 1f, 0.95f);
 
     [Tooltip("射线 LineRenderer 的 Sorting Order（确保在角色/地面之上）")]
     public int beamSortingOrder = 200;
 
-    [Tooltip("射线可视化持续时间（秒）。建议略小于 beamInterval，避免线段常亮。")]
+    [Tooltip("射线可视化持续时间（秒）。建议略小于 SkillDef 间隔，避免线段常亮。")]
     [Range(0.02f, 0.5f)]
     public float beamVisualDuration = 0.08f;
 
-    [Header("技能参数：环绕刀")]
-    [Tooltip("环绕刀片 Sprite（拖入工程内已导入的美术）；为空则用程序化白块")]
+    [Header("技能 Prefab 覆盖（P1 迁入 SkillDef）")]
+    [Tooltip("环绕刀片 Prefab；为空则用 SkillDef.bladePrefab")]
+    public GameObject bladePrefab;
+    [Tooltip("环绕刀片 Sprite（覆盖 Prefab 内贴图；UI 图标仍用 SkillDef.icon）")]
     public Sprite bladeSprite;
     [Tooltip("刀片 SpriteRenderer.sortingOrder，被地面/角色挡住时调大")]
     public int bladeSpriteSortingOrder = 50;
@@ -63,11 +45,10 @@ public class PlayerSkills : MonoBehaviour
     public Color bladeSpriteTint = Color.white;
     [Tooltip("刀片整体缩放")]
     public float bladeVisualScale = 1f;
-    public int bladeCount = 3;
-    public float bladeOrbitRadius = 1.2f;
-    public float bladeRotateSpeed = 180f;
-    public float bladeDamagePerTick = 10f;
-    public float bladeTickInterval = 0.15f;
+
+    [Tooltip("手雷 Prefab；为空则用 SkillDef.grenadePrefab")]
+    public GameObject grenadePrefab;
+    public GameObject grenadeExplosionFxPrefab;
 
     [Header("肉鸽配置")]
     [Tooltip("技能上阵槽位上限（蛋壳特工队风格，默认5个）")]
@@ -88,10 +69,6 @@ public class PlayerSkills : MonoBehaviour
         if (_pc != null)
         {
             _pc.disableLegacyAutoShoot = disableLegacyAutoShoot;
-            if (bulletPrefab == null && _pc.bulletPrefab != null)
-                bulletPrefab = _pc.bulletPrefab;
-            if (Mathf.Approximately(bulletSpeed, 10f) && !Mathf.Approximately(_pc.bulletSpeed, bulletSpeed))
-                bulletSpeed = _pc.bulletSpeed;
             if (string.IsNullOrWhiteSpace(enemyTag))
                 enemyTag = _pc.enemyTag;
         }
@@ -146,112 +123,38 @@ public class PlayerSkills : MonoBehaviour
         return skillCatalog != null ? skillCatalog.Get(id) : null;
     }
 
+    private SkillRuntimeBindings BuildRuntimeBindings()
+    {
+        return new SkillRuntimeBindings
+        {
+            beamVisualDuration = beamVisualDuration,
+            configureLineBeam = EnsureBeamVisual,
+            bladePrefab = bladePrefab,
+            bladeSprite = bladeSprite,
+            bladeSpriteSortingOrder = bladeSpriteSortingOrder,
+            bladeSpriteTint = bladeSpriteTint,
+            bladeVisualScale = bladeVisualScale,
+            grenadePrefab = grenadePrefab,
+            grenadeExplosionFxPrefab = grenadeExplosionFxPrefab,
+        };
+    }
+
     private void ApplyStatsFromDefinition(ISkill skill, SkillDefinitionBase def)
     {
-        if (skill == null) return;
-        if (def == null) return;
-
-        int lv = def.ClampLevel(skill.Level);
-
-        switch (def)
-        {
-            case AutoProjectileSkillDefinition ap:
-            {
-                if (skill is SkillAutoProjectile s)
-                {
-                    s.interval = Mathf.Max(0.05f, ap.IntervalAt(lv));
-                    s.damage = Mathf.Max(0.01f, ap.DamageAt(lv));
-                    s.projectileCount = Mathf.Max(1, ap.ProjectileCountAt(lv));
-                    s.spreadDegrees = Mathf.Max(0f, ap.spreadDegrees);
-                }
-                break;
-            }
-            case LineBeamSkillDefinition lb:
-            {
-                if (skill is SkillLineBeam2D s)
-                {
-                    s.interval = Mathf.Max(0.05f, lb.IntervalAt(lv));
-                    s.damage = Mathf.Max(0.01f, lb.DamageAt(lv));
-                    s.beamCount = Mathf.Max(1, lb.BeamCountAt(lv));
-                }
-                break;
-            }
-            case OrbitingBladesSkillDefinition ob:
-            {
-                if (skill is SkillOrbitingBlades s)
-                {
-                    int count = Mathf.Max(1, ob.BladeCountAt(lv));
-                    s.ApplyRuntimeStats(
-                        count,
-                        ob.OrbitRadiusAt(lv),
-                        ob.RotateSpeedAt(lv),
-                        ob.DamagePerTickAt(lv),
-                        ob.TickIntervalAt(lv));
-                }
-                break;
-            }
-        }
+        if (skill == null || def == null) return;
+        def.ApplyStatsToSkill(skill, def.ClampLevel(skill.Level));
     }
 
     private ISkill CreateSkill(SkillId id)
     {
         SkillDefinitionBase def = GetDef(id);
-
-        switch (id)
+        if (def == null)
         {
-            case SkillId.AutoProjectile:
-            {
-                if (bulletPrefab == null) return null;
-                var s = new SkillAutoProjectile(bulletPrefab, bulletSpeed, autoProjectileInterval);
-                s.damage = Mathf.Max(0.01f, autoProjectileDamage);
-                ApplyStatsFromDefinition(s, def);
-                return s;
-            }
-            case SkillId.LineBeam:
-            {
-                var s = new SkillLineBeam2D(beamLength, beamDamage, beamInterval, beamHitMask);
-                s.visualDuration = beamVisualDuration;
-                EnsureBeamVisual(s);
-                ApplyStatsFromDefinition(s, def);
-                return s;
-            }
-            case SkillId.OrbitingBlades:
-            {
-                // Visual 优先取 PlayerSkills Inspector 上的覆盖（方便角色/皮肤差异）
-                Sprite sprite = bladeSprite;
-                Color tint = bladeSpriteTint;
-                int order = bladeSpriteSortingOrder;
-                float scale = bladeVisualScale;
-
-                if (def is OrbitingBladesSkillDefinition ob)
-                {
-                    if (sprite == null) sprite = ob.bladeSprite;
-                    if (tint == default) tint = ob.bladeTint;
-                    if (order == 50) order = ob.sortingOrder;
-                    if (Mathf.Approximately(scale, 1f)) scale = ob.visualScale;
-                }
-
-                int lv = 1;
-                int count = bladeCount;
-                float r = bladeOrbitRadius;
-                float rot = bladeRotateSpeed;
-                float dmg = bladeDamagePerTick;
-                float tick = bladeTickInterval;
-
-                if (def is OrbitingBladesSkillDefinition obd)
-                {
-                    count = obd.BladeCountAt(lv);
-                    r = obd.OrbitRadiusAt(lv);
-                    rot = obd.RotateSpeedAt(lv);
-                    dmg = obd.DamagePerTickAt(lv);
-                    tick = obd.TickIntervalAt(lv);
-                }
-
-                return new SkillOrbitingBlades(sprite, count, r, rot, dmg, tick, order, tint, scale);
-            }
+            Debug.LogWarning($"PlayerSkills: skillCatalog 缺少 SkillId={id} 的 SkillDefinition。");
+            return null;
         }
 
-        return null;
+        return def.CreateRuntimeSkill(BuildRuntimeBindings());
     }
 
     public bool TryAddSkill(SkillId id)
@@ -265,8 +168,8 @@ public class PlayerSkills : MonoBehaviour
         _skills.Add(s);
         _skillById[id] = s;
 
-        if (id == SkillId.LineBeam)
-            _lineBeamSkill = s as SkillLineBeam2D;
+        if (s is SkillLineBeam2D beam)
+            _lineBeamSkill = beam;
 
         // 已经在运行中时，立即装备
         if (isActiveAndEnabled)

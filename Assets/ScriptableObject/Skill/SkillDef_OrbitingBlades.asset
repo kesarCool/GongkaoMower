@@ -43,7 +43,8 @@ MonoBehaviour:
   - 220
   - 240
   - 260
-  bladeSprite: {fileID: 21300000, guid: 6c923e9c81a2af1428fe02ebd8041ecc, type: 3}
+  bladePrefab: {fileID: 8012345678901234001, guid: b1c2d3e4f5a6789012345678c9def012, type: 3}
+  bladeSprite: {fileID: 21300000, guid: 1e2cf2470cccd4441a1ead8b8e80034e, type: 3}
   bladeTint: {r: 1, g: 1, b: 1, a: 1}
   sortingOrder: 50
   visualScale: 1

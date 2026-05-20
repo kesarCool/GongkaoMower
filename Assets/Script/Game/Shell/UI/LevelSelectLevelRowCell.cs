@@ -47,12 +47,12 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
         if (titleText != null)
         {
-            var prefix = row.levelOrdinalInList > 0 ? $"{row.levelOrdinalInList}. " : string.Empty;
+        //    var prefix = row.levelOrdinalInList > 0 ? $"{row.levelOrdinalInList}. " : string.Empty;
             string name;
             if (!string.IsNullOrEmpty(row.mapName))
-                name = prefix + row.mapName;
+                name = row.mapName;
             else
-                name = $"{prefix}关卡 {row.levelId}";
+                name = $"关卡 {row.levelId}";
 
             if (!unlocked)
                 name += "（未解锁）";

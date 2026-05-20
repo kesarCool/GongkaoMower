@@ -117,34 +117,6 @@ public class PlayerController : MonoBehaviour
 
     private GameObject FindNearestEnemy()
     {
-        GameObject[] enemies;
-        try
-        {
-            enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-        }
-        catch (UnityException)
-        {
-            // Thrown when the tag does not exist in Tag Manager.
-            Debug.LogWarning($"PlayerController: Tag '{enemyTag}' is not defined. Please create it in Tag Manager and assign it to enemies.");
-            return null;
-        }
-        if (enemies == null || enemies.Length == 0) return null;
-
-        Vector3 p = transform.position;
-        float best = float.PositiveInfinity;
-        GameObject bestObj = null;
-
-        for (int i = 0; i < enemies.Length; i++)
-        {
-            if (enemies[i] == null) continue;
-            float d = (enemies[i].transform.position - p).sqrMagnitude;
-            if (d < best)
-            {
-                best = d;
-                bestObj = enemies[i];
-            }
-        }
-
-        return bestObj;
+        return CombatTargetRegistry.FindNearest(enemyTag, transform.position);
     }
 }

@@ -18,6 +18,10 @@ MonoBehaviour:
   description: "\u5C04\u7EBF"
   icon: {fileID: 21300000, guid: 5dd298371bd2dfb4c8e7a2dabad7a462, type: 3}
   levelDescriptions: []
+  beamLength: 8
+  beamHitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   intervalByLevel:
   - 0.8
   - 0.75
