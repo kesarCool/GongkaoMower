@@ -34,22 +34,6 @@ public class PlayerSkills : MonoBehaviour
     [Range(0.02f, 0.5f)]
     public float beamVisualDuration = 0.08f;
 
-    [Header("技能 Prefab 覆盖（P1 迁入 SkillDef）")]
-    [Tooltip("环绕刀片 Prefab；为空则用 SkillDef.bladePrefab")]
-    public GameObject bladePrefab;
-    [Tooltip("环绕刀片 Sprite（覆盖 Prefab 内贴图；UI 图标仍用 SkillDef.icon）")]
-    public Sprite bladeSprite;
-    [Tooltip("刀片 SpriteRenderer.sortingOrder，被地面/角色挡住时调大")]
-    public int bladeSpriteSortingOrder = 50;
-    [Tooltip("与美术色相乘；保留原画用白色")]
-    public Color bladeSpriteTint = Color.white;
-    [Tooltip("刀片整体缩放")]
-    public float bladeVisualScale = 1f;
-
-    [Tooltip("手雷 Prefab；为空则用 SkillDef.grenadePrefab")]
-    public GameObject grenadePrefab;
-    public GameObject grenadeExplosionFxPrefab;
-
     [Header("肉鸽配置")]
     [Tooltip("技能上阵槽位上限（蛋壳特工队风格，默认5个）")]
     public const int MAX_SKILL_SLOTS = 5;
@@ -129,13 +113,6 @@ public class PlayerSkills : MonoBehaviour
         {
             beamVisualDuration = beamVisualDuration,
             configureLineBeam = EnsureBeamVisual,
-            bladePrefab = bladePrefab,
-            bladeSprite = bladeSprite,
-            bladeSpriteSortingOrder = bladeSpriteSortingOrder,
-            bladeSpriteTint = bladeSpriteTint,
-            bladeVisualScale = bladeVisualScale,
-            grenadePrefab = grenadePrefab,
-            grenadeExplosionFxPrefab = grenadeExplosionFxPrefab,
         };
     }
 
@@ -293,6 +270,14 @@ public class PlayerSkills : MonoBehaviour
     /// 检查是否拥有某技能
     /// </summary>
     public bool HasSkill(SkillId id) => _skillById.ContainsKey(id);
+
+    /// <summary>获取已装备技能的运行时实例（调试 / Gizmo 等）。</summary>
+    public T GetEquippedSkill<T>(SkillId id) where T : class, ISkill
+    {
+        if (_skillById.TryGetValue(id, out var s))
+            return s as T;
+        return null;
+    }
 
     /// <summary>
     /// 获取技能当前等级（0=未拥有）

@@ -98,14 +98,6 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
     private string BuildConfirmMessage()
     {
-        int id = _row.levelId;
-        int chapter = id / 100;
-        int stage = id % 100;
-        string name = !string.IsNullOrEmpty(_row.mapName)
-            ? _row.mapName
-            : chapter > 0 && stage > 0
-                ? $"关卡{chapter}-{stage}"
-                : $"关卡 {id}";
-        return $"是否进入「{name}」？";
+        return $"是否进入「{ChapterLevelDisplay.FormatLevelName(_row.levelId, _row.mapName)}」？";
     }
 }

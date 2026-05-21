@@ -174,7 +174,7 @@ Common 内部建议（按需建立子文件夹）：
 
 | 方法 | 时机 |
 |------|------|
-| `CreateRuntimeSkillInternal(bindings)` | 用 Def 资源 + `SkillRuntimeBindings`（Player 仅 Prefab 覆盖 / 射线表现钩子）构造 `ISkill` |
+| `CreateRuntimeSkillInternal(bindings)` | 用 Def 资源 + `SkillRuntimeBindings`（Player 仅 LineBeam 射线表现钩子）构造 `ISkill` |
 | `ApplyStatsToSkill(skill, level)` | 创建后 / 升级时写入 per-level 数值 |
 
 `PlayerSkills.CreateSkill` 流程：
@@ -183,9 +183,9 @@ Common 内部建议（按需建立子文件夹）：
 GetDef(id) → def.CreateRuntimeSkill(_bindings)   // 内含 ApplyStats Lv.1；无 Def 则告警并失败
 ```
 
-**新增技能 checklist**：`SkillId` → `*SkillDefinition` 两方法 → `SkillCatalog` 挂 SO → （P1 前）Player 上可选 Prefab 覆盖 / 射线表现字段。
+**新增技能 checklist**：`SkillId` → `*SkillDefinition` 两方法 → `SkillCatalog` 挂 SO → Prefab/数值均在 SkillDef；Player 仅保留射线 `LineRenderer` 表现字段。
 
-**P0 约定**：技能数值与 AutoProjectile 的 `bulletPrefab` 均在 SkillDef；Player 不再存 interval/damage 等回退字段。
+**P0 约定**：技能数值与 Prefab（含 AutoProjectile 子弹、飞刀、手雷、力场特效）均在 SkillDef；Player 仅保留 LineBeam 射线宽度 / SortingOrder / 持续时间。
 
 ---
 
@@ -198,7 +198,7 @@ GetDef(id) → def.CreateRuntimeSkill(_bindings)   // 内含 ApplyStats Lv.1；�
 - 大厅/选关/词汇预览等壳业务 Panel：`Shell/UI/`（与 `Roguelike/UI/` 对称：前者局外，后者局内）
 - `SpawnerWaves`：`Spawning/Systems/`
 - `CombatVfxSpawner` / `PooledCombatVfx`：`Combat/Visuals/`（一次性池化战斗特效统一走 **`CombatVfxSpawner.TryPlayPooled`**；Prefab 挂 **`PooledCombatVfx`**；SpawnLimiter key = `CombatVfx`）
-- `SkillDefinitionBase` / `SkillRuntimeBindings` / `SkillRuntimeFallback`：`Combat/Skills/`（**Def 自注册**：各 `*SkillDefinition` 实现 `CreateRuntimeSkillInternal` + `ApplyStatsToSkill`；`PlayerSkills` 只调 `def.CreateRuntimeSkill(bindings)`，见下）
+- `SkillDefinitionBase` / `SkillRuntimeBindings`：`Combat/Skills/`（**Def 自注册**：各 `*SkillDefinition` 实现 `CreateRuntimeSkillInternal` + `ApplyStatsToSkill`；`PlayerSkills` 只调 `def.CreateRuntimeSkill(bindings)`，见下）
 - `EnemyBase/EnemyAI/EnemyRanged`：`Enemies/Components/`（怪物 **`OnEnable/OnDisable`** 向 `CombatTargetRegistry` 注册，见 **5.3**）
 - `EnemyCatalog/EnemyDefinition`：`Enemies/Data/`
 

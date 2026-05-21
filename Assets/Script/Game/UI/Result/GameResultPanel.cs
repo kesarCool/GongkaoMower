@@ -32,6 +32,7 @@ public class GameResultPanel : UIPanelBase
     private Image _bannerImage;
     private TextMeshProUGUI _textTime;
     private TextMeshProUGUI _textKillNum;
+    private TextMeshProUGUI _textLevel;
     private Transform _scrollContent;
     private Button _btnExit;
     private Button _btnAgain;
@@ -45,6 +46,7 @@ public class GameResultPanel : UIPanelBase
         _bannerImage = transform.Find("Image")?.GetComponent<Image>();
         _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
         _textKillNum = transform.Find("TextKillNum")?.GetComponent<TextMeshProUGUI>();
+        _textLevel = transform.Find("Textlevel")?.GetComponent<TextMeshProUGUI>();
         _scrollContent = transform.Find("Scroll View/Viewport/Content");
         _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
         _btnAgain = transform.Find("ButtonAgain")?.GetComponent<Button>();
@@ -115,6 +117,8 @@ public class GameResultPanel : UIPanelBase
         if (_textKillNum != null)
             _textKillNum.text = $"击杀数量：{_vm.killCount}";
 
+        RefreshLevelLabel();
+
         if (_btnAgain != null) _btnAgain.gameObject.SetActive(!win);
         if (_btnNext != null)
         {
@@ -145,6 +149,24 @@ public class GameResultPanel : UIPanelBase
             Time.timeScale = 1f;
             _openedWithPauseOnly = false;
         }
+    }
+
+    private void RefreshLevelLabel()
+    {
+        if (_textLevel == null) return;
+
+        if (!SelectedLevelContext.HasSelection)
+        {
+            _textLevel.text = string.Empty;
+            return;
+        }
+
+        if (TableManager.Instance != null)
+            TableManager.Instance.Init();
+
+        int levelId = SelectedLevelContext.LevelId;
+        string mapName = ChapterLevelDisplay.ResolveMapName(levelId);
+        _textLevel.text = ChapterLevelDisplay.FormatLevelLabel(levelId, mapName);
     }
 
     private Sprite ResolveWinSprite()

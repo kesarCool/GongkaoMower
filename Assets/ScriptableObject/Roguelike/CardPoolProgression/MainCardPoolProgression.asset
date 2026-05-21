@@ -15,10 +15,16 @@ MonoBehaviour:
   unlockConditions:
   - skill: 1
     unlockAtLevel: 1
-    baseWeight: 30
+    baseWeight: 20
   - skill: 2
     unlockAtLevel: 1
-    baseWeight: 40
+    baseWeight: 20
   - skill: 3
     unlockAtLevel: 1
-    baseWeight: 30
+    baseWeight: 20
+  - skill: 4
+    unlockAtLevel: 1
+    baseWeight: 20
+  - skill: 5
+    unlockAtLevel: 1
+    baseWeight: 20

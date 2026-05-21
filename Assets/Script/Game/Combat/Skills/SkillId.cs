@@ -12,4 +12,6 @@ public enum SkillId
     OrbitingBlades = 3,
     /// <summary>固定 CD 向最近敌人抛物线投掷，落地圆形 AOE</summary>
     ThrowGrenade = 4,
+    /// <summary>附着玩家的持续溶解力场（圆形范围 DPS）</summary>
+    FieldGenerator = 5,
 }

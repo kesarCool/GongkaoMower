@@ -21,25 +21,13 @@ public static class ChapterLevelNavigation
         var dict = TableManager.Instance.GetTable<ChapterLevel>();
         if (dict == null || dict.Count == 0) return false;
 
-        var list = new List<ChapterLevel>(dict.Count);
-        foreach (var kv in dict)
-        {
-            if (kv.Value is ChapterLevel cl)
-                list.Add(cl);
-        }
-
+        var list = BuildSortedLevelRows(dict);
         if (list.Count == 0) return false;
-
-        list.Sort((a, b) =>
-        {
-            int c = a.chapterId.CompareTo(b.chapterId);
-            return c != 0 ? c : a.levelId.CompareTo(b.levelId);
-        });
 
         int idx = list.FindIndex(x => x.chapterId == chapterId && x.levelId == levelId);
         if (idx < 0 || idx >= list.Count - 1) return false;
 
-        ChapterLevel next = list[idx + 1];
+        var next = list[idx + 1];
         nextChapterId = next.chapterId;
         nextLevelId = next.levelId;
         return true;
@@ -47,4 +35,68 @@ public static class ChapterLevelNavigation
         return false;
 #endif
     }
+
+    /// <summary>
+    /// 按列表顺序取「当前进度」：最后一个已解锁的关卡（默认开始游戏用）。
+    /// </summary>
+    public static bool TryGetMaxUnlockedLevel(out int chapterId, out int levelId)
+    {
+        chapterId = 0;
+        levelId = 0;
+
+#if USE_FB_TABLE
+        if (TableManager.Instance == null) return false;
+
+        TableManager.Instance.Init();
+        var dict = TableManager.Instance.GetTable<ChapterLevel>();
+        if (dict == null || dict.Count == 0) return false;
+
+        var list = BuildSortedLevelRows(dict);
+        if (list.Count == 0) return false;
+
+        PlayerProfileService.Instance.LoadOrCreate();
+
+        bool any = false;
+        for (int i = 0; i < list.Count; i++)
+        {
+            var row = list[i];
+            if (!PlayerProfileService.Instance.IsLevelUnlocked(row.levelId))
+                break;
+
+            chapterId = row.chapterId;
+            levelId = row.levelId;
+            any = true;
+        }
+
+        if (any) return true;
+
+        chapterId = list[0].chapterId;
+        levelId = list[0].levelId;
+        return true;
+#else
+        chapterId = 1;
+        levelId = ChapterLevelCatalog.DefaultFirstLevelId;
+        return true;
+#endif
+    }
+
+#if USE_FB_TABLE
+    private static List<ChapterLevel> BuildSortedLevelRows(Dictionary<int, object> dict)
+    {
+        var list = new List<ChapterLevel>(dict.Count);
+        foreach (var kv in dict)
+        {
+            if (kv.Value is ChapterLevel cl)
+                list.Add(cl);
+        }
+
+        list.Sort((a, b) =>
+        {
+            int c = a.chapterId.CompareTo(b.chapterId);
+            return c != 0 ? c : a.levelId.CompareTo(b.levelId);
+        });
+
+        return list;
+    }
+#endif
 }

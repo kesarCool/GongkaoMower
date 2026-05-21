@@ -31,29 +31,20 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
     {
-        if (bindings == null) return null;
-
-        GameObject prefab = bindings.bladePrefab ?? bladePrefab;
-        Sprite sprite = bindings.bladeSprite ?? bladeSprite;
-        Color tint = bindings.bladeSpriteTint;
-        if (tint == default) tint = bladeTint;
-        int order = bindings.bladeSpriteSortingOrder;
-        if (order == 50) order = sortingOrder;
-        float scale = bindings.bladeVisualScale;
-        if (Mathf.Approximately(scale, 1f)) scale = visualScale;
+        if (bladePrefab == null) return null;
 
         int lv = 1;
         return new SkillOrbitingBlades(
-            prefab,
-            sprite,
+            bladePrefab,
+            bladeSprite,
             BladeCountAt(lv),
             OrbitRadiusAt(lv),
             RotateSpeedAt(lv),
             DamagePerTickAt(lv),
             TickIntervalAt(lv),
-            order,
-            tint,
-            scale);
+            sortingOrder,
+            bladeTint,
+            visualScale);
     }
 
     public override void ApplyStatsToSkill(ISkill skill, int level)

@@ -122,6 +122,7 @@ GameObject:
   - component: {fileID: 5002500605322820591}
   - component: {fileID: 8771076658137708668}
   - component: {fileID: 7733221100889977666}
+  - component: {fileID: 2167164036099694569}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -203,13 +204,6 @@ MonoBehaviour:
   beamVisualWidth: 0.08
   beamSortingOrder: 200
   beamVisualDuration: 0.08
-  bladePrefab: {fileID: 8012345678901234001, guid: b1c2d3e4f5a6789012345678c9def012, type: 3}
-  bladeSprite: {fileID: 21300000, guid: 1e2cf2470cccd4441a1ead8b8e80034e, type: 3}
-  bladeSpriteSortingOrder: 50
-  bladeSpriteTint: {r: 1, g: 1, b: 1, a: 1}
-  bladeVisualScale: 1
-  grenadePrefab: {fileID: 9012345678901235001, guid: a7b77da3f4e2c1b09876543210fedcba, type: 3}
-  grenadeExplosionFxPrefab: {fileID: 0}
 --- !u!50 &-9110866368867753895
 Rigidbody2D:
   serializedVersion: 4
@@ -282,6 +276,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fillTransform: {fileID: 0}
   playerHealth: {fileID: 8771076658137708668}
+--- !u!114 &2167164036099694569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186490287265628212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9305aaf0eebaa34989293f119a23eaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerSkills: {fileID: 7067422121645680188}
+  damageRadiusColor: {r: 0, g: 1, b: 1, a: 0.9}
+  drawPreviewWhenUnequipped: 0
 --- !u!1001 &1066185600145853123
 PrefabInstance:
   m_ObjectHideFlags: 0

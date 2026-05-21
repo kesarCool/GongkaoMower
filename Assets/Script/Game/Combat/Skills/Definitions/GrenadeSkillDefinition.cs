@@ -35,16 +35,12 @@ public class GrenadeSkillDefinition : SkillDefinitionBase
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
     {
-        if (bindings == null) return null;
+        if (grenadePrefab == null) return null;
 
-        GameObject prefab = bindings.grenadePrefab ?? grenadePrefab;
-        if (prefab == null) return null;
-
-        GameObject explosionFx = bindings.grenadeExplosionFxPrefab ?? explosionFxPrefab;
         int lv = 1;
 
-        var s = new SkillThrowGrenade(prefab, CooldownAt(lv));
-        s.explosionFxPrefab = explosionFx;
+        var s = new SkillThrowGrenade(grenadePrefab, CooldownAt(lv));
+        s.explosionFxPrefab = explosionFxPrefab;
         s.damage = Mathf.Max(0.01f, DamageAt(lv));
         s.aoeRadius = Mathf.Max(0.1f, AoeRadiusAt(lv));
         s.arcHeight = Mathf.Max(0f, ArcHeightAt(lv));
