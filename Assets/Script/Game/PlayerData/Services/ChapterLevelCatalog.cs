@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 #if USE_FB_TABLE
@@ -8,6 +9,7 @@ using ProtoTable;
 public static class ChapterLevelCatalog
 {
     public const int DefaultFirstLevelId = 101;
+    public const string DefaultMapResourcesPath = "Map/TileMap101";
 
 #if USE_FB_TABLE
     private static Dictionary<int, ChapterLevel> _byLevelId;
@@ -28,6 +30,48 @@ public static class ChapterLevelCatalog
             return true;
         row = null;
         return false;
+    }
+
+    /// <summary>
+    /// 关卡表 <c>mapPath</c> → Resources 路径（不含扩展名）；空或未配表时返回默认 TileMap101。
+    /// </summary>
+    public static string ResolveMapResourcesPath(int levelId)
+    {
+#if USE_FB_TABLE
+        if (TryGetByLevelId(levelId, out ChapterLevel row) &&
+            row != null &&
+            !string.IsNullOrWhiteSpace(row.mapPath))
+        {
+            return NormalizeMapResourcesPath(row.mapPath);
+        }
+#endif
+        return DefaultMapResourcesPath;
+    }
+
+    public static string NormalizeMapResourcesPath(string mapPath)
+    {
+        if (string.IsNullOrWhiteSpace(mapPath))
+            return DefaultMapResourcesPath;
+
+        string path = mapPath.Trim().Replace('\\', '/');
+        if (path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+            path = path.Substring(0, path.Length - ".prefab".Length);
+
+        const string assetsResourcesPrefix = "Assets/Resources/";
+        if (path.StartsWith(assetsResourcesPrefix, StringComparison.OrdinalIgnoreCase))
+            path = path.Substring(assetsResourcesPrefix.Length);
+
+        const string resourcesPrefix = "Resources/";
+        if (path.StartsWith(resourcesPrefix, StringComparison.OrdinalIgnoreCase))
+            path = path.Substring(resourcesPrefix.Length);
+
+        if (path.StartsWith("/", StringComparison.Ordinal))
+            path = path.TrimStart('/');
+
+        if (!path.Contains("/"))
+            path = "Map/" + path;
+
+        return path;
     }
 
     private static void EnsureCache()

@@ -154,6 +154,37 @@ public static class CombatTargetRegistry
         return count;
     }
 
+    /// <summary>在范围内均匀随机选一个活跃目标（用于落雷等）。</summary>
+    public static bool TryPickRandomInRange(string tag, Vector3 from, float maxRange, out Transform picked)
+    {
+        picked = null;
+        if (string.IsNullOrEmpty(tag)) return false;
+        if (!Buckets.TryGetValue(tag, out TagBucket bucket)) return false;
+
+        float maxSq = maxRange * maxRange;
+        List<Transform> list = bucket.Active;
+        int eligible = 0;
+
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            Transform tr = list[i];
+            if (!IsAlive(tr))
+            {
+                RemoveAt(list, i);
+                continue;
+            }
+
+            if (((Vector2)tr.position - (Vector2)from).sqrMagnitude > maxSq)
+                continue;
+
+            eligible++;
+            if (Random.Range(0, eligible) == 0)
+                picked = tr;
+        }
+
+        return picked != null;
+    }
+
     private static bool IsAlive(Transform tr)
     {
         return tr != null && tr.gameObject.activeInHierarchy;

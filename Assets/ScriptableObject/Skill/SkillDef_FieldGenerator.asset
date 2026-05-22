@@ -21,15 +21,15 @@ MonoBehaviour:
   radiusByLevel:
   - 1.5
   - 1.7
-  - 1.7
+  - 1.9
   - 2.1
   - 2.4
   damagePerSecondByLevel:
-  - 150
-  - 200
-  - 260
-  - 330
-  - 420
+  - 15
+  - 20
+  - 26
+  - 33
+  - 42
   damageTickIntervalByLevel:
   - 0.25
   - 0.22

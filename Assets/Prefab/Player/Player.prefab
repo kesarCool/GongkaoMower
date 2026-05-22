@@ -73,7 +73,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_Sprite: {fileID: 21300000, guid: bbcf669dc27c7de46a496bb282220262, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -198,7 +198,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skillCatalog: {fileID: 11400000, guid: 9d0bd947eb4540d479be3c7bce060432, type: 2}
-  startingSkill: 1
+  startingSkill: 6
   disableLegacyAutoShoot: 1
   enemyTag: monster
   beamVisualWidth: 0.08

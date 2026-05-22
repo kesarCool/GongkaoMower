@@ -14,4 +14,6 @@ public enum SkillId
     ThrowGrenade = 4,
     /// <summary>附着玩家的持续溶解力场（圆形范围 DPS）</summary>
     FieldGenerator = 5,
+    /// <summary>随机落雷，范围内 AOE 伤害；升级增加道数与伤害</summary>
+    LightningStrike = 6,
 }

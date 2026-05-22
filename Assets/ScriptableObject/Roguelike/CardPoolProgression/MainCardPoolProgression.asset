@@ -28,3 +28,6 @@ MonoBehaviour:
   - skill: 5
     unlockAtLevel: 1
     baseWeight: 20
+  - skill: 6
+    unlockAtLevel: 1
+    baseWeight: 20
