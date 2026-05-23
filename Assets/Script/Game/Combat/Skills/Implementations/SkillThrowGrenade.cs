@@ -54,6 +54,12 @@ public class SkillThrowGrenade : SkillBase
             start, end, baseFlightTime, flightTimePerUnitDistance, minFlightTime, maxFlightTime);
 
         GameObject go = GameObjectPool.Get(grenadePrefab, start, Quaternion.identity);
+        if (go == null)
+        {
+            Debug.LogWarning("[SkillThrowGrenade] GameObjectPool.Get 返回 null，prefab=" + grenadePrefab.name);
+            return;
+        }
+
         GrenadeProjectile grenade = go.GetComponent<GrenadeProjectile>();
         if (grenade == null)
             grenade = go.AddComponent<GrenadeProjectile>();

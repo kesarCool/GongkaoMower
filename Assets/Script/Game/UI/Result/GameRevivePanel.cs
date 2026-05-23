@@ -97,6 +97,7 @@ public class GameRevivePanel : UIPanelBase
     private void OnReviveClicked()
     {
         if (_resolved) return;
+        UiClickSound.Play();
         _resolved = true;
         StopCountdown();
         SetButtonsInteractable(false);
@@ -114,6 +115,7 @@ public class GameRevivePanel : UIPanelBase
     private void OnExitClicked()
     {
         if (_resolved) return;
+        UiClickSound.PlayClose();
         _resolved = true;
         StopCountdown();
         SetButtonsInteractable(false);

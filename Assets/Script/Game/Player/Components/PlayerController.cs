@@ -15,10 +15,18 @@ public class PlayerController : MonoBehaviour
     public GameObject bulletPrefab;
     public float bulletSpeed = 10f;
     public string enemyTag = "monster";
+
+    [Header("Visual")]
+    [Tooltip("留空则自动查找子节点 Body 的 SpriteRenderer")]
+    [SerializeField] private SpriteRenderer bodyRenderer;
+
     private Camera mainCam;
     private Vector3 targetPos;
     private bool hasTarget;
     private float attackTimer;
+    private Rigidbody2D _rb;
+    private Vector3 _lastPosition;
+    private const float FacingEpsilon = 0.001f;
 
     private void Awake()
     {
@@ -26,6 +34,15 @@ public class PlayerController : MonoBehaviour
         targetPos = transform.position;
         hasTarget = false;
         attackTimer = 0f;
+        _rb = GetComponent<Rigidbody2D>();
+        _lastPosition = transform.position;
+
+        if (bodyRenderer == null)
+        {
+            Transform body = transform.Find("Body");
+            if (body != null)
+                bodyRenderer = body.GetComponent<SpriteRenderer>();
+        }
     }
 
     private void Update()
@@ -35,6 +52,11 @@ public class PlayerController : MonoBehaviour
        /// 自动射击最近敌人
        if (!disableLegacyAutoShoot)
            AutoShootNearestEnemy();
+    }
+
+    private void LateUpdate()
+    {
+        UpdateBodyFacing();
     }
 
 
@@ -73,6 +95,22 @@ public class PlayerController : MonoBehaviour
 
         if ((targetPos - transform.position).sqrMagnitude < 0.01f)
             hasTarget = false;
+    }
+
+    private void UpdateBodyFacing()
+    {
+        if (bodyRenderer == null) return;
+
+        float horizontal = 0f;
+        if (_rb != null && Mathf.Abs(_rb.velocity.x) > FacingEpsilon)
+            horizontal = _rb.velocity.x;
+        else
+            horizontal = transform.position.x - _lastPosition.x;
+
+        _lastPosition = transform.position;
+
+        if (Mathf.Abs(horizontal) <= FacingEpsilon) return;
+        bodyRenderer.flipX = horizontal < 0f;
     }
 
     private void AutoShootNearestEnemy()

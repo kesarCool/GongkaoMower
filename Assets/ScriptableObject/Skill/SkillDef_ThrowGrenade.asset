@@ -16,7 +16,7 @@ MonoBehaviour:
   maxLevel: 5
   displayName: "\u624B\u96F7"
   description: "\u5411\u6700\u8FD1\u654C\u4EBA\u6295\u63B7\uFF0C\u843D\u5730\u7206\u70B8"
-  icon: {fileID: 21300000, guid: 0b25cdfe49f9383429503e454ae4a157, type: 3}
+  icon: {fileID: 21300000, guid: f00f9d4c72d48964293883c108deabe8, type: 3}
   levelDescriptions: []
   cooldownByLevel:
   - 2
@@ -48,4 +48,4 @@ MonoBehaviour:
   maxFlightTime: 1.1
   maxTargetRange: 14
   grenadePrefab: {fileID: 9012345678901235001, guid: a7b77da3f4e2c1b09876543210fedcba, type: 3}
-  explosionFxPrefab: {fileID: 8181609617876284249, guid: 9c7728f10508409408e49929d92b2de7, type: 3}
+  explosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}

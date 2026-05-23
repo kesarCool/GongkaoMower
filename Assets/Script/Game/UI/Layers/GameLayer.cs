@@ -57,7 +57,8 @@ public class GameLayer : MonoBehaviour
 
     private void Start()
     {
-        
+        AudioService.Ensure().StartCoroutine(AudioService.Ensure().LoadGroupAsync(AudioLoadGroup.Battle));
+
         // 如果没有拖 UI 引用，自动创建一套基础 UI，便于快速跑起来
         if (killText == null || timerText == null || pauseButton == null)
             BuildMinimalUIIfMissing();
@@ -142,6 +143,7 @@ public class GameLayer : MonoBehaviour
 
     public void TogglePause()
     {
+        UiClickSound.Play();
         _paused = !_paused;
         Time.timeScale = _paused ? 0f : 1f;
 

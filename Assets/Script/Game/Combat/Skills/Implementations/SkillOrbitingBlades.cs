@@ -51,10 +51,12 @@ public class SkillOrbitingBlades : SkillBase
     {
         base.OnEquip(ctx);
         EnsureOrbitVisuals();
+        AudioService.Ensure().PlayLoop(AudioId.SkillOrbitingBlades);
     }
 
     public override void OnUnequip()
     {
+        AudioService.Ensure().StopLoop(AudioId.SkillOrbitingBlades);
         base.OnUnequip();
         ClearBlades();
         if (_orbitRoot != null)

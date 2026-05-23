@@ -217,12 +217,14 @@ public class GameResultPanel : UIPanelBase
 
     private void OnExitClicked()
     {
+        UiClickSound.PlayClose();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Home");
     }
 
     private void OnAgainClicked()
     {
+        UiClickSound.Play();
         Time.timeScale = 1f;
 
         // 本关重开：SelectedLevelContext 不变，直接重载 Game。
@@ -232,6 +234,7 @@ public class GameResultPanel : UIPanelBase
 
     private void OnNextClicked()
     {
+        UiClickSound.Play();
         if (!SelectedLevelContext.HasSelection)
         {
             GameErrorPresenter.Show(GameErrorCodes.LevelNoContext);

@@ -1,5 +1,5 @@
 /// <summary>
-/// 公考主题词库（ThemePackId=1）下，文字怪 <see cref="ProtoTable.Monster.CategoryTag"/> /
+/// 成语主题词库（ThemePackId=1）下，文字怪 <see cref="ProtoTable.Monster.CategoryTag"/> /
 /// <see cref="ProtoTable.LexiconTable.CategoryTag"/> 的整型约定。需与词表、怪物表一致。
 /// </summary>
 public static class LexiconCategoryTags
@@ -11,19 +11,15 @@ public static class LexiconCategoryTags
     public static int MakeLexiconId(int themePackId, int categoryTag, int indexInCategory) =>
         themePackId * 100000 + categoryTag * 1000 + indexInCategory;
 
-    /// <summary>主题包：公考梗词</summary>
-    public const int ThemePackGongkao = 1;
+    /// <summary>主题包：成语词库</summary>
+    public const int ThemePackChengyu = 1;
 
-    /// <summary>言语理解</summary>
-    public const int YanYuLiJie = 1;
-    /// <summary>判断推理</summary>
-    public const int PanDuanTuiLi = 2;
-    /// <summary>资料分析</summary>
-    public const int ZiLiaoFenXi = 3;
-    /// <summary>数量关系</summary>
-    public const int ShuLiangGuanXi = 4;
-    /// <summary>时政常识</summary>
-    public const int ShiZhengChangShi = 5;
-    /// <summary>申论</summary>
-    public const int ShenLun = 6;
+    /// <summary>神话传说</summary>
+    public const int ChengyuShenHua = 1;
+    /// <summary>寓言故事</summary>
+    public const int ChengyuYuYan = 2;
+    /// <summary>历史事件</summary>
+    public const int ChengyuLiShi = 3;
+    /// <summary>文学创作</summary>
+    public const int ChengyuWenXue = 4;
 }

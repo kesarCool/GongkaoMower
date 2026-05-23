@@ -32,6 +32,7 @@ public class LoginSceneController : MonoBehaviour
 
     private void OnStartGameClicked()
     {
+        UiClickSound.Play();
         PlayerProfileService.Instance.LoadOrCreate();
 
         if (string.IsNullOrWhiteSpace(homeSceneName))

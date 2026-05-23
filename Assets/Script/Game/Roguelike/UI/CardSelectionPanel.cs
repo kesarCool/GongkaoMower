@@ -95,16 +95,14 @@ public class CardSelectionPanel : UIPanelBase
         _onRefreshRequested = null;
     }
 
-    private void OnCardClick(int index)
-    {
-        _onCardSelected?.Invoke(index);
-    }
+    private void OnCardClick(int index) => _onCardSelected?.Invoke(index);
 
     /// <summary>
     /// 刷新按钮点击（由Inspector的Button组件调用或代码绑定）
     /// </summary>
     public void OnRefreshButtonClick()
     {
+        UiClickSound.Play();
         _onRefreshRequested?.Invoke();
     }
 }

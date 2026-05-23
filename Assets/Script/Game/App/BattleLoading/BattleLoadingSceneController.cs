@@ -53,6 +53,7 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void OnRetryClicked()
     {
+        UiClickSound.Play();
         if (retryButton != null)
             retryButton.gameObject.SetActive(false);
         BeginFlow();
@@ -94,6 +95,15 @@ public class BattleLoadingSceneController : MonoBehaviour
             TableManager.Instance.Init();
 
         BattleChineseFontRuntime.EnsureLoaded();
+
+        SetStatus("加载音效…");
+        SetProgress(0f);
+
+        var audio = AudioService.Ensure();
+        if (!audio.IsGroupLoaded(AudioLoadGroup.Battle))
+        {
+            yield return audio.LoadGroupAsync(AudioLoadGroup.Battle);
+        }
 
         SetStatus("进入战斗…");
         SetProgress(0f);

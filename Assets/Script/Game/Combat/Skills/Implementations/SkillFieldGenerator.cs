@@ -43,6 +43,7 @@ public class SkillFieldGenerator : SkillBase
         base.OnEquip(ctx);
         EnsureVisual();
         RefreshVisual();
+        PublishSkillCast();
     }
 
     public override void OnUnequip()

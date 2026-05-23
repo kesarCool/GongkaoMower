@@ -72,6 +72,8 @@ public class LevelSelectLevelRowCell : MonoBehaviour
         if (_row.Kind != LevelSelectRowKind.Level)
             return;
 
+        UiClickSound.Play();
+
         PlayerProfileService.Instance.LoadOrCreate();
         if (!PlayerProfileService.Instance.IsLevelUnlocked(_row.levelId))
             return;

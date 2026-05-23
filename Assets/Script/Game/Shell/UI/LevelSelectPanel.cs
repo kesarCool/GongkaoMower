@@ -39,6 +39,7 @@ public class LevelSelectPanel : UIPanelBase
 
     private void OnCloseClicked()
     {
+        UiClickSound.PlayClose();
         if (UIManager.Instance != null)
             UIManager.Instance.CloseTop();
     }

@@ -11,8 +11,8 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LexiconPreviewPanel : UIPanelBase
 {
-    public const int DefaultThemePackId = LexiconCategoryTags.ThemePackGongkao;
-    public const int DefaultCategoryTag = LexiconCategoryTags.YanYuLiJie;
+    public const int DefaultThemePackId = LexiconCategoryTags.ThemePackChengyu;
+    public const int DefaultCategoryTag = LexiconCategoryTags.ChengyuShenHua;
 
     [Header("Prefab 引用（ThemePack / CategoryTag 下各保留一个 Toggle 作模板，运行时会隐藏）")]
     [SerializeField] private Button closeButton;
@@ -102,6 +102,7 @@ public class LexiconPreviewPanel : UIPanelBase
 
     private void OnCloseClicked()
     {
+        UiClickSound.PlayClose();
         if (UIManager.Instance != null)
             UIManager.Instance.CloseTop();
     }
@@ -194,6 +195,7 @@ public class LexiconPreviewPanel : UIPanelBase
         if (!isOn)
             return;
 
+        UiClickSound.Play();
         _selectedThemeId = themePackId;
         AdjustCategoryAfterThemeChanged();
         RebuildCategoryFilters();
@@ -205,6 +207,7 @@ public class LexiconPreviewPanel : UIPanelBase
         if (!isOn)
             return;
 
+        UiClickSound.Play();
         _selectedCategoryTag = categoryTag;
         RefreshEntryList();
     }

@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fffb2caa089f2004e8e5cd95b3302a96, type: 3}
+  m_Name: MainAudioCatalog
+  m_EditorClassIdentifier: 
+  common:
+    uiClick:
+      id: 1
+      relativePath: Audio/Common/sfx_button_click.mp3
+      group: 0
+      volume: 1
+      minInterval: 0
+    uiClose:
+      id: 2
+      relativePath: Audio/Common/sfx_button_close.mp3
+      group: 0
+      volume: 1
+      minInterval: 0
+  combat:
+    enemyHit:
+      id: 10
+      relativePath: 
+      group: 1
+      volume: 1
+      minInterval: 0.08
+    enemyDie:
+      id: 11
+      relativePath: 
+      group: 1
+      volume: 1
+      minInterval: 0
+    playerHurt:
+      id: 12
+      relativePath: 
+      group: 1
+      volume: 1
+      minInterval: 0.12
+  playerSkill:
+    autoProjectile:
+      id: 101
+      relativePath: Audio/Battle/PlayerSkill/sfx_shoot_auto_projectile.mp3
+      group: 1
+      volume: 0.143
+      minInterval: 0
+    lineBeam:
+      id: 102
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_line_beam.mp3
+      group: 1
+      volume: 1
+      minInterval: 0
+    orbitingBlades:
+      id: 103
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_orbiting_blade.mp3
+      group: 1
+      volume: 0.3
+      minInterval: 0
+    throwGrenade:
+      id: 104
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_throw_grenade.mp3
+      group: 1
+      volume: 1
+      minInterval: 0
+    fieldGenerator:
+      id: 105
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.mp3
+      group: 1
+      volume: 1
+      minInterval: 0
+    lightningStrike:
+      id: 106
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_lightning.wav
+      group: 1
+      volume: 1
+      minInterval: 0

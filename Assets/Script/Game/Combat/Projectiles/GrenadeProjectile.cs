@@ -82,6 +82,15 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
 
         SpawnLimiter.Instance?.Unregister(SpawnLimiterKey, gameObject);
         GameObjectPool.Release(gameObject);
+
+        if (_skillId != SkillId.None)
+        {
+            EventBus.Publish(new SkillCastEvent
+            {
+                skillId = _skillId,
+                worldPosition = fxPos
+            });
+        }
     }
 
     private void ApplyAoeDamage(Vector2 center)
@@ -126,5 +135,6 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
     public void OnPoolRelease()
     {
         _exploded = true;
+        SpawnLimiter.Instance?.Unregister(SpawnLimiterKey, gameObject);
     }
 }

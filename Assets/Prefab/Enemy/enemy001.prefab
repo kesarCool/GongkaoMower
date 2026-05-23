@@ -328,7 +328,7 @@ MonoBehaviour:
   fontSizeAbsoluteMin: 4
   enableStereoTextStyle: 1
   instanceMaterialPerEnemy: 1
-  stereoFaceBase: {r: 0.9811321, g: 0.40365034, b: 0.06941971, a: 1}
+  stereoFaceBase: {r: 1, g: 1, b: 1, a: 1}
   preferWaveSharedTint: 1
   perEnemyMicroHueJitter: 0.02
   randomizeStereoHue: 1

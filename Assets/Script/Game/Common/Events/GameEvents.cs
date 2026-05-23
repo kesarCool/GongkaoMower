@@ -61,3 +61,10 @@ public struct PlayerDiedEvent
     public PlayerHealth playerHealth;
 }
 
+/// <summary>技能施放/命中（供音效等旁路系统订阅；手雷等在落地爆炸时发布，其余技能在释放时发布）。</summary>
+public struct SkillCastEvent
+{
+    public SkillId skillId;
+    public Vector3 worldPosition;
+}
+

@@ -138,6 +138,7 @@ public class CardView : MonoBehaviour
     /// </summary>
     public void OnClick()
     {
+        UiClickSound.Play();
         if (animator != null)
             animator.SetTrigger("Selected");
 

@@ -47,4 +47,16 @@ public abstract class SkillBase : ISkill
         float rad = Random.Range(0f, 360f) * Mathf.Deg2Rad;
         return new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
     }
+
+    protected void PublishSkillCast(Vector3? worldPosition = null)
+    {
+        if (Id == SkillId.None) return;
+
+        Vector3 pos = worldPosition ?? (_ctx.player != null ? _ctx.player.position : Vector3.zero);
+        EventBus.Publish(new SkillCastEvent
+        {
+            skillId = Id,
+            worldPosition = pos
+        });
+    }
 }

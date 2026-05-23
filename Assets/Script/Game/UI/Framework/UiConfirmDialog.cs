@@ -78,6 +78,7 @@ public class UiConfirmDialog : UIPanelBase
             return;
         }
 
+        UiClickSound.PlayClose();
         var cb = _callback;
         _callback = null;
         cb.Invoke(false);
@@ -85,6 +86,7 @@ public class UiConfirmDialog : UIPanelBase
 
     private void OnOk()
     {
+        UiClickSound.Play();
         var cb = _callback;
         _callback = null;
         cb?.Invoke(true);
@@ -94,6 +96,7 @@ public class UiConfirmDialog : UIPanelBase
 
     private void OnCancel()
     {
+        UiClickSound.PlayClose();
         var cb = _callback;
         _callback = null;
         cb?.Invoke(false);

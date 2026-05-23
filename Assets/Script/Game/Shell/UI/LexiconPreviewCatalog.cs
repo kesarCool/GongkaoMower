@@ -135,7 +135,7 @@ public static class LexiconPreviewCatalog
     }
 
     /// <summary>
-    /// 当前已选多个主题时：若仅一个主题则用 <see cref="GetCategoryTabLabel"/>；若含公考包则优先用公考包命名；否则用 <see cref="GetCategoryTabLabelBestEffort"/>。
+    /// 当前已选多个主题时：若仅一个主题则用 <see cref="GetCategoryTabLabel"/>；若含成语包则优先用成语包命名；否则用 <see cref="GetCategoryTabLabelBestEffort"/>。
     /// </summary>
     public static string GetCategoryTabLabelForSelection(IReadOnlyCollection<int> themePackIds, int categoryTag)
     {
@@ -150,44 +150,40 @@ public static class LexiconPreviewCatalog
 
         foreach (var t in themePackIds)
         {
-            if (t == LexiconCategoryTags.ThemePackGongkao)
+            if (t == LexiconCategoryTags.ThemePackChengyu)
                 return GetCategoryTabLabel(t, categoryTag);
         }
 
         return GetCategoryTabLabelBestEffort(categoryTag);
     }
 
-    /// <summary>分类显示名：不依赖具体主题包时，用公考常用标签名兜底。</summary>
+    /// <summary>分类显示名：不依赖具体主题包时，用成语常用标签名兜底。</summary>
     public static string GetCategoryTabLabelBestEffort(int categoryTag)
     {
-        if (categoryTag == LexiconCategoryTags.YanYuLiJie) return "言语理解";
-        if (categoryTag == LexiconCategoryTags.PanDuanTuiLi) return "判断推理";
-        if (categoryTag == LexiconCategoryTags.ZiLiaoFenXi) return "资料分析";
-        if (categoryTag == LexiconCategoryTags.ShuLiangGuanXi) return "数量关系";
-        if (categoryTag == LexiconCategoryTags.ShiZhengChangShi) return "时政常识";
-        if (categoryTag == LexiconCategoryTags.ShenLun) return "申论";
+        if (categoryTag == LexiconCategoryTags.ChengyuShenHua) return "神话传说";
+        if (categoryTag == LexiconCategoryTags.ChengyuYuYan) return "寓言故事";
+        if (categoryTag == LexiconCategoryTags.ChengyuLiShi) return "历史事件";
+        if (categoryTag == LexiconCategoryTags.ChengyuWenXue) return "文学创作";
         return "分类 " + categoryTag;
     }
 
     /// <summary>主题包在页签上的显示名（可随产品扩展）。</summary>
     public static string GetThemeTabLabel(int themePackId)
     {
-        if (themePackId == LexiconCategoryTags.ThemePackGongkao)
-            return "主题一 · 公考";
+        if (themePackId == LexiconCategoryTags.ThemePackChengyu)
+            return "主题一 · 成语";
         return "主题 " + themePackId;
     }
 
-    /// <summary>分类在子页签上的显示名；公考包用 <see cref="LexiconCategoryTags"/> 常量名。</summary>
+    /// <summary>分类在子页签上的显示名。</summary>
     public static string GetCategoryTabLabel(int themePackId, int categoryTag)
     {
-        if (themePackId == LexiconCategoryTags.ThemePackGongkao)
+        if (themePackId == LexiconCategoryTags.ThemePackChengyu)
         {
-            if (categoryTag == LexiconCategoryTags.YanYuLiJie) return "言语理解";
-            if (categoryTag == LexiconCategoryTags.PanDuanTuiLi) return "判断推理";
-            if (categoryTag == LexiconCategoryTags.ZiLiaoFenXi) return "资料分析";
-            if (categoryTag == LexiconCategoryTags.ShuLiangGuanXi) return "数量关系";
-            if (categoryTag == LexiconCategoryTags.ShiZhengChangShi) return "时政常识";
-            if (categoryTag == LexiconCategoryTags.ShenLun) return "申论";
+            if (categoryTag == LexiconCategoryTags.ChengyuShenHua) return "神话传说";
+            if (categoryTag == LexiconCategoryTags.ChengyuYuYan) return "寓言故事";
+            if (categoryTag == LexiconCategoryTags.ChengyuLiShi) return "历史事件";
+            if (categoryTag == LexiconCategoryTags.ChengyuWenXue) return "文学创作";
         }
 
         return "分类 " + categoryTag;

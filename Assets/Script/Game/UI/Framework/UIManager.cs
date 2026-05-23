@@ -115,7 +115,10 @@ public class UIManager : MonoBehaviour
 
         var top = Top;
         if (top != null && top.LastOptions.CloseOnBack)
+        {
+            UiClickSound.PlayClose();
             CloseTop();
+        }
     }
 
     /// <summary>当前主栈顶（无则 null）</summary>

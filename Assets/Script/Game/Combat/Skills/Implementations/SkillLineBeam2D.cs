@@ -108,6 +108,7 @@ public class SkillLineBeam2D : SkillBase
 
         Physics2D.queriesHitTriggers = prev;
         HideExtraBeamVisuals(count);
+        PublishSkillCast(origin);
     }
 
     private static Vector2 ResolveBeamDirection(int beamIndex, bool allAimAtMonster, bool hasNearest, Vector2 aimDir)

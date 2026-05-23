@@ -86,5 +86,8 @@ public class SkillAutoProjectile : SkillBase
             SpawnLimiter.Instance?.RegisterSpawned("Bullet", bullet);
             spawned++;
         }
+
+        if (spawned > 0)
+            PublishSkillCast(from);
     }
 }

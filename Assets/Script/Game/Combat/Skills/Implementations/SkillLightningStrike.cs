@@ -93,6 +93,7 @@ public class SkillLightningStrike : SkillBase
         var fxPos = new Vector3(center.x, center.y, -0.1f);
         CombatVfxSpawner.TryPlayPooled(strikeFxPrefab, fxPos, Quaternion.identity);
         ApplyStrikeDamage(center);
+        PublishSkillCast(fxPos);
     }
 
     private void ApplyStrikeDamage(Vector2 center)

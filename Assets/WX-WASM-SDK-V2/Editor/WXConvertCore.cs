@@ -801,6 +801,85 @@ namespace WeChatWASM
             }
         }
 
+        /// <summary>
+        /// 修复 _WXInnerAudio* 和 _WXCreateInnerAudioContext 等音频 bridge stub，
+        /// 改为直接调用 window.WXWASMSDK.WX*Audio* 实现。
+        /// </summary>
+        private static void FixWXAudioStubs(ref string text)
+        {
+            var replacements = new (string oldStub, string newImpl)[]
+            {
+                (
+                    "function _WXCreateInnerAudioContext() {\n err(\"missing function: WXCreateInnerAudioContext\");\n abort(-1);\n}",
+                    "function _WXCreateInnerAudioContext(srcPtr, loop, startTime, autoplay, volume, playbackRate, needDownload) {\n var src = UTF8ToString(srcPtr);\n var res = window.WXWASMSDK.WXCreateInnerAudioContext(src, Boolean(loop), startTime, Boolean(autoplay), volume, playbackRate, Boolean(needDownload));\n var bufferSize = lengthBytesUTF8(res || \"\") + 1;\n var buffer = _malloc(bufferSize);\n stringToUTF8(res, buffer, bufferSize);\n return buffer;\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextAddListener() {\n err(\"missing function: WXInnerAudioContextAddListener\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextAddListener(idPtr, keyPtr) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXInnerAudioContextAddListener(id, key);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextDestroy() {\n err(\"missing function: WXInnerAudioContextDestroy\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextDestroy(idPtr) {\n var id = UTF8ToString(idPtr);\n window.WXWASMSDK.WXInnerAudioContextDestroy(id);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextGetBool() {\n err(\"missing function: WXInnerAudioContextGetBool\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextGetBool(idPtr, keyPtr) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n return window.WXWASMSDK.WXInnerAudioContextGetBool(id, key) ? 1 : 0;\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextGetFloat() {\n err(\"missing function: WXInnerAudioContextGetFloat\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextGetFloat(idPtr, keyPtr) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n return window.WXWASMSDK.WXInnerAudioContextGetFloat(id, key);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextPause() {\n err(\"missing function: WXInnerAudioContextPause\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextPause(idPtr) {\n var id = UTF8ToString(idPtr);\n window.WXWASMSDK.WXInnerAudioContextPause(id);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextPlay() {\n err(\"missing function: WXInnerAudioContextPlay\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextPlay(idPtr) {\n var id = UTF8ToString(idPtr);\n window.WXWASMSDK.WXInnerAudioContextPlay(id);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextRemoveListener() {\n err(\"missing function: WXInnerAudioContextRemoveListener\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextRemoveListener(idPtr, keyPtr) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXInnerAudioContextRemoveListener(id, key);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextSeek() {\n err(\"missing function: WXInnerAudioContextSeek\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextSeek(idPtr, position) {\n var id = UTF8ToString(idPtr);\n window.WXWASMSDK.WXInnerAudioContextSeek(id, position);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextSetBool() {\n err(\"missing function: WXInnerAudioContextSetBool\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextSetBool(idPtr, keyPtr, v) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXInnerAudioContextSetBool(id, key, Boolean(v));\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextSetFloat() {\n err(\"missing function: WXInnerAudioContextSetFloat\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextSetFloat(idPtr, keyPtr, v) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n window.WXWASMSDK.WXInnerAudioContextSetFloat(id, key, v);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextSetString() {\n err(\"missing function: WXInnerAudioContextSetString\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextSetString(idPtr, keyPtr, vPtr) {\n var id = UTF8ToString(idPtr);\n var key = UTF8ToString(keyPtr);\n var v = UTF8ToString(vPtr);\n window.WXWASMSDK.WXInnerAudioContextSetString(id, key, v);\n}"
+                ),
+                (
+                    "function _WXInnerAudioContextStop() {\n err(\"missing function: WXInnerAudioContextStop\");\n abort(-1);\n}",
+                    "function _WXInnerAudioContextStop(idPtr) {\n var id = UTF8ToString(idPtr);\n window.WXWASMSDK.WXInnerAudioContextStop(id);\n}"
+                ),
+                (
+                    "function _WXPreDownloadAudios() {\n err(\"missing function: WXPreDownloadAudios\");\n abort(-1);\n}",
+                    "function _WXPreDownloadAudios(pathsPtr, id) {\n var paths = UTF8ToString(pathsPtr);\n window.WXWASMSDK.WXPreDownloadAudios(paths, id);\n}"
+                ),
+            };
+
+            foreach (var (oldStub, newImpl) in replacements)
+            {
+                if (text.Contains(oldStub))
+                {
+                    text = text.Replace(oldStub, newImpl);
+                }
+                else
+                {
+                    Debug.LogWarning($"[WXConvertCore] FixWXAudioStubs: stub not found, skip. {oldStub.Substring(0, Math.Min(50, oldStub.Length))}...");
+                }
+            }
+        }
+
         private static bool CheckBuildTemplate()
         {
             string[] res = BuildTemplate.CheckCustomCoverBaseConflict(
@@ -991,6 +1070,7 @@ namespace WeChatWASM
             }
 
             FixWXStorageStubs(ref text);
+            FixWXAudioStubs(ref text);
 
             if (!Directory.Exists(Path.Combine(config.ProjectConf.DST, miniGameDir)))
             {

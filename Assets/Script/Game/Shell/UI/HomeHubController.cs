@@ -49,6 +49,7 @@ public class HomeHubController : MonoBehaviour
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
     public void OpenLevelSelect()
     {
+        UiClickSound.Play();
         if (TableManager.Instance != null)
             TableManager.Instance.Init();
 
@@ -67,6 +68,7 @@ public class HomeHubController : MonoBehaviour
     /// </summary>
     public void StartCurrentLevel()
     {
+        UiClickSound.Play();
         if (TableManager.Instance != null)
             TableManager.Instance.Init();
 
@@ -83,6 +85,7 @@ public class HomeHubController : MonoBehaviour
     /// <summary>打开词汇预览：先 <see cref="TableManager.Init"/> 再弹窗。</summary>
     public void OpenLexiconPreview()
     {
+        UiClickSound.Play();
         if (TableManager.Instance != null)
             TableManager.Instance.Init();
 
