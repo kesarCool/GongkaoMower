@@ -58,27 +58,27 @@ public class SkillLineBeam2D : SkillBase
 
         _timer += deltaTime;
         if (_timer < interval) return;
-        _timer = 0f;
 
         Vector2 origin = _ctx.player.position;
-        int count = Mathf.Max(1, beamCount);
-
-        GameObject nearest = null;
-        Vector2 aimDir = Vector2.right;
-        int livingEnemies = 0;
-
         float senseRange = Mathf.Max(0.5f, beamLength);
 
-        if (!string.IsNullOrEmpty(_ctx.enemyTag))
+        if (string.IsNullOrEmpty(_ctx.enemyTag))
+            return;
+
+        int livingEnemies = CountActiveEnemiesInRange(origin, _ctx.enemyTag, senseRange);
+        if (livingEnemies <= 0)
+            return;
+
+        _timer = 0f;
+
+        int count = Mathf.Max(1, beamCount);
+        GameObject nearest = FindNearestEnemy(origin, _ctx.enemyTag, senseRange);
+        Vector2 aimDir = Vector2.right;
+        if (nearest != null)
         {
-            livingEnemies = CountActiveEnemiesInRange(origin, _ctx.enemyTag, senseRange);
-            nearest = FindNearestEnemy(origin, _ctx.enemyTag, senseRange);
-            if (nearest != null)
-            {
-                Vector2 toEnemy = (Vector2)nearest.transform.position - origin;
-                if (toEnemy.sqrMagnitude > 0.0001f)
-                    aimDir = toEnemy.normalized;
-            }
+            Vector2 toEnemy = (Vector2)nearest.transform.position - origin;
+            if (toEnemy.sqrMagnitude > 0.0001f)
+                aimDir = toEnemy.normalized;
         }
 
         // 感知范围内仅 1 只：全部集中；否则第 0 条瞄最近，其余 360° 随机

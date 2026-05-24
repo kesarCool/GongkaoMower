@@ -8,16 +8,12 @@ public class PlayerController : MonoBehaviour
     [Header("Attack (Legacy)")]
     [Tooltip("勾选后：禁用本脚本内的自动射击（改由 PlayerSkills / 技能系统驱动）")]
     public bool disableLegacyAutoShoot = false;
-    
-    [Tooltip("攻击间隔（秒）。例如 0.5 表示每 0.5 秒攻击一次")]
     public float attackSpeed = 0.5f;
-
     public GameObject bulletPrefab;
     public float bulletSpeed = 10f;
     public string enemyTag = "monster";
 
     [Header("Visual")]
-    [Tooltip("留空则自动查找子节点 Body 的 SpriteRenderer")]
     [SerializeField] private SpriteRenderer bodyRenderer;
 
     private Camera mainCam;
@@ -25,6 +21,7 @@ public class PlayerController : MonoBehaviour
     private bool hasTarget;
     private float attackTimer;
     private Rigidbody2D _rb;
+    private DynamicJoystick _joystick;
     private Vector3 _lastPosition;
     private const float FacingEpsilon = 0.001f;
 
@@ -49,9 +46,8 @@ public class PlayerController : MonoBehaviour
     {
         HandleInput();
         MoveToTarget();
-       /// 自动射击最近敌人
-       if (!disableLegacyAutoShoot)
-           AutoShootNearestEnemy();
+        if (!disableLegacyAutoShoot)
+            AutoShootNearestEnemy();
     }
 
     private void LateUpdate()
@@ -59,34 +55,47 @@ public class PlayerController : MonoBehaviour
         UpdateBodyFacing();
     }
 
-
     private void HandleInput()
     {
-        // 鼠标点击（PC）
-       // if (Input.GetMouseButtonDown(0))
-      //  {
-      //      SetMoveTarget(Input.mousePosition);
-       // }
+        // 如果摇杆正在控制，跳过点击移动（避免双系统打架）
+        if (_joystick != null && _joystick.JoystickActive)
+        {
+            hasTarget = false;
+            return;
+        }
 
-        // 触摸（手机）
         if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
             SetMoveTarget(Input.GetTouch(0).position);
+        }
+        else if (Input.GetMouseButtonDown(0))
+        {
+            SetMoveTarget(Input.mousePosition);
         }
     }
 
     private void SetMoveTarget(Vector3 screenPos)
     {
         if (mainCam == null) mainCam = Camera.main;
+        if (mainCam == null) return;
 
         Vector3 world = mainCam.ScreenToWorldPoint(screenPos);
-        world.z = 0f;                 // 2D
+        world.z = 0f;
         targetPos = world;
         hasTarget = true;
     }
 
     private void MoveToTarget()
     {
+        // 摇杆激活时不执行（避免和摇杆抢控）
+        if (_joystick == null)
+            _joystick = FindObjectOfType<DynamicJoystick>();
+        if (_joystick != null && _joystick.JoystickActive)
+        {
+            hasTarget = false;
+            return;
+        }
+
         if (!hasTarget) return;
 
         Vector3 cur = transform.position;
@@ -101,12 +110,7 @@ public class PlayerController : MonoBehaviour
     {
         if (bodyRenderer == null) return;
 
-        float horizontal = 0f;
-        if (_rb != null && Mathf.Abs(_rb.velocity.x) > FacingEpsilon)
-            horizontal = _rb.velocity.x;
-        else
-            horizontal = transform.position.x - _lastPosition.x;
-
+        float horizontal = transform.position.x - _lastPosition.x;
         _lastPosition = transform.position;
 
         if (Mathf.Abs(horizontal) <= FacingEpsilon) return;
@@ -128,7 +132,6 @@ public class PlayerController : MonoBehaviour
         if (dir.sqrMagnitude < 0.0001f) return;
         dir.Normalize();
 
-        // 检查上限与节流
         if (SpawnLimiter.Instance != null)
         {
             if (!SpawnLimiter.Instance.CanSpawn("Bullet", out _))
@@ -145,7 +148,6 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // 如果你忘了挂 Bullet 脚本，仍然让它能飞：给它一个刚体速度
             Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
             if (rb != null) rb.velocity = dir * bulletSpeed;
         }
@@ -156,5 +158,23 @@ public class PlayerController : MonoBehaviour
     private GameObject FindNearestEnemy()
     {
         return CombatTargetRegistry.FindNearest(enemyTag, transform.position);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // 玩家不要被怪物推走：碰撞时抵消怪物施加的冲量
+        if (collision.rigidbody != null && collision.collider.CompareTag(enemyTag))
+        {
+            // 把碰撞法线方向的相对速度清零，防止被推
+            _rb.velocity = Vector2.zero;
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.rigidbody != null && collision.collider.CompareTag(enemyTag))
+        {
+            _rb.velocity = Vector2.zero;
+        }
     }
 }

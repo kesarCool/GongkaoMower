@@ -59,7 +59,7 @@ public class EnemyBase : MonoBehaviour
     public GameObject BulletPrefab => bulletPrefab;
 
     /// <summary>
-    /// 由生成器/初始化逻辑调用：从配置数据写入运行时属性
+    /// 从配表写入 id、名字、prefab 引用。数值（攻血速）走 <see cref="ApplyTableStats"/>。
     /// </summary>
     public virtual void InitFromDefinition(EnemyDefinition def)
     {
@@ -67,13 +67,6 @@ public class EnemyBase : MonoBehaviour
 
         enemyId = def.id;
         enemyName = def.enemyName;
-
-        moveSpeed = def.moveSpeed;
-        maxHp = Mathf.Max(1f, def.maxHp);
-        hp = maxHp;
-        damage = def.damage;
-        rewardKillCount = def.rewardKillCount;
-
         sprite = def.sprite;
         bulletPrefab = def.bulletPrefab;
 
@@ -81,26 +74,40 @@ public class EnemyBase : MonoBehaviour
     }
 
     /// <summary>
-    /// 关卡波次表覆盖：attack/maxHp 为 0 表示保留 <see cref="InitFromDefinition"/> 结果。
+    /// 唯一数值入口：所有攻血速只能从 Excel 表（LevelWave.attack/maxHp/speed）来。
+    /// </summary>
+    public virtual void ApplyTableStats(int attackRaw, int hpRaw, float moveSpeed)
+    {
+        if (attackRaw > 0)    damage    = attackRaw;
+        if (hpRaw > 0)        maxHp     = Mathf.Max(1f, hpRaw);
+        if (moveSpeed > 0f)   this.moveSpeed = moveSpeed;
+        hp = maxHp;
+
+        SyncComponents();
+    }
+
+    /// <summary>
+    /// 关卡波次表覆盖（已废弃，用 ApplyTableStats 代替）。保留以兼容旧调用。
     /// </summary>
     public virtual void ApplyWaveStatOverrides(int attackOverride, int maxHpOverride)
     {
-        if (attackOverride > 0)
-            damage = attackOverride;
-        if (maxHpOverride > 0)
-        {
-            maxHp = Mathf.Max(1f, maxHpOverride);
-            hp = maxHp;
-        }
+        ApplyTableStats(attackOverride, maxHpOverride, 0);
+    }
 
-        ApplyToComponents();
-
+    /// <summary>
+    /// ApplyTableStats 完成后同步 EnemyStats 和 EnemyAI。
+    /// </summary>
+    private void SyncComponents()
+    {
         EnemyStats stats = GetComponent<EnemyStats>();
         if (stats != null)
         {
             stats.maxHp = maxHp;
             stats.hp = hp;
         }
+
+        EnemyAI ai = GetComponent<EnemyAI>();
+        if (ai != null) ai.moveSpeed = moveSpeed;
     }
 
     /// <summary>

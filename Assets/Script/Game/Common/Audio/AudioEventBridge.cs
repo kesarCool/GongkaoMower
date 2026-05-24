@@ -34,7 +34,7 @@ public sealed class AudioEventBridge : MonoBehaviour
         if (e.skillId == SkillId.OrbitingBlades)
             return;
 
-        AudioId id = SkillAudioMapping.ToAudioId(e.skillId);
+        AudioId id = AudioCatalog.ResolveSkillAudioId(e.skillId);
         if (id != AudioId.None)
         {
             AudioService service = AudioService.Ensure();

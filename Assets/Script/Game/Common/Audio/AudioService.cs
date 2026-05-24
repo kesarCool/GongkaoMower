@@ -116,7 +116,7 @@ public sealed class AudioService : MonoBehaviour
             return;
 
         _lastPlayTime[id] = Time.unscaledTime;
-        _backend.Play(entry.relativePath, entry.volume);
+        _backend.Play(entry.relativePath, entry.volume, entry.pitchVariation, entry.pitchOffset, entry.volumeVariation);
     }
 
     /// <summary>常驻循环音（如环绕刀片）；同一 <see cref="AudioId"/> 重复调用会先停再播。</summary>

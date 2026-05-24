@@ -20,6 +20,12 @@ public sealed class AudioCatalog : ScriptableObject
         [Range(0f, 1f)] public float volume = 1f;
         [Tooltip("同一 Id 两次播放的最小间隔（秒），0 表示不限制。技能音建议 0，由施放事件节流。")]
         public float minInterval;
+        [Tooltip("音高随机范围：0 表示不变，0.1 表示 ±10% 随机。受击/连射音建议 0.08~0.12。")]
+        [Range(0f, 0.3f)] public float pitchVariation;
+        [Tooltip("音高偏移：-0.1 表示整体低沉10%。死亡音建议 -0.1。")]
+        [Range(-0.3f, 0.3f)] public float pitchOffset;
+        [Tooltip("音量随机范围：0 表示固定，0.15 表示 ±15% 波动。连射音建议 0.15 打破单调感。")]
+        [Range(0f, 0.3f)] public float volumeVariation;
     }
 
     [Header("Common（首包 UI）")]
@@ -62,6 +68,21 @@ public sealed class AudioCatalog : ScriptableObject
     public CommonSection Common => common;
     public CombatSection Combat => combat;
     public PlayerSkillSection PlayerSkill => playerSkill;
+
+    /// <summary>SkillId → AudioId 映射（原来的 SkillAudioMapping）。</summary>
+    public static AudioId ResolveSkillAudioId(SkillId skillId)
+    {
+        switch (skillId)
+        {
+            case SkillId.AutoProjectile:  return AudioId.SkillAutoProjectile;
+            case SkillId.LineBeam:        return AudioId.SkillLineBeam;
+            case SkillId.OrbitingBlades:  return AudioId.SkillOrbitingBlades;
+            case SkillId.ThrowGrenade:    return AudioId.SkillThrowGrenade;
+            case SkillId.FieldGenerator:  return AudioId.SkillFieldGenerator;
+            case SkillId.LightningStrike: return AudioId.SkillLightningStrike;
+            default:                      return AudioId.None;
+        }
+    }
 
     public bool TryGet(AudioId id, out Entry entry)
     {

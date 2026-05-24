@@ -31,15 +31,16 @@ public enum eCrypt : int
   public int monsterId { get { int o = __p.__offset(12); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int attack { get { int o = __p.__offset(14); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int maxHp { get { int o = __p.__offset(16); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int exp { get { int o = __p.__offset(18); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int prop { get { int o = __p.__offset(20); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int timeStart { get { int o = __p.__offset(22); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public float intervalSpawn { get { int o = __p.__offset(24); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
-  public int totalMonster { get { int o = __p.__offset(26); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int lineSpawn { get { int o = __p.__offset(28); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public bool iscirculate { get { int o = __p.__offset(30); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  public bool isBoss { get { int o = __p.__offset(32); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  public int quantityBoss { get { int o = __p.__offset(34); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public float speed { get { int o = __p.__offset(18); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public int exp { get { int o = __p.__offset(20); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public int prop { get { int o = __p.__offset(22); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public int timeStart { get { int o = __p.__offset(24); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public float intervalSpawn { get { int o = __p.__offset(26); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public int totalMonster { get { int o = __p.__offset(28); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public int lineSpawn { get { int o = __p.__offset(30); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public bool iscirculate { get { int o = __p.__offset(32); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
+  public bool isBoss { get { int o = __p.__offset(34); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
+  public int quantityBoss { get { int o = __p.__offset(36); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
 
   public static Offset<LevelWave> CreateLevelWave(FlatBufferBuilder builder,
       int ID = 0,
@@ -49,6 +50,7 @@ public enum eCrypt : int
       int monsterId = 0,
       int attack = 0,
       int maxHp = 0,
+      float speed = 0.0f,
       int exp = 0,
       int prop = 0,
       int timeStart = 0,
@@ -58,7 +60,7 @@ public enum eCrypt : int
       bool iscirculate = false,
       bool isBoss = false,
       int quantityBoss = 0) {
-    builder.StartObject(16);
+    builder.StartObject(17);
     LevelWave.AddQuantityBoss(builder, quantityBoss);
     LevelWave.AddLineSpawn(builder, lineSpawn);
     LevelWave.AddTotalMonster(builder, totalMonster);
@@ -66,6 +68,7 @@ public enum eCrypt : int
     LevelWave.AddTimeStart(builder, timeStart);
     LevelWave.AddProp(builder, prop);
     LevelWave.AddExp(builder, exp);
+    LevelWave.AddSpeed(builder, speed);
     LevelWave.AddMaxHp(builder, maxHp);
     LevelWave.AddAttack(builder, attack);
     LevelWave.AddMonsterId(builder, monsterId);
@@ -78,7 +81,7 @@ public enum eCrypt : int
     return LevelWave.EndLevelWave(builder);
   }
 
-  public static void StartLevelWave(FlatBufferBuilder builder) { builder.StartObject(16); }
+  public static void StartLevelWave(FlatBufferBuilder builder) { builder.StartObject(17); }
   public static void AddID(FlatBufferBuilder builder, int ID) { builder.AddInt(0, ID, 0); }
   public static void AddLevelId(FlatBufferBuilder builder, int levelId) { builder.AddInt(1, levelId, 0); }
   public static void AddWave(FlatBufferBuilder builder, int wave) { builder.AddInt(2, wave, 0); }
@@ -86,15 +89,16 @@ public enum eCrypt : int
   public static void AddMonsterId(FlatBufferBuilder builder, int monsterId) { builder.AddInt(4, monsterId, 0); }
   public static void AddAttack(FlatBufferBuilder builder, int attack) { builder.AddInt(5, attack, 0); }
   public static void AddMaxHp(FlatBufferBuilder builder, int maxHp) { builder.AddInt(6, maxHp, 0); }
-  public static void AddExp(FlatBufferBuilder builder, int exp) { builder.AddInt(7, exp, 0); }
-  public static void AddProp(FlatBufferBuilder builder, int prop) { builder.AddInt(8, prop, 0); }
-  public static void AddTimeStart(FlatBufferBuilder builder, int timeStart) { builder.AddInt(9, timeStart, 0); }
-  public static void AddIntervalSpawn(FlatBufferBuilder builder, float intervalSpawn) { builder.AddFloat(10, intervalSpawn, 0.0f); }
-  public static void AddTotalMonster(FlatBufferBuilder builder, int totalMonster) { builder.AddInt(11, totalMonster, 0); }
-  public static void AddLineSpawn(FlatBufferBuilder builder, int lineSpawn) { builder.AddInt(12, lineSpawn, 0); }
-  public static void AddIscirculate(FlatBufferBuilder builder, bool iscirculate) { builder.AddBool(13, iscirculate, false); }
-  public static void AddIsBoss(FlatBufferBuilder builder, bool isBoss) { builder.AddBool(14, isBoss, false); }
-  public static void AddQuantityBoss(FlatBufferBuilder builder, int quantityBoss) { builder.AddInt(15, quantityBoss, 0); }
+  public static void AddSpeed(FlatBufferBuilder builder, float speed) { builder.AddFloat(7, speed, 0.0f); }
+  public static void AddExp(FlatBufferBuilder builder, int exp) { builder.AddInt(8, exp, 0); }
+  public static void AddProp(FlatBufferBuilder builder, int prop) { builder.AddInt(9, prop, 0); }
+  public static void AddTimeStart(FlatBufferBuilder builder, int timeStart) { builder.AddInt(10, timeStart, 0); }
+  public static void AddIntervalSpawn(FlatBufferBuilder builder, float intervalSpawn) { builder.AddFloat(11, intervalSpawn, 0.0f); }
+  public static void AddTotalMonster(FlatBufferBuilder builder, int totalMonster) { builder.AddInt(12, totalMonster, 0); }
+  public static void AddLineSpawn(FlatBufferBuilder builder, int lineSpawn) { builder.AddInt(13, lineSpawn, 0); }
+  public static void AddIscirculate(FlatBufferBuilder builder, bool iscirculate) { builder.AddBool(14, iscirculate, false); }
+  public static void AddIsBoss(FlatBufferBuilder builder, bool isBoss) { builder.AddBool(15, isBoss, false); }
+  public static void AddQuantityBoss(FlatBufferBuilder builder, int quantityBoss) { builder.AddInt(16, quantityBoss, 0); }
   public static Offset<LevelWave> EndLevelWave(FlatBufferBuilder builder) {
     int o = builder.EndObject();
     return new Offset<LevelWave>(o);

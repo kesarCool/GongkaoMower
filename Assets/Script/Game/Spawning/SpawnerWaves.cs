@@ -33,65 +33,34 @@ public class SpawnerWaves : MonoBehaviour
     }
 
     [Header("Prefab")]
-    [Tooltip("敌人预制体（兼容旧用法）。如果你改为按 enemyId 生成，可以不填。")]
+    [Tooltip("敌人预制体（按 ID 在 EnemyCatalog 找不到时兜底使用）。")]
     public GameObject enemyPrefab;
 
     [Header("按ID生成（推荐）")]
-    [Tooltip("怪物目录表（Inspector里配置ID->Prefab/数值/资源引用）。按ID生成时需要。")]
+    [Tooltip("怪物目录表（Inspector里配置ID->Prefab映射）。数值不再从此读取，统一走 Excel 表。")]
     public EnemyCatalog catalog;
 
     [Tooltip("常规刷怪使用的怪物ID（当启用常规刷怪时使用）")]
     public int normalEnemyId = 1;
 
     [Header("目标（玩家）")]
-    [Tooltip("刷怪围绕的目标。若为空，会尝试用 Tag=Player 查找。")]
     public Transform target;
-
-    [Tooltip("当 target 为空时，用该 Tag 自动查找。")]
     public string targetTag = "Player";
 
     [Header("常规刷怪（可选）")]
-    [Tooltip("是否启用常规刷怪（按 interval 持续刷）")]
     public bool enableNormalSpawn = true;
-
-    [Tooltip("常规刷怪间隔（秒）")]
     public float normalInterval = 1f;
-
-    [Tooltip("常规刷怪每次生成数量")]
     public int normalCountPerTick = 1;
 
     [Header("生成环参数（方案R）")]
-    [Tooltip("最小安全距离：怪物生成点到玩家至少该距离（世界单位）。")]
     public float rMin = 5f;
-
-    [Tooltip("生成环半径：怪物会在距离玩家约该半径的位置生成（世界单位）。")]
     public float rSpawn = 10f;
-
-    [Tooltip("位置扰动（世界单位）：让生成点在环上有少许随机偏移，避免完全规则。")]
     public float ringJitter = 0.3f;
 
-    [Header("地图边界限制（必须在地图内生成）")]
-    [Tooltip("用于判断“地图内/外”的 Tilemap（建议拖 GroundTilemap）。为空则不做地图内限制。")]
+    [Header("地图边界限制")]
     public Tilemap mapBoundsTilemap;
-
-    [Tooltip("生成点距离地图边界的最小留边（世界单位）。例如 0.5 表示不要刷在边界墙正贴边的位置。")]
     public float mapPadding = 0.5f;
-
-    [Tooltip("每次生成时最多尝试多少次找一个在地图内的点（玩家靠边时很重要）。")]
     public int maxTries = 12;
-
-    [Header("敌人参数（可选）")]
-    [Tooltip("是否写入敌人移动速度（EnemyAI.moveSpeed）")]
-    public bool applyMoveSpeed = true;
-
-    [Tooltip("敌人速度范围（随机）")]
-    public Vector2 enemySpeedRange = new Vector2(1.5f, 3.5f);
-
-    [Tooltip("是否写入敌人血量（EnemyStats.hp/maxHp）。若敌人没有该组件会自动挂上。")]
-    public bool applyHp = true;
-
-    [Tooltip("敌人血量范围（随机）")]
-    public Vector2 enemyHpRange = new Vector2(3f, 10f);
 
     [Header("爆兵（分波次）")]
     [Tooltip("波次数组（按顺序执行）")]
@@ -179,6 +148,7 @@ public class SpawnerWaves : MonoBehaviour
         public int lineSpawn;
         public int attack;
         public int maxHp;
+        public float moveSpeed; // LevelWave.speed，直接使用
         public bool isBoss;
         public int quantityBoss;
 
@@ -195,6 +165,7 @@ public class SpawnerWaves : MonoBehaviour
                 lineSpawn = lw.lineSpawn,
                 attack = lw.attack,
                 maxHp = lw.maxHp,
+                moveSpeed = lw.speed,
                 isBoss = lw.isBoss,
                 quantityBoss = lw.quantityBoss,
             };
@@ -362,7 +333,7 @@ public class SpawnerWaves : MonoBehaviour
                         }
                     }
 
-                    SpawnOne(cfg.enemyId, 0, 0, 0);
+                    SpawnEnemy(cfg.enemyId, 0, 0, 0, 0);
                     spawned++;
 
                     if (step > 0f)
@@ -443,7 +414,7 @@ public class SpawnerWaves : MonoBehaviour
             if (markBoss)
                 bossMarkBudget--;
 
-            GameObject spawnedGo = SpawnOne(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp);
+            GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed);
             if (markBoss && spawnedGo != null)
                 TryMarkLastWaveBoss(spawnedGo);
             spawned++;
@@ -520,12 +491,16 @@ public class SpawnerWaves : MonoBehaviour
         BattleVictoryBossTracker.RegisterBossSpawned();
     }
 
-    private GameObject SpawnOne(int enemyId)
+    /// <summary>常规刷怪（无 Excel 数据 → 攻血速走旧 Inspector 兜底）。</summary>
+    private void SpawnOne(int enemyId)
     {
-        return SpawnOne(enemyId, 0, 0, 0);
+        SpawnEnemy(enemyId, 0, 0, 0, 0);
     }
 
-    private GameObject SpawnOne(int enemyId, int lineSpawn, int attackOverride, int maxHpOverride)
+    /// <summary>
+    /// 核心生成方法：所有攻血速从 Excel（LevelWave 表）来，不再读 EnemyDefinition 或 Inspector。
+    /// </summary>
+    private GameObject SpawnEnemy(int enemyId, int lineSpawn, int attack, int maxHp, float moveSpeed)
     {
         if (SpawnLimiter.Instance != null)
         {
@@ -556,37 +531,11 @@ public class SpawnerWaves : MonoBehaviour
         SpawnLimiter.Instance?.RegisterSpawned("Enemy", enemy);
 
         EnemyBase eb = enemy.GetComponent<EnemyBase>();
-        if (eb != null && def != null)
+        if (eb != null)
         {
-            eb.InitFromDefinition(def);
-            if (attackOverride > 0 || maxHpOverride > 0)
-                eb.ApplyWaveStatOverrides(attackOverride, maxHpOverride);
-            MonsterWordSpawnBinding.TryApply(enemy, enemyId);
-            return enemy;
-        }
-
-        if (applyMoveSpeed)
-        {
-            float spd = Random.Range(enemySpeedRange.x, enemySpeedRange.y);
-            EnemyAI ai = enemy.GetComponent<EnemyAI>();
-            if (ai != null) ai.moveSpeed = spd;
-        }
-
-        if (applyHp || maxHpOverride > 0 || attackOverride > 0)
-        {
-            EnemyStats stats = enemy.GetComponent<EnemyStats>();
-            if (stats == null) stats = enemy.AddComponent<EnemyStats>();
-            if (maxHpOverride > 0)
-            {
-                stats.maxHp = maxHpOverride;
-                stats.hp = maxHpOverride;
-            }
-            else if (applyHp)
-            {
-                float hp = Random.Range(enemyHpRange.x, enemyHpRange.y);
-                stats.hp = hp;
-                stats.maxHp = Mathf.Max(stats.maxHp, hp);
-            }
+            if (def != null)
+                eb.InitFromDefinition(def);
+            eb.ApplyTableStats(attack, maxHp, moveSpeed);
         }
 
         MonsterWordSpawnBinding.TryApply(enemy, enemyId);

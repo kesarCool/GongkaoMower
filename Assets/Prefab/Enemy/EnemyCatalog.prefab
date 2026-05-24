@@ -72,12 +72,21 @@ MonoBehaviour:
     maxHp: 5
     damage: 0
     rewardKillCount: 3
-  - id: 10004
-    enemyName: "\u8D44\u6599\u602A"
-    prefab: {fileID: 5848326406780195278, guid: c3167271d3aef5345aa9f4db4a02a23e, type: 3}
+  - id: 30001
+    enemyName: "\u725B\u5200\u5C0F\u8BD5"
+    prefab: {fileID: 7967808863430004001, guid: eb5abc02008910c45ba912f051e71ebe, type: 3}
     sprite: {fileID: 0}
     bulletPrefab: {fileID: 0}
-    moveSpeed: 3
-    maxHp: 5
-    damage: 0
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 30002
+    enemyName: "\u725B\u5200\u5C0F\u8BD5"
+    prefab: {fileID: 9000609663849151995, guid: b2638762f7d33fe4d89a4141defd4bd5, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
     rewardKillCount: 3

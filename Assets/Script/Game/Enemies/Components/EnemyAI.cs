@@ -36,6 +36,11 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
+        // Boss 放技能（如冲刺）时暂停追人
+        BossBrain brain = GetComponent<BossBrain>();
+        if (brain != null && brain.IsBusy)
+            return;
+
         Vector2 current = rb.position;
         Vector2 target = player.position;
         Vector2 next = Vector2.MoveTowards(current, target, moveSpeed * Time.fixedDeltaTime);

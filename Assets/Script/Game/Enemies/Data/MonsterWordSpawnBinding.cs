@@ -61,21 +61,32 @@ public static class MonsterWordSpawnBinding
 
         L($"命中 Monster ID={monster.ID} monsterId={monster.monsterId} type={monster.type}(需={MonsterTypeIds.Word}为文字怪) CategoryTag={monster.CategoryTag} ThemePackId={monster.ThemePackId} name={monster.name}");
 
+        string display;
+
         if (monster.type != MonsterTypeIds.Word)
         {
-            L($"跳过：type 不是文字怪（当前 {monster.type}，期望 {MonsterTypeIds.Word}）");
-            return;
+            // Boss / 非文字怪：名字直接用 Monster.name，不走词库随机
+            display = monster.name;
+            L($"非文字怪 type={monster.type}，直接取 Monster.name={display}");
+        }
+        else
+        {
+            var lexDict = TableManager.Instance.GetTable<LexiconTable>();
+            L($"Lexicon 表行数={lexDict?.Count ?? -1}");
+
+            display = PickLexiconDisplayText(monster, out int poolStrict, out int poolLoose, out int poolUsed);
+            if (string.IsNullOrEmpty(display))
+                display = monster.name;
+
+            string dispShort = display.Length > 48 ? display.Substring(0, 48) + "..." : display;
+            L($"词条 strict={poolStrict} loose={poolLoose} 选用池条目数={poolUsed} displayLen={display.Length} display={dispShort}");
         }
 
-        var lexDict = TableManager.Instance.GetTable<LexiconTable>();
-        L($"Lexicon 表行数={lexDict?.Count ?? -1}");
-
-        string display = PickLexiconDisplayText(monster, out int poolStrict, out int poolLoose, out int poolUsed);
         if (string.IsNullOrEmpty(display))
-            display = monster.name;
-
-        string dispShort = display.Length > 48 ? display.Substring(0, 48) + "..." : display;
-        L($"词条 strict={poolStrict} loose={poolLoose} 选用池条目数={poolUsed} displayLen={display.Length} display={dispShort}");
+        {
+            W("display 文本为空，跳过 SetWord");
+            return;
+        }
 
         var label = enemy.GetComponent<EnemyWordLabel>();
         if (label == null)

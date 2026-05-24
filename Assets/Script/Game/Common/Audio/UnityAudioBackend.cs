@@ -44,7 +44,7 @@ public sealed class UnityAudioBackend : IAudioBackend
         _loadedGroups.Add(group);
     }
 
-    public void Play(string catalogRelativePath, float volume)
+    public void Play(string catalogRelativePath, float volume, float pitchVariation = 0f, float pitchOffset = 0f, float volumeVariation = 0f)
     {
         if (string.IsNullOrWhiteSpace(catalogRelativePath)) return;
 
@@ -54,8 +54,17 @@ public sealed class UnityAudioBackend : IAudioBackend
             return;
         }
 
+        float pitch = 1f + pitchOffset;
+        if (pitchVariation > 0.0001f)
+            pitch += Random.Range(-pitchVariation, pitchVariation);
+
+        float vol = Mathf.Clamp01(volume);
+        if (volumeVariation > 0.0001f)
+            vol = Mathf.Clamp01(vol + Random.Range(-volumeVariation, volumeVariation));
+
         AudioSource source = RentSource();
-        source.PlayOneShot(clip, Mathf.Clamp01(volume));
+        source.pitch = pitch;
+        source.PlayOneShot(clip, vol);
     }
 
     public void PlayLoop(string catalogRelativePath, float volume, int loopKey)

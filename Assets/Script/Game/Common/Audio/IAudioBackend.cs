@@ -8,7 +8,7 @@ public interface IAudioBackend
 
     IEnumerator LoadGroupRoutine(AudioLoadGroup group, AudioCatalog catalog, MonoBehaviour host);
 
-    void Play(string catalogRelativePath, float volume);
+    void Play(string catalogRelativePath, float volume, float pitchVariation = 0f, float pitchOffset = 0f, float volumeVariation = 0f);
 
     void PlayLoop(string catalogRelativePath, float volume, int loopKey);
 

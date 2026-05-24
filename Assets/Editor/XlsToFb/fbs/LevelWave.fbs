@@ -11,6 +11,7 @@ table LevelWave{
 	monsterId:int32;
 	attack:int32;
 	maxHp:int32;
+	speed:float;
 	exp:int32;
 	prop:int32;
 	timeStart:int32;

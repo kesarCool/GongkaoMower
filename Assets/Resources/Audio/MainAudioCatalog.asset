@@ -19,65 +19,98 @@ MonoBehaviour:
       group: 0
       volume: 1
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     uiClose:
       id: 2
       relativePath: Audio/Common/sfx_button_close.mp3
       group: 0
       volume: 1
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
   combat:
     enemyHit:
       id: 10
-      relativePath: 
+      relativePath: Audio/Battle/Combat/sfx_enemy_hit.wav
       group: 1
-      volume: 1
+      volume: 0.1
       minInterval: 0.08
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     enemyDie:
       id: 11
-      relativePath: 
+      relativePath: Audio/Battle/Combat/sfx_enemy_die.ogg
       group: 1
-      volume: 1
+      volume: 0.12
       minInterval: 0
+      pitchVariation: 0.05
+      pitchOffset: -0.15
+      volumeVariation: 0
     playerHurt:
       id: 12
-      relativePath: 
+      relativePath: Audio/Battle/Combat/sfx_enemy_hit.wav
       group: 1
       volume: 1
       minInterval: 0.12
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
   playerSkill:
     autoProjectile:
       id: 101
       relativePath: Audio/Battle/PlayerSkill/sfx_shoot_auto_projectile.mp3
       group: 1
-      volume: 0.143
+      volume: 0.1
       minInterval: 0
+      pitchVariation: 0.1
+      pitchOffset: 0
+      volumeVariation: 0.15
     lineBeam:
       id: 102
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_line_beam.mp3
       group: 1
-      volume: 1
+      volume: 0.3
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     orbitingBlades:
       id: 103
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_orbiting_blade.mp3
       group: 1
-      volume: 0.3
+      volume: 0.1
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     throwGrenade:
       id: 104
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_throw_grenade.mp3
       group: 1
-      volume: 1
+      volume: 0.3
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     fieldGenerator:
       id: 105
-      relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.mp3
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.ogg
       group: 1
       volume: 1
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
     lightningStrike:
       id: 106
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_lightning.wav
       group: 1
-      volume: 1
+      volume: 0.3
       minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0

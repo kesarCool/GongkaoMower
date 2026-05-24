@@ -24,17 +24,10 @@ public class EnemyDefinition
     [Tooltip("远程怪使用的子弹预制体（可选）。由派生类 EnemyRanged 使用。")]
     public GameObject bulletPrefab;
 
-    [Header("数值")]
-    [Tooltip("移动速度（EnemyAI.moveSpeed）")]
-    public float moveSpeed = 2f;
-
-    [Tooltip("最大血量")]
-    public float maxHp = 10f;
-
-    [Tooltip("接触/攻击伤害（预留）")]
-    public float damage = 1f;
-
-    [Tooltip("死亡时增加的击杀数（用于 GameLayer 显示）")]
-    public int rewardKillCount = 1;
+    [Header("数值（已废弃——攻血速统一从 Excel 表读取）")]
+    [HideInInspector] public float moveSpeed = 2f;
+    [HideInInspector] public float maxHp = 10f;
+    [HideInInspector] public float damage = 1f;
+    [HideInInspector] public int rewardKillCount = 1;
 }
 
