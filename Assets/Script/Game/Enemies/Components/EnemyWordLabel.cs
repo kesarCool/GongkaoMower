@@ -37,8 +37,8 @@ public class EnemyWordLabel : MonoBehaviour
     [Tooltip("为 true 时复制一份 fontMaterial，避免改描边影响同材质其它字")]
     [SerializeField] private bool instanceMaterialPerEnemy = true;
 
-    [Tooltip("字面底色基准；开启顶点渐变时仍参与上下明暗，最终会与渐变相乘（无整波底色时使用）")]
-    [SerializeField] private Color stereoFaceBase = new Color(0.9f, 0.97f, 1f, 1f);
+    [Tooltip("字面底色基准；偏亮偏暖，暗地图上也清晰可见")]
+    [SerializeField] private Color stereoFaceBase = new Color(1f, 0.93f, 0.7f, 1f);
 
     [Tooltip("为 true 且本波已设置 WordMonsterWaveStyle 时，整波共用一波底色，仅做下方「微色相」抖动")]
     [SerializeField] private bool preferWaveSharedTint = true;
@@ -51,8 +51,8 @@ public class EnemyWordLabel : MonoBehaviour
 
     [SerializeField] private float stereoHueShift = 0.07f;
 
-    [Tooltip("描边宽度（TMP Distance Field 常用约 0.1~0.45）")]
-    [SerializeField] private Vector2 outlineWidthRange = new Vector2(0.14f, 0.36f);
+    [Tooltip("描边宽度（略粗以增加暗底对比度）")]
+    [SerializeField] private Vector2 outlineWidthRange = new Vector2(0.20f, 0.40f);
 
     [Tooltip("描边颜色，略深、不透明更显立体")]
     [SerializeField] private Color outlineColor = new Color(0.04f, 0.02f, 0.14f, 0.94f);
@@ -61,10 +61,10 @@ public class EnemyWordLabel : MonoBehaviour
     [SerializeField] private bool stereoUseVertexGradient = true;
 
     [Range(0f, 1f)]
-    [SerializeField] private float gradientTopBrighten = 0.2f;
+    [SerializeField] private float gradientTopBrighten = 0.25f;
 
     [Range(0f, 1f)]
-    [SerializeField] private float gradientBottomDarken = 0.32f;
+    [SerializeField] private float gradientBottomDarken = 0.12f;
 
     [Header("受击反馈")]
     [SerializeField] private bool enableHitFeedback = true;

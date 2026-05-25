@@ -28,7 +28,7 @@ public class HomingKnifeModule : BossSkillModule
         damage     = p[3] > 0f ? p[3] : 20f;
         cooldown   = interval * 0.3f; // 出场后 30% 冷却就首次攻击
 
-        // knifePrefab 从 BossBrain.resourceDb 查找
+        // 缓存 prefab（只查一次）
         knifePrefab = brain.FindPrefab("HomingBullet");
     }
 
@@ -48,21 +48,15 @@ public class HomingKnifeModule : BossSkillModule
         }
         if (_target == null) return;
 
-        // 刀伤：取表配置值，0 则用 Boss 当前的 ContactDamage
         float dmg = damage > 0f ? damage : boss.GetComponent<EnemyBase>()?.ContactDamage ?? 20f;
+        Vector2 dir = ((Vector2)_target.position - (Vector2)boss.position).normalized;
 
         GameObject bullet = GameObjectPool.Get(knifePrefab, boss.position, Quaternion.identity);
         if (bullet == null)
             bullet = Object.Instantiate(knifePrefab, boss.position, Quaternion.identity);
 
         HomingBullet hb = bullet.GetComponent<HomingBullet>();
-        if (hb != null)
-        {
-            hb.speed = knifeSpeed;
-            hb.turnRate = turnRate;
-            hb.lifetime = lifetime;
-            hb.damage = dmg;
-        }
+        if (hb != null) hb.Launch(dir, knifeSpeed, dmg, lifetime);
 
         ResetCooldown();
     }

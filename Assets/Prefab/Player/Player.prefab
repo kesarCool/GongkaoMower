@@ -165,6 +165,7 @@ MonoBehaviour:
   bulletPrefab: {fileID: 6234684193253506922, guid: 1601bf4980ce6814dad60eacd60afb69, type: 3}
   bulletSpeed: 10
   enemyTag: monster
+  bodyRenderer: {fileID: 0}
 --- !u!114 &-6722639037895721023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,6 +180,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   energy: 0
   consumeEnergyOnTrigger: 1
+  levelConfig: {fileID: 11400000, guid: c510895ac5ae0c2479a0ede212deadba, type: 2}
   OnEnergyChanged:
     m_PersistentCalls:
       m_Calls: []

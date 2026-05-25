@@ -113,8 +113,7 @@ public class BossBrain : MonoBehaviour
         {
             case "homingKnife": return new HomingKnifeModule();
             case "dash":         return new DashModule();
-            // 后续扩展：
-            // case "bladeBurst":   return new BladeBurstModule();
+            case "bladeBurst":   return new BladeBurstModule();
             // case "clone":        return new CloneModule();
             // case "summon":       return new SummonModule();
             // case "revive":       return new ReviveModule();

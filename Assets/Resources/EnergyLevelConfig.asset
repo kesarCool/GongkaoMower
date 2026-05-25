@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87038a6f77ee56b4595924c8815c97f3, type: 3}
+  m_Name: EnergyLevelConfig
+  m_EditorClassIdentifier: 
+  levelThresholds: 01000000020000000300000005000000070000000b0000000d0000001100000013000000170000001d0000001f00000025000000290000002b0000002f000000350000003b0000003d00000043000000

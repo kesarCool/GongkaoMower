@@ -30,11 +30,21 @@ public class GameLayer : MonoBehaviour
     public Button pauseButton;
 
     [Header("Energy → Card Selection")]
-    [Tooltip("能量进度条（预制体 SliderProgress）")]
+    [Tooltip("能量进度条（预制体 SliderProgress），Boss 出场时隐藏")]
     public Slider energyProgressSlider;
 
     [Tooltip("能量进度文字（预制体 Textprogress，如 70%）")]
     public TextMeshProUGUI energyProgressText;
+
+    [Header("Boss HP")]
+    [Tooltip("Boss 血条（Slider），Boss 出场时显示，与能量条互斥")]
+    public Slider bossHpSlider;
+
+    [Tooltip("Boss 名字（TextMeshPro），显示在血条左侧")]
+    public TextMeshProUGUI bossHpNameText;
+
+    [Tooltip("Boss 血量数字（如 450/500）")]
+    public TextMeshProUGUI bossHpValueText;
 
     [Tooltip("留空则在场景中查找 PlayerEnergy")]
     public PlayerEnergy playerEnergy;
@@ -42,15 +52,16 @@ public class GameLayer : MonoBehaviour
     [Header("Game Data")]
     public int targetKills = 100;
 
-    [Tooltip("倒计时总时长（秒）。例如 300 表示 5 分钟。")]
-    public int countdownSeconds = 300;
+    [Tooltip("正计时上限（秒，0=无限）。到达后不变，不触发任何事件。")]
+    public int maxSeconds;
 
     private int _kills;
-    private float _timeLeft;
+    private float _timeElapsed;
     private bool _paused;
     private PlayerEnergy _playerEnergy;
     private int _currentWave;
     private int _totalWaves;
+    private EnemyBase _currentBoss;
 
     public int CurrentKills => _kills;
     public int TargetKills => targetKills;
@@ -63,7 +74,7 @@ public class GameLayer : MonoBehaviour
         if (killText == null || timerText == null || pauseButton == null)
             BuildMinimalUIIfMissing();
 
-        _timeLeft = Mathf.Max(0, countdownSeconds);
+        _timeElapsed = 0f;
         RefreshKillText();
         RefreshTimerText();
 
@@ -82,13 +93,17 @@ public class GameLayer : MonoBehaviour
 
         // 订阅怪物死亡事件：更新击杀数
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
+        EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged, owner: this);
         EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEnded, owner: this);
         EventBus.Subscribe<BattleWaveChangedEvent>(OnBattleWaveChanged, owner: this);
+
+        HideBossHp();
     }
 
     private void OnDestroy()
     {
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+        EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
         EventBus.Unsubscribe<CardSelectionEndedEvent>(OnCardSelectionEnded);
         EventBus.Unsubscribe<BattleWaveChangedEvent>(OnBattleWaveChanged);
         if (_playerEnergy != null)
@@ -97,20 +112,91 @@ public class GameLayer : MonoBehaviour
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
-        // 你要求：死亡加击杀数
         if (e.rewardKillCount > 0)
             AddKill(e.rewardKillCount);
+
+        if (_currentBoss == e.enemy)
+        {
+            _currentBoss = null;
+            HideBossHp();
+            RefreshEnergyProgress();
+        }
+    }
+
+    private void OnEnemyDamaged(EnemyDamagedEvent e)
+    {
+        // 检测 Boss：有 LastWaveBossMarker 标记
+        if (_currentBoss == null && e.enemy != null)
+        {
+            if (e.enemy.GetComponent<LastWaveBossMarker>() != null)
+            {
+                _currentBoss = e.enemy;
+                ShowBossHp(e.enemy.EnemyName);
+            }
+        }
+
+        if (_currentBoss == e.enemy)
+            RefreshBossHp();
+    }
+
+    private void ShowBossHp(string bossName)
+    {
+        if (energyProgressSlider != null)
+            energyProgressSlider.gameObject.SetActive(false);
+        if (energyProgressText != null)
+            energyProgressText.gameObject.SetActive(false);
+
+        if (bossHpSlider != null)
+            bossHpSlider.gameObject.SetActive(true);
+        if (bossHpNameText != null)
+        {
+            bossHpNameText.text = bossName ?? "Boss";
+            bossHpNameText.gameObject.SetActive(true);
+        }
+        if (bossHpValueText != null)
+            bossHpValueText.gameObject.SetActive(true);
+
+        bossHpSlider.minValue = 0f;
+        bossHpSlider.maxValue = 1f;
+        RefreshBossHp();
+    }
+
+    private void HideBossHp()
+    {
+        if (bossHpSlider != null)
+            bossHpSlider.gameObject.SetActive(false);
+        if (bossHpNameText != null)
+            bossHpNameText.gameObject.SetActive(false);
+        if (bossHpValueText != null)
+            bossHpValueText.gameObject.SetActive(false);
+
+        if (energyProgressSlider != null)
+            energyProgressSlider.gameObject.SetActive(true);
+        if (energyProgressText != null)
+            energyProgressText.gameObject.SetActive(true);
+    }
+
+    private void RefreshBossHp()
+    {
+        if (_currentBoss == null) return;
+
+        float ratio = Mathf.Clamp01(_currentBoss.Hp / Mathf.Max(1f, _currentBoss.MaxHp));
+        if (bossHpSlider != null)
+            bossHpSlider.value = ratio;
+        if (bossHpValueText != null)
+            bossHpValueText.text = $"{Mathf.CeilToInt(_currentBoss.Hp)}/{Mathf.CeilToInt(_currentBoss.MaxHp)}";
     }
 
     private void Update()
     {
-        // 倒计时：使用 unscaledDeltaTime，暂停后仍会走 UI 更新逻辑（但我们会在 paused 时不减少时间）
-        if (_paused) return;
-        if (_timeLeft <= 0f) return;
-
-        _timeLeft -= Time.deltaTime;
-        if (_timeLeft < 0f) _timeLeft = 0f;
-        RefreshTimerText();
+        if (!_paused)
+        {
+            if (maxSeconds <= 0 || _timeElapsed < maxSeconds)
+            {
+                _timeElapsed += Time.deltaTime;
+                RefreshTimerText();
+            }
+        }
     }
 
     /// <summary>
@@ -135,24 +221,10 @@ public class GameLayer : MonoBehaviour
     /// <summary>
     /// 重置/设置倒计时（秒）
     /// </summary>
-    public void SetCountdown(int seconds)
-    {
-        _timeLeft = Mathf.Max(0, seconds);
-        RefreshTimerText();
-    }
-
     public void TogglePause()
     {
         UiClickSound.Play();
-        _paused = !_paused;
-        Time.timeScale = _paused ? 0f : 1f;
-
-        // 可选：更新按钮文字
-        if (pauseButton != null)
-        {
-            var t = pauseButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (t != null) t.text = _paused ? "Resume" : "Pause";
-        }
+        UIManager.Instance.Open<GamePausePanel>();
     }
 
     private void RefreshKillText()
@@ -165,7 +237,7 @@ public class GameLayer : MonoBehaviour
     {
         if (timerText == null) return;
 
-        int total = Mathf.CeilToInt(_timeLeft);
+        int total = Mathf.FloorToInt(_timeElapsed);
         int mm = total / 60;
         int ss = total % 60;
         timerText.text = $"{mm:00}:{ss:00}";
@@ -271,15 +343,18 @@ public class GameLayer : MonoBehaviour
         RefreshEnergyProgress();
     }
 
-    /// <summary>根据 <see cref="PlayerEnergy"/> 刷新选卡能量进度条与文字。</summary>
+    /// <summary>
+    /// 刷新能量显示：等级 = 已完成选卡次数+1，进度 = 当前能量 / 下一级所需。
+    /// </summary>
     public void RefreshEnergyProgress()
     {
         if (_playerEnergy == null)
             return;
 
+        int curEnergy = Mathf.Max(0, _playerEnergy.energy);
         int need = _playerEnergy.EnergyRequiredForNextCard;
-        int cur = Mathf.Max(0, _playerEnergy.energy);
-        float ratio = Mathf.Clamp01((float)cur / need);
+        int displayLv = _playerEnergy.CompletedCardSelectionCount + 1;
+        float ratio = Mathf.Clamp01((float)curEnergy / Mathf.Max(1, need));
 
         if (energyProgressSlider != null)
         {
@@ -289,7 +364,7 @@ public class GameLayer : MonoBehaviour
         }
 
         if (energyProgressText != null)
-            energyProgressText.text = $"{Mathf.RoundToInt(ratio * 100f)}%";
+            energyProgressText.text = $"Lv{displayLv}";
     }
 
     /// <summary>

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 2
   maxLevel: 5
-  displayName: "\u4E0A\u5CB8\u5C04\u7EBF"
-  description: "\u5C04\u7EBF"
+  displayName: "\u6C14\u8D2F\u957F\u8679"
+  description: "\u51DD\u805A\u5185\u529B\u5411\u524D\u65B9\u5C04\u51FA\u4E00\u9053\u8D2F\u7A7F\u5149\u675F\uFF0C\u7A7F\u900F\u8DEF\u5F84\u4E0A\u6240\u6709\u654C\u4EBA\u3002"
   icon: {fileID: 21300000, guid: 5dd298371bd2dfb4c8e7a2dabad7a462, type: 3}
   levelDescriptions: []
   beamLength: 8

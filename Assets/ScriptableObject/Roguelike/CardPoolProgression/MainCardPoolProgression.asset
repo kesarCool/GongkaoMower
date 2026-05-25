@@ -14,20 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   unlockConditions:
   - skill: 1
-    unlockAtLevel: 1
+    unlockAtLevel: 101
     baseWeight: 20
   - skill: 2
-    unlockAtLevel: 1
+    unlockAtLevel: 102
     baseWeight: 20
   - skill: 3
-    unlockAtLevel: 1
+    unlockAtLevel: 101
     baseWeight: 20
   - skill: 4
-    unlockAtLevel: 1
+    unlockAtLevel: 101
     baseWeight: 20
   - skill: 5
-    unlockAtLevel: 1
+    unlockAtLevel: 201
     baseWeight: 20
   - skill: 6
-    unlockAtLevel: 1
+    unlockAtLevel: 103
     baseWeight: 20

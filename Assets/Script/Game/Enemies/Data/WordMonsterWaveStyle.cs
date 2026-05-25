@@ -35,7 +35,7 @@ public static class WordMonsterWaveStyle
 
         if (mode == WordMonsterWaveTintMode.RandomPerWave)
         {
-            Color c = Random.ColorHSV(0f, 1f, 0.38f, 0.72f, 0.82f, 1f);
+            Color c = Random.ColorHSV(0f, 1f, 0.55f, 0.85f, 0.85f, 1f);
             c.a = 1f;
             WaveFaceTint = c;
             HasWaveTint = true;
@@ -47,8 +47,8 @@ public static class WordMonsterWaveStyle
             int seed = levelId * 73856093 ^ waveNumber * 19349663;
             var rng = new System.Random(seed);
             float h = (float)rng.NextDouble();
-            float s = Mathf.Lerp(0.4f, 0.72f, (float)rng.NextDouble());
-            float v = Mathf.Lerp(0.82f, 1f, (float)rng.NextDouble());
+            float s = Mathf.Lerp(0.55f, 0.85f, (float)rng.NextDouble());
+            float v = Mathf.Lerp(0.85f, 1f, (float)rng.NextDouble());
             Color c = Color.HSVToRGB(h, s, v);
             c.a = 1f;
             WaveFaceTint = c;

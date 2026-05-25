@@ -18,11 +18,17 @@ public class PlayerEnergy : MonoBehaviour
     [Tooltip("触发后是否扣除能量（通常为 true，表示消耗一轮能量进入选卡）")]
     public bool consumeEnergyOnTrigger = true;
 
+    [Tooltip("能量等级阈值配置（留空则 Lv1=1, Lv2=2...）。Resources/EnergyLevelConfig 加载")]
+    public EnergyLevelConfig levelConfig;
+
     /// <summary>本局已触发选卡次数（0 表示尚未触发过）。</summary>
     public int CompletedCardSelectionCount => _triggerCount;
 
-    /// <summary>下次选卡所需能量：第 1 次 1、第 2 次 2……即 <c>已完成次数 + 1</c>。</summary>
-    public int EnergyRequiredForNextCard => Mathf.Max(1, _triggerCount + 1);
+    /// <summary>下次选卡所需能量，从 EnergyLevelConfig 读取。</summary>
+    public int EnergyRequiredForNextCard => ResolveLevelConfig()?.GetRequiredEnergy(_triggerCount + 1) ?? Mathf.Max(1, _triggerCount + 1);
+
+    /// <summary>当前能量等级（1-based, Lv1 起步）。</summary>
+    public int CurrentEnergyLevel => ResolveLevelConfig()?.GetCurrentLevel(energy) ?? 1;
 
     [Header("事件")]
     [Tooltip("能量变化时触发（参数为当前能量）")]
@@ -56,6 +62,13 @@ public class PlayerEnergy : MonoBehaviour
         energy = 0;
         _triggerCount = 0;
         OnEnergyChanged.Invoke(energy);
+    }
+
+    private EnergyLevelConfig ResolveLevelConfig()
+    {
+        if (levelConfig == null)
+            levelConfig = Resources.Load<EnergyLevelConfig>("EnergyLevelConfig");
+        return levelConfig;
     }
 
     private void TryTriggerCardSelection()

@@ -90,3 +90,12 @@ MonoBehaviour:
     maxHp: 1000
     damage: 20
     rewardKillCount: 3
+  - id: 30003
+    enemyName: "\u5251\u6C14\u7EB5\u6A2A"
+    prefab: {fileID: 5206544943168846885, guid: 166f0d1efd335d34da7e34bda30ee97d, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
