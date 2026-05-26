@@ -14,8 +14,8 @@ public class CardView : MonoBehaviour
     public TextMeshProUGUI titleText;
     public TextMeshProUGUI descText;
     public TextMeshProUGUI labelText;
-    public Image labelIcon;
-    public Image borderGlow;
+ //   public Image labelIcon;
+    // public Image borderGlow;
 
     [Header("点击")]
     [Tooltip("可为空：自动取同物体上的 Button；点击与 Animator 无关。")]
@@ -65,20 +65,20 @@ public class CardView : MonoBehaviour
         if (style != null)
         {
             if (background != null) background.sprite = style.background;
-            borderGlow.gameObject.SetActive(false);
-     //       if (borderGlow != null)
-      //      {
-      //          borderGlow.color = style.borderGlowColor;
-      //          borderGlow.gameObject.SetActive(style.rarityStars > 0);
-      //      }
+        //    borderGlow.gameObject.SetActive(false);
+    //  //       if (borderGlow != null)
+    //   //      {
+    //   //          borderGlow.color = style.borderGlowColor;
+    //   //          borderGlow.gameObject.SetActive(style.rarityStars > 0);
+    //   //      }
 
-            labelIcon.gameObject.SetActive(false);
-            if (labelIcon != null)
-            {
-                labelIcon.sprite = style.labelIcon;
-                labelIcon.color = style.labelColor;
-                labelIcon.gameObject.SetActive(true);
-            }
+            // labelIcon.gameObject.SetActive(false);
+            // if (labelIcon != null)
+            // {
+            //     labelIcon.sprite = style.labelIcon;
+            //     labelIcon.color = style.labelColor;
+            //     labelIcon.gameObject.SetActive(true);
+            // }
         }
 
         // 标签文字
@@ -150,8 +150,8 @@ public class CardView : MonoBehaviour
     /// </summary>
     private void StopClickPropagationFromDecorations()
     {
-        if (borderGlow != null) borderGlow.raycastTarget = false;
-        if (labelIcon != null) labelIcon.raycastTarget = false;
+        // if (borderGlow != null) borderGlow.raycastTarget = false;
+        // if (labelIcon != null) labelIcon.raycastTarget = false;
         if (icon != null) icon.raycastTarget = false;
         if (titleText != null) titleText.raycastTarget = false;
         if (descText != null) descText.raycastTarget = false;

@@ -63,12 +63,6 @@ MonoBehaviour:
     spawnPerFrame: 5
     currentAlive: 0
     spawnThisFrame: 0
-  - key: EnergyPickup
-    maxAlive: 50
-    recycleOldest: 1
-    spawnPerFrame: 5
-    currentAlive: 0
-    spawnThisFrame: 0
   - key: Grenade
     maxAlive: 24
     recycleOldest: 1

@@ -16,26 +16,26 @@ MonoBehaviour:
   maxLevel: 5
   displayName: "\u5F39\u65E0\u865A\u53D1"
   description: "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u8FFD\u8E2A\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
-  icon: {fileID: 21300000, guid: 6af5e4fce4ef1f8449f4a78779f24b92, type: 3}
+  icon: {fileID: 21300000, guid: 0af94e125d23a4f4387e8b520f04096c, type: 3}
   levelDescriptions:
   - "\u53D1\u5C04\u5B50\u5F39\u81EA\u52A8\u653B\u51FB"
   - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u51CF5%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
   - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  bulletPrefab: {fileID: 6234684193253506922, guid: 1601bf4980ce6814dad60eacd60afb69, type: 3}
+  - "\u5B50\u5F39\u52A01\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  bulletPrefab: {fileID: 685301462951185581, guid: 6c647dcf9f05df74fa83efb4acfd2337, type: 3}
   bulletSpeed: 10
   intervalByLevel:
-  - 0.5
-  - 0.45
-  - 0.4
-  - 0.36
-  - 0.32
+  - 0.85
+  - 0.8
+  - 0.75
+  - 0.7
+  - 0.65
   damageByLevel:
-  - 50
-  - 58
-  - 66
-  - 76
-  - 88
+  - 35
+  - 40
+  - 35
+  - 38
+  - 38
   projectileCountByLevel: 0100000001000000020000000200000003000000
   spreadDegrees: 10

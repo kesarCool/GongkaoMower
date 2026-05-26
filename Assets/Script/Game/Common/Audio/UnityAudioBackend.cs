@@ -192,43 +192,89 @@ public sealed class UnityAudioBackend : IAudioBackend
         }
 #endif
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // 微信 WebGL：streamingAssetsPath 指向 CDN，本地文件用 Resources.Load
+        string resourcePath = Path.ChangeExtension(catalogRelativePath, null);
+        AudioClip resClip = Resources.Load<AudioClip>(resourcePath);
+        if (resClip != null)
+        {
+            _clipCache[catalogRelativePath] = resClip;
+            yield break;
+        }
+        Debug.LogWarning($"[UnityAudioBackend] Resources.Load 失败: {resourcePath}，回退到 UnityWebRequest");
+#endif
+
         string url = BuildLoadUrl(catalogRelativePath);
         if (string.IsNullOrEmpty(url))
             yield break;
 
+#pragma warning disable CS0618
         AudioType audioType = GuessAudioType(catalogRelativePath);
-        using UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url, audioType);
-        if (req.downloadHandler is DownloadHandlerAudioClip dh)
-            dh.compressed = false;
-        req.timeout = 15;
-        yield return req.SendWebRequest();
 
-#if UNITY_2020_2_OR_NEWER
-        bool success = req.result == UnityWebRequest.Result.Success;
-#else
-        bool success = !req.isNetworkError && !req.isHttpError;
-#endif
-
-        if (!success)
-        {
-            Debug.LogWarning("[UnityAudioBackend] 加载失败：" + catalogRelativePath + " err=" + req.error);
-            yield break;
-        }
+        // 尝试两种 compressed 设置：优先按类型选择，其次反向重试一次以作为回退。
+        bool firstPreferCompressed = audioType != AudioType.WAV;
+        bool[] attempts = firstPreferCompressed ? new[] { true, false } : new[] { false, true };
 
         AudioClip clip = null;
         string getContentError = null;
-        try
+
+        foreach (bool tryCompressed in attempts)
         {
-            clip = DownloadHandlerAudioClip.GetContent(req);
+            using (UnityWebRequest req = UnityWebRequestMultimedia.GetAudioClip(url, audioType))
+            {
+                if (req.downloadHandler is DownloadHandlerAudioClip dh)
+                {
+                    dh.compressed = tryCompressed;
+                }
+
+                req.timeout = 15;
+                yield return req.SendWebRequest();
+
+#if UNITY_2020_2_OR_NEWER
+                bool success = req.result == UnityWebRequest.Result.Success;
+#else
+                bool success = !req.isNetworkError && !req.isHttpError;
+#endif
+
+                if (!success)
+                {
+                    Debug.LogWarning($"[UnityAudioBackend] 加载失败（尝试 compressed={tryCompressed}）：{catalogRelativePath} err={req.error}");
+                    continue;
+                }
+
+                // 记录响应信息，帮助排查 FMOD 无法创建 Sound 的原因
+                string respType = null;
+                try { respType = req.GetResponseHeader("Content-Type"); } catch { respType = null; }
+                Debug.Log($"[UnityAudioBackend] Download OK url={url} audioType={audioType} compressed={tryCompressed} downloadedBytes={req.downloadedBytes} contentType={respType}");
+
+                try
+                {
+                    clip = DownloadHandlerAudioClip.GetContent(req);
+                }
+                catch (System.Exception ex)
+                {
+                    getContentError = ex.Message;
+                    Debug.LogWarning($"[UnityAudioBackend] GetContent 异常（compressed={tryCompressed}）：{catalogRelativePath} ex={ex.Message} downloadedBytes={req.downloadedBytes} contentType={respType}");
+                    clip = null;
+                }
+
+                if (clip == null || clip.length <= 0.001f)
+                {
+                    Debug.LogWarning($"[UnityAudioBackend] AudioClip 无效（compressed={tryCompressed}）：{catalogRelativePath}" +
+                                     (getContentError != null ? " ex=" + getContentError : ""));
+                    clip = null;
+                    continue;
+                }
+
+                // 成功获取
+                break;
+            }
         }
-        catch (System.Exception ex)
-        {
-            getContentError = ex.Message;
-        }
+#pragma warning restore CS0618
 
         if (clip == null || clip.length <= 0.001f)
         {
-            Debug.LogWarning("[UnityAudioBackend] AudioClip 无效（空或长度 0）：" + catalogRelativePath +
+            Debug.LogWarning("[UnityAudioBackend] 最终加载失败或音频无效：" + catalogRelativePath +
                              (getContentError != null ? " ex=" + getContentError : ""));
             yield break;
         }
@@ -244,7 +290,7 @@ public sealed class UnityAudioBackend : IAudioBackend
         if (string.IsNullOrWhiteSpace(catalogRelativePath))
             return false;
 
-        string assetPath = "Assets/Res/" + catalogRelativePath.Trim().Replace('\\', '/');
+        string assetPath = "Assets/Resources/" + catalogRelativePath.Trim().Replace('\\', '/');
         clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(assetPath);
         return clip != null && clip.length > 0.001f;
     }
@@ -259,8 +305,13 @@ public sealed class UnityAudioBackend : IAudioBackend
 #endif
 
         string streaming = AudioPathUtility.ResolveStreamingUrl(catalogRelativePath);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // WebGL 下 File.Exists 不可靠，直接返回 streamingAssets 路径
+        return streaming;
+#else
         if (!string.IsNullOrEmpty(streaming) && File.Exists(streaming))
             return streaming;
+#endif
 
         return null;
     }

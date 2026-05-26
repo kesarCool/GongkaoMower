@@ -145,26 +145,8 @@ public sealed class AudioService : MonoBehaviour
 
     private IAudioBackend CreateBackend()
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        if (IsWeChatRuntime())
-            return new WeChatAudioBackend();
-#endif
+        // 微信环境用 UnityAudioBackend：StreamingAssets 路径 + UnityWebRequest 加载
+        // InnerAudioContext 不支持代码包本地文件，只认网络/CDN/wxfile://usr
         return new UnityAudioBackend(transform);
-    }
-
-    private static bool IsWeChatRuntime()
-    {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        try
-        {
-            return WeChatWASM.WXBase.env != null;
-        }
-        catch
-        {
-            return false;
-        }
-#else
-        return false;
-#endif
     }
 }

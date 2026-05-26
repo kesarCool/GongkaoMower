@@ -1,5 +1,7 @@
 using UnityEngine;
 
+/// <summary>[Obsolete] 请迁移到 PlayerStraightBullet。保留此文件仅用于旧 Prefab 兼容。</summary>
+[System.Obsolete]
 public class Bullet : MonoBehaviour
 {
     public float speed = 10f;

@@ -5,24 +5,27 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 选卡面板：控制3张卡牌的显示、选择、刷新。由 <see cref="UIManager"/> 打开，或回退为 <see cref="CardSelectionSystem"/> 直接驱动。
+/// 选卡面板：3 卡牌 + 刷新按钮（免费 1 次 + 广告 1 次）。由 UIManager 打开。
 /// </summary>
 public class CardSelectionPanel : UIPanelBase
 {
-    [Tooltip("3个卡牌槽位（按左中右或三角形排列）")]
+    [Tooltip("3 个卡牌槽位")]
     public CardView[] cardSlots;
 
-    [Tooltip("刷新按钮")]
-    public GameObject refreshButton;
+    [Tooltip("刷新按钮（Button 组件）")]
+    public Button refreshButton;
 
-    [Tooltip("剩余刷新次数显示文本")]
+    [Tooltip("刷新按钮文字（如 刷新(1) / 看广告刷新 / 隐藏）")]
     public TextMeshProUGUI refreshCountText;
 
-    [Tooltip("面板根物体（控制显示/隐藏）")]
     public GameObject panelRoot;
 
     private Action<int> _onCardSelected;
     private Action _onRefreshRequested;
+    private Action _onAdRefreshRequested;
+
+    private int _freeRefreshCount;
+    private int _adRefreshCount;
 
     private void Awake()
     {
@@ -38,22 +41,35 @@ public class CardSelectionPanel : UIPanelBase
             Debug.LogError("[CardSelectionPanel] OnOpen 需要 CardSelectionOpenPayload");
             return;
         }
-        Show(p.Cards, p.OnCardSelected, p.OnRefreshRequested, p.RemainingRefresh);
+
+        // 清除旧监听（包含 Prefab 上可能残留的旧 OnRefreshButtonClick）
+        if (refreshButton != null)
+        {
+            refreshButton.onClick.RemoveAllListeners();
+            refreshButton.onClick.AddListener(OnRefreshClicked);
+        }
+
+        Show(p.Cards, p.OnCardSelected, p.OnRefreshRequested, p.OnAdRefreshRequested,
+            p.FreeRefreshCount, p.AdRefreshCount);
     }
 
     public override void OnClose()
     {
+        if (refreshButton != null)
+            refreshButton.onClick.RemoveAllListeners();
         Hide();
         base.OnClose();
     }
 
-    /// <summary>
-    /// 显示选卡面板（无 UIManager 时的回退路径）
-    /// </summary>
-    public bool Show(List<CardDeck.DrawResult> cards, Action<int> onCardSelected, Action onRefreshRequested, int refreshCount)
+    public bool Show(List<CardDeck.DrawResult> cards, Action<int> onCardSelected,
+        Action onRefreshRequested, Action onAdRefreshRequested,
+        int freeRefreshCount, int adRefreshCount)
     {
         _onCardSelected = onCardSelected;
         _onRefreshRequested = onRefreshRequested;
+        _onAdRefreshRequested = onAdRefreshRequested;
+        _freeRefreshCount = freeRefreshCount;
+        _adRefreshCount = adRefreshCount;
 
         if (panelRoot != null)
             panelRoot.SetActive(true);
@@ -73,47 +89,74 @@ public class CardSelectionPanel : UIPanelBase
                 cardSlots[i].Hide();
         }
 
-        UpdateRefreshCount(refreshCount);
+        UpdateRefreshUI();
         return true;
     }
 
-    public void UpdateRefreshCount(int count)
+    public void UpdateRefreshCount(int free, int ad)
     {
-        if (refreshCountText != null)
-            refreshCountText.text = $"刷新({count})";
+        _freeRefreshCount = free;
+        _adRefreshCount = ad;
+        UpdateRefreshUI();
+    }
 
-        if (refreshButton != null)
-            refreshButton.SetActive(count > 0);
+    private void UpdateRefreshUI()
+    {
+        if (_freeRefreshCount > 0)
+        {
+            if (refreshCountText != null)
+                refreshCountText.text = $"刷新({_freeRefreshCount})";
+            if (refreshButton != null)
+                refreshButton.gameObject.SetActive(true);
+        }
+        else if (_adRefreshCount > 0)
+        {
+            if (refreshCountText != null)
+                refreshCountText.text = "看广告刷新";
+            if (refreshButton != null)
+                refreshButton.gameObject.SetActive(true);
+        }
+        else
+        {
+            if (refreshButton != null)
+                refreshButton.gameObject.SetActive(false);
+        }
     }
 
     public void Hide()
     {
         if (panelRoot != null)
             panelRoot.SetActive(false);
-
         _onCardSelected = null;
         _onRefreshRequested = null;
+        _onAdRefreshRequested = null;
     }
 
     private void OnCardClick(int index) => _onCardSelected?.Invoke(index);
 
-    /// <summary>
-    /// 刷新按钮点击（由Inspector的Button组件调用或代码绑定）
-    /// </summary>
-    public void OnRefreshButtonClick()
+    private void OnRefreshClicked()
     {
         UiClickSound.Play();
-        _onRefreshRequested?.Invoke();
+
+        if (_freeRefreshCount > 0)
+        {
+            _freeRefreshCount--;
+            _onRefreshRequested?.Invoke();
+        }
+        else if (_adRefreshCount > 0)
+        {
+            _adRefreshCount--;
+            _onAdRefreshRequested?.Invoke();
+        }
     }
 }
 
-/// <summary>
-/// 交给 <see cref="UIManager.Open{T}"/> 的载荷。
-/// </summary>
 public class CardSelectionOpenPayload
 {
     public List<CardDeck.DrawResult> Cards;
     public Action<int> OnCardSelected;
     public Action OnRefreshRequested;
-    public int RemainingRefresh;
+    public Action OnAdRefreshRequested;
+    public int FreeRefreshCount;
+    public int AdRefreshCount;
 }

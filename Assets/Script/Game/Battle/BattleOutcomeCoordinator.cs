@@ -1,328 +1,44 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 /// <summary>
-/// 局内胜负判定与拉起结算 UI。
-/// 胜利：击杀最后一波配表 Boss（<c>LevelWave.isBoss</c>）；无 Boss 配置时回退为「波次刷完且场上无怪」。
-/// - 本组件<strong>不是</strong>结算面板的父节点：父节点由 <see cref="UIManager"/> 的 <c>stackRoot</c>（优先）
-///   或 <see cref="resultParentOverride"/> / 场景内首个 <see cref="Canvas"/>（回退）决定。
-/// - 结算 UI 优先走 <see cref="UIManager.Open{T}"/>（需在场景的 UIManager 上注册 <see cref="GameResultPanel"/> 预制体）；
-///   无实例或未注册时再 <c>Instantiate</c> 回退，避免 Game 场景未挂 UIManager 时完全打不开。
+/// 局内胜负判定 + 复活流程 + 结算入口。纯事件驱动，不轮询。
+/// 需要场景已有 UIManager 并注册 GameResultPanel / GameRevivePanel。
 /// </summary>
 [DefaultExecutionOrder(-40)]
 public sealed class BattleOutcomeCoordinator : MonoBehaviour
 {
-    private const string GameResultPrefabAssetPath = "Assets/Prefab/Result/GameResultPanel.prefab";
-    private const string GameRevivePrefabAssetPath = "Assets/Prefab/Result/GameRevivePanel.prefab";
-
-    [SerializeField] private GameObject gameResultPanelPrefab;
-    [SerializeField] private GameObject gameRevivePanelPrefab;
-
-    [Tooltip("结算实例父节点；空则挂到场景中第一个 Screen Space Canvas 下")]
-    [SerializeField] private RectTransform resultParentOverride;
-
     private GameLayer _gameLayer;
     private PlayerHealth _playerHealth;
-    private bool _spawnWavesFullyFinished;
     private bool _battleEnded;
     private bool _reviveOfferUsed;
     private bool _reviveFlowActive;
-    private bool _battleWaveConfigInvalid;
-    private bool _waveConfigErrorShown;
-    private GameObject _resultUiInstance;
-    private GameObject _reviveUiInstance;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void InstallSceneHook()
-    {
-        SceneManager.sceneLoaded -= OnGameSceneLoaded;
-        SceneManager.sceneLoaded += OnGameSceneLoaded;
-    }
-
-    private static void OnGameSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (!scene.IsValid() || scene.name != "Game") return;
-        EnsureCoordinatorInScene();
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AutoCreateInGameScene()
-    {
-        Scene s = SceneManager.GetActiveScene();
-        if (!s.IsValid() || s.name != "Game") return;
-        EnsureCoordinatorInScene();
-    }
-
-    private static void EnsureCoordinatorInScene()
-    {
-        var all = FindObjectsOfType<BattleOutcomeCoordinator>(true);
-        for (int i = 0; i < all.Length; i++)
-        {
-            var c = all[i];
-            if (c != null && c.isActiveAndEnabled)
-                return;
-        }
-
-        for (int i = 0; i < all.Length; i++)
-        {
-            var c = all[i];
-            if (c == null) continue;
-            c.gameObject.SetActive(true);
-            c.enabled = true;
-            return;
-        }
-
-        var go = new GameObject(nameof(BattleOutcomeCoordinator));
-        go.AddComponent<BattleOutcomeCoordinator>();
-    }
-
-    private void Awake()
-    {
-#if UNITY_EDITOR
-        if (gameResultPanelPrefab == null)
-            gameResultPanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameResultPrefabAssetPath);
-#endif
-        if (gameResultPanelPrefab == null)
-            gameResultPanelPrefab = Resources.Load<GameObject>("GameResultPanel");
-
-#if UNITY_EDITOR
-        if (gameRevivePanelPrefab == null)
-            gameRevivePanelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GameRevivePrefabAssetPath);
-#endif
-    }
 
     private void OnEnable()
     {
         _gameLayer = FindObjectOfType<GameLayer>(true);
-        TryCachePlayerHealth();
-        ResetPlayerEnergyForNewRun();
-        ResetPlayerHealthForNewRun();
+        _playerHealth = FindObjectOfType<PlayerHealth>(true);
         _reviveOfferUsed = false;
         _reviveFlowActive = false;
+        _battleEnded = false;
 
         BattleRunMetrics.BeginBattle();
         BattleVictoryBossTracker.Reset();
-        _battleWaveConfigInvalid = false;
-        _waveConfigErrorShown = false;
 
         EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied, owner: this);
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
-    }
-
-    private void Start()
-    {
-        ValidateBattleWaveConfig();
-        ApplyKillQuotaToHud();
+        EventBus.Subscribe<BattleWavesCompletedEvent>(OnWavesCompleted, owner: this);
     }
 
     private void OnDisable()
     {
         EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+        EventBus.Unsubscribe<BattleWavesCompletedEvent>(OnWavesCompleted);
     }
 
-    private void Update()
-    {
-        if (_battleEnded || _reviveFlowActive) return;
+    // ── 失败：玩家死亡 ──
 
-        TryCachePlayerHealth();
-
-        if (_playerHealth != null && !_playerHealth.IsAlive)
-        {
-            TryHandlePlayerDeath();
-            return;
-        }
-
-        if (_battleWaveConfigInvalid)
-            return;
-
-        if (BattleVictoryBossTracker.IsBossVictoryReady)
-        {
-            EndBattleVictory();
-            return;
-        }
-
-        if (BattleVictoryBossTracker.UsesBossVictory)
-            return;
-
-        RefreshSpawnWavesFinishedFromSpawners();
-        if (!_spawnWavesFullyFinished) return;
-
-        if (CountMonstersAlive() > 0) return;
-
-        EndBattleVictory();
-    }
-
-    private void OnEnemyDied(EnemyDiedEvent e)
-    {
-        if (_battleEnded || _reviveFlowActive || _battleWaveConfigInvalid) return;
-        if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
-
-        if (BattleVictoryBossTracker.TryRegisterKill())
-            EndBattleVictory();
-    }
-
-    private void ValidateBattleWaveConfig()
-    {
-        if (TableManager.Instance != null)
-            TableManager.Instance.Init();
-
-        int levelId = BattleLevelContext.LevelId;
-        SpawnerWaves[] arr = FindObjectsOfType<SpawnerWaves>(true);
-        if (arr == null || arr.Length == 0)
-        {
-            _battleWaveConfigInvalid = true;
-            ShowWaveConfigErrorOnce(GameErrorCodes.BattleSpawnerMissing);
-            return;
-        }
-
-        int configured = 0;
-        for (int i = 0; i < arr.Length; i++)
-        {
-            SpawnerWaves s = arr[i];
-            if (!IsSpawnerPresentForValidation(s))
-                continue;
-
-            configured++;
-            if (s.useLevelWaveTable && !LevelWaveCatalog.IsTableLoaded())
-            {
-                _battleWaveConfigInvalid = true;
-                ShowWaveConfigErrorOnce(GameErrorCodes.LevelWaveTableMissing);
-                return;
-            }
-
-            if (!s.HasValidLevelWaveConfiguration())
-            {
-                _battleWaveConfigInvalid = true;
-                ShowWaveConfigErrorOnce(GameErrorCodes.LevelWaveConfigMissing, levelId);
-                return;
-            }
-        }
-
-        if (configured == 0)
-        {
-            _battleWaveConfigInvalid = true;
-            ShowWaveConfigErrorOnce(GameErrorCodes.BattleSpawnerMissing);
-        }
-    }
-
-    private void ShowWaveConfigErrorOnce(string errorCode, params object[] formatArgs)
-    {
-        if (_waveConfigErrorShown)
-            return;
-        _waveConfigErrorShown = true;
-        GameErrorPresenter.Show(errorCode, ExitBattleToHome, formatArgs);
-    }
-
-    private static void ExitBattleToHome()
-    {
-        if (Time.timeScale == 0f)
-            Time.timeScale = 1f;
-
-        GameObjectPool.ClearAllPools();
-        SceneManager.LoadScene("Home");
-    }
-
-    private static bool AnyRelevantSpawnerInScene()
-    {
-        foreach (var s in FindObjectsOfType<SpawnerWaves>(true))
-        {
-            if (IsSpawnerRelevantForWaveProgress(s))
-                return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>配置校验：场景内存在 SpawnerWaves 即可（不要求已 OnEnable）。</summary>
-    private static bool IsSpawnerPresentForValidation(SpawnerWaves s)
-    {
-        return s != null;
-    }
-
-    private static bool IsSpawnerRelevantForWaveProgress(SpawnerWaves s)
-    {
-        return s != null && s.isActiveAndEnabled && s.enabled;
-    }
-
-    /// <summary>
-    /// 轮询兜底：避免 BattleWavesCompletedEvent 在订阅前发出、或 EventBus 漏处理时卡死。
-    /// </summary>
-    private void RefreshSpawnWavesFinishedFromSpawners()
-    {
-        if (_spawnWavesFullyFinished) return;
-
-        SpawnerWaves[] arr = FindObjectsOfType<SpawnerWaves>(true);
-        if (arr == null || arr.Length == 0) return;
-
-        int relevant = 0;
-        for (int i = 0; i < arr.Length; i++)
-        {
-            SpawnerWaves s = arr[i];
-            if (!IsSpawnerRelevantForWaveProgress(s)) continue;
-            relevant++;
-            if (!s.HasReleasedWaveCompletionSignal)
-                return;
-        }
-
-        if (relevant > 0)
-            _spawnWavesFullyFinished = true;
-    }
-
-    private void TryCachePlayerHealth()
-    {
-        if (_playerHealth != null)
-            return;
-
-        _playerHealth = FindObjectOfType<PlayerHealth>(true);
-    }
-
-    private void ResetPlayerEnergyForNewRun()
-    {
-        var pe = FindObjectOfType<PlayerEnergy>(true);
-        if (pe == null)
-            return;
-
-        pe.ResetForNewRun();
-        _gameLayer?.RefreshEnergyProgress();
-    }
-
-    private void ResetPlayerHealthForNewRun()
-    {
-        if (_playerHealth == null)
-            _playerHealth = FindObjectOfType<PlayerHealth>(true);
-
-        if (_playerHealth == null)
-            return;
-
-        _playerHealth.ResetToFull();
-
-        var hpBar = FindObjectOfType<PlayerWorldHpBar>(true);
-        if (hpBar != null)
-            hpBar.Refresh();
-    }
-
-    private void ApplyKillQuotaToHud()
-    {
-        if (_gameLayer == null) return;
-
-        int levelId = BattleLevelContext.LevelId;
-
-        int quota = LevelWaveKillQuota.SumTotalMonstersForLevel(levelId);
-        if (quota > 0)
-            _gameLayer.targetKills = quota;
-    }
-
-    private void OnPlayerDied(PlayerDiedEvent e)
-    {
-        TryHandlePlayerDeath();
-    }
-
-    private void TryHandlePlayerDeath()
+    private void OnPlayerDied(PlayerDiedEvent _)
     {
         if (_battleEnded || _reviveFlowActive) return;
 
@@ -334,6 +50,30 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
         EndBattleDefeat();
     }
+
+    // ── 胜利：Boss 被击杀 ──
+
+    private void OnEnemyDied(EnemyDiedEvent e)
+    {
+        if (_battleEnded || _reviveFlowActive) return;
+        if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
+
+        if (BattleVictoryBossTracker.TryRegisterKill())
+            EndBattleVictory();
+    }
+
+    // ── 胜利（无 Boss 关卡）：波次刷完且场上无怪 ──
+
+    private void OnWavesCompleted(BattleWavesCompletedEvent _)
+    {
+        if (_battleEnded || _reviveFlowActive) return;
+        if (BattleVictoryBossTracker.UsesBossVictory) return;
+        if (CombatTargetRegistry.CountActive("monster") > 0) return;
+
+        EndBattleVictory();
+    }
+
+    // ── 复活流程 ──
 
     private void BeginReviveOffer()
     {
@@ -353,117 +93,37 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private void OnReviveGiveUp()
     {
         if (_battleEnded) return;
-
         _reviveOfferUsed = true;
         _reviveFlowActive = false;
-        CloseReviveUi();
+        UIManager.Instance.CloseTop();
         EndBattleDefeat();
     }
 
     private void OnReviveAccepted()
     {
         if (_battleEnded) return;
-
         _reviveOfferUsed = true;
         _reviveFlowActive = false;
-        CloseReviveUi();
+        UIManager.Instance.CloseTop();
 
-        TryCachePlayerHealth();
-        if (_playerHealth != null)
-            _playerHealth.ResetToFull();
+        if (_playerHealth == null)
+            _playerHealth = FindObjectOfType<PlayerHealth>(true);
+        _playerHealth?.ResetToFull();
 
         var hpBar = FindObjectOfType<PlayerWorldHpBar>(true);
-        if (hpBar != null)
-            hpBar.Refresh();
+        hpBar?.Refresh();
 
         if (Time.timeScale == 0f)
             Time.timeScale = 1f;
     }
 
-    private void ShowReviveUi(GameRevivePanelPayload payload)
-    {
-        if (UIManager.Instance != null)
-        {
-            GameRevivePanel panel = UIManager.Instance.Open<GameRevivePanel>(payload, UiOpenOptions.ModalDefault);
-            if (panel != null)
-            {
-                _reviveUiInstance = null;
-                return;
-            }
-
-            Debug.LogWarning("[BattleOutcomeCoordinator] UIManager 未能打开 GameRevivePanel，将回退为 Instantiate。");
-        }
-
-        if (gameRevivePanelPrefab == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] 未配置 gameRevivePanelPrefab。");
-            OnReviveGiveUp();
-            return;
-        }
-
-        Transform parent = resultParentOverride;
-        if (parent == null)
-        {
-            Canvas c = FindObjectOfType<Canvas>(true);
-            parent = c != null ? c.transform as RectTransform : null;
-        }
-
-        if (parent == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] 找不到 Canvas，无法显示复活面板。");
-            OnReviveGiveUp();
-            return;
-        }
-
-        if (_reviveUiInstance != null)
-            Destroy(_reviveUiInstance);
-
-        _reviveUiInstance = Instantiate(gameRevivePanelPrefab, parent, false);
-        var fallback = _reviveUiInstance.GetComponent<GameRevivePanel>();
-        if (fallback == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] GameRevivePanel 预制体缺少 GameRevivePanel 组件。");
-            OnReviveGiveUp();
-            return;
-        }
-
-        Time.timeScale = 0f;
-        fallback.OnOpen(payload);
-    }
-
-    private void CloseReviveUi()
-    {
-        if (UIManager.Instance != null && UIManager.Instance.Top is GameRevivePanel)
-        {
-            UIManager.Instance.CloseTop();
-            _reviveUiInstance = null;
-            return;
-        }
-
-        if (_reviveUiInstance != null)
-        {
-            var panel = _reviveUiInstance.GetComponent<GameRevivePanel>();
-            panel?.OnClose();
-            Destroy(_reviveUiInstance);
-            _reviveUiInstance = null;
-        }
-
-        if (Time.timeScale == 0f)
-            Time.timeScale = 1f;
-    }
-
-    private static int CountMonstersAlive()
-    {
-        return CombatTargetRegistry.CountActive("monster");
-    }
+    // ── 结算 ──
 
     private void EndBattleVictory()
     {
         if (_battleEnded) return;
-        if (_battleWaveConfigInvalid) return;
-        if (_playerHealth != null && !_playerHealth.IsAlive) return;
-
         _battleEnded = true;
+
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
         TryRecordVictoryProgress(dur, kills);
@@ -482,59 +142,21 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void ShowResultUi(GameResultViewModel vm)
     {
-        if (UIManager.Instance != null)
-        {
-            GameResultPanel managed = UIManager.Instance.Open<GameResultPanel>(vm);
-            if (managed != null)
-            {
-                _resultUiInstance = null;
-                return;
-            }
+        UIManager.Instance.Open<GameResultPanel>(vm);
+    }
 
-            Debug.LogWarning("[BattleOutcomeCoordinator] UIManager 存在但未注册 GameResultPanel，将回退为 Instantiate。");
-        }
-
-        if (gameResultPanelPrefab == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] 未配置 gameResultPanelPrefab（请在 UIManager 注册 GameResultPanel，或拖入预制体 / 放入 Resources）。");
-            return;
-        }
-
-        Transform parent = resultParentOverride;
-        if (parent == null)
-        {
-            Canvas c = FindObjectOfType<Canvas>(true);
-            parent = c != null ? c.transform as RectTransform : null;
-        }
-
-        if (parent == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] 找不到 Canvas，无法显示结算。");
-            return;
-        }
-
-        if (_resultUiInstance != null)
-            Destroy(_resultUiInstance);
-
-        _resultUiInstance = Instantiate(gameResultPanelPrefab, parent, false);
-        var panel = _resultUiInstance.GetComponent<GameResultPanel>();
-        if (panel == null)
-        {
-            Debug.LogError("[BattleOutcomeCoordinator] GameResultPanel 预制体缺少 GameResultPanel 组件。");
-            return;
-        }
-
-        panel.OnOpen(vm);
+    private void ShowReviveUi(GameRevivePanelPayload payload)
+    {
+        UIManager.Instance.Open<GameRevivePanel>(payload, UiOpenOptions.ModalDefault);
     }
 
     private static void TryRecordVictoryProgress(float durationSec, int killCount)
     {
         if (!SelectedLevelContext.HasSelection) return;
-
         PlayerProfileService.Instance.LoadOrCreate();
+
         int levelId = SelectedLevelContext.LevelId;
-        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId))
-            return;
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId)) return;
 
         var health = FindObjectOfType<PlayerHealth>();
         int stars = health != null

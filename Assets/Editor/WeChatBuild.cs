@@ -10,10 +10,14 @@ using UnityEngine;
 public static class WeChatBuild
 {
     private const string WebGLBuildDir = "Build/WebGL";
+    private const string MiniGameBuildDir = "Build/minigame";
 
     [MenuItem("Build/微信小游戏 - 一键构建", false, 100)]
     public static void Build()
     {
+        // 0. 清理旧构建产物，防止 Windows 文件占用导致 IOException
+        CleanBuildOutput();
+
         // 1. 切换到 WebGL 平台
         if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WebGL)
         {
@@ -103,6 +107,36 @@ public static class WeChatBuild
         PlayerSettings.WebGL.linkerTarget = WebGLLinkerTarget.Wasm;
 
         Debug.Log("[WeChatBuild] PlayerSettings 已配置: Gamma, 256MB, NoThreads, Medium Strip");
+    }
+
+    /// <summary>构建前清理旧输出目录，避免 Windows 文件占用导致 IOException。</summary>
+    private static void CleanBuildOutput()
+    {
+        string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+        string[] dirs = { "Build/minigame", "Build/WebGL" };
+
+        foreach (string dir in dirs)
+        {
+            string fullPath = Path.Combine(projectRoot, dir);
+            if (!Directory.Exists(fullPath)) continue;
+
+            try
+            {
+                // 去掉只读属性（递归）
+                foreach (string f in Directory.GetFiles(fullPath, "*", SearchOption.AllDirectories))
+                    File.SetAttributes(f, FileAttributes.Normal);
+
+                Directory.Delete(fullPath, true);
+                Debug.Log($"[WeChatBuild] 已清理: {dir}");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[WeChatBuild] 清理失败({dir}): {ex.Message}。请手动删除后重试。");
+                EditorUtility.DisplayDialog("构建警告",
+                    $"无法删除 {dir}\n\n{ex.Message}\n\n请关闭微信开发者工具、文件资源管理器、VS Code 中占用该目录的窗口后重试。",
+                    "确定");
+            }
+        }
     }
 
     private static void SetDefineSymbols(BuildTargetGroup group, string symbols)

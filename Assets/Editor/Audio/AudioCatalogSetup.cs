@@ -10,7 +10,7 @@ using UnityEngine;
 public static class AudioCatalogSetup
 {
     private const string CatalogAssetPath = "Assets/Resources/Audio/MainAudioCatalog.asset";
-    private const string ResAudioRoot = "Assets/Res/Audio";
+    private const string ResAudioRoot = "Assets/Resources/Audio";
 
     private static readonly string[] AudioExtensions = { ".mp3", ".wav", ".ogg" };
 
@@ -96,22 +96,6 @@ public static class AudioCatalogSetup
         }
 
         Debug.Log(sb.ToString());
-    }
-
-    [MenuItem("Tools/Audio/拷贝音频到 StreamingAssets 与 Minigame", false, 301)]
-    public static void CopyAudioForRuntime()
-    {
-        AudioBuildCopy.CopyResAudioToStreamingAssets();
-        AudioBuildCopy.CopyResAudioToMinigame();
-        AssetDatabase.Refresh();
-        Debug.Log("[AudioCatalogSetup] 音频已拷贝到 StreamingAssets/Audio 与 Build/minigame/Audio。");
-    }
-
-    [MenuItem("Tools/Audio/一键初始化音效", false, 299)]
-    public static void SetupAll()
-    {
-        CreateDefaultCatalog();
-        CopyAudioForRuntime();
     }
 
     private static void AssignPath(AudioCatalog.Entry entry, string relativePath, List<string> warnings, string label)

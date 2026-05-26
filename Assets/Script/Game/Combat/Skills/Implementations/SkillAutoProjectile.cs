@@ -71,11 +71,15 @@ public class SkillAutoProjectile : SkillBase
             Vector2 d = Quaternion.Euler(0f, 0f, ang) * dir;
 
             GameObject bullet = GameObjectPool.Get(bulletPrefab, from, Quaternion.identity);
-            Bullet b = bullet.GetComponent<Bullet>();
-            if (b != null)
+            if (bullet == null)
             {
-                b.ApplySkillShot(SkillId.AutoProjectile, damage);
-                b.SetDirection(d, bulletSpeed);
+                bullet = Object.Instantiate(bulletPrefab, from, Quaternion.identity);
+            }
+
+            PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
+            if (pb != null)
+            {
+                pb.Launch(d, bulletSpeed, damage, 5f, SkillId.AutoProjectile);
             }
             else
             {

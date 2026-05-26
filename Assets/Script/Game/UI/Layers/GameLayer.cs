@@ -26,9 +26,6 @@ public class GameLayer : MonoBehaviour
     [Tooltip("显示当前关卡（预制体 TextLevel，读选关上下文）")]
     public TextMeshProUGUI levelText;
 
-    [Tooltip("暂停按钮（点击切换 Time.timeScale 0/1）")]
-    public Button pauseButton;
-
     [Header("Energy → Card Selection")]
     [Tooltip("能量进度条（预制体 SliderProgress），Boss 出场时隐藏")]
     public Slider energyProgressSlider;
@@ -71,7 +68,7 @@ public class GameLayer : MonoBehaviour
         AudioService.Ensure().StartCoroutine(AudioService.Ensure().LoadGroupAsync(AudioLoadGroup.Battle));
 
         // 如果没有拖 UI 引用，自动创建一套基础 UI，便于快速跑起来
-        if (killText == null || timerText == null || pauseButton == null)
+        if (killText == null || timerText == null)
             BuildMinimalUIIfMissing();
 
         _timeElapsed = 0f;
@@ -81,11 +78,9 @@ public class GameLayer : MonoBehaviour
         ResolveWaveTextRef();
         ResolveLevelTextRef();
         InitWaveDisplayFromSpawner();
+        ApplyKillQuotaFromTable();
         RefreshWaveText();
         RefreshLevelText();
-
-        if (pauseButton != null)
-            pauseButton.onClick.AddListener(TogglePause);
 
         ResolveEnergyProgressRefs();
         BindPlayerEnergy();
@@ -221,12 +216,6 @@ public class GameLayer : MonoBehaviour
     /// <summary>
     /// 重置/设置倒计时（秒）
     /// </summary>
-    public void TogglePause()
-    {
-        UiClickSound.Play();
-        UIManager.Instance.Open<GamePausePanel>();
-    }
-
     private void RefreshKillText()
     {
         if (killText == null) return;
@@ -270,6 +259,14 @@ public class GameLayer : MonoBehaviour
 
         BattleLevelContext.LogMissingSelectionOnce(nameof(GameLayer));
         levelText.text = BattleLevelContext.GetDisplayText();
+    }
+
+    private void ApplyKillQuotaFromTable()
+    {
+        int levelId = BattleLevelContext.LevelId;
+        int quota = LevelWaveKillQuota.SumTotalMonstersForLevel(levelId);
+        if (quota > 0)
+            targetKills = quota;
     }
 
     private void InitWaveDisplayFromSpawner()
@@ -392,12 +389,6 @@ public class GameLayer : MonoBehaviour
             timerText.text = "00:00";
         }
 
-        if (pauseButton == null)
-        {
-            pauseButton = CreateButton("PauseButton", canvas.transform, new Vector2(-10, 10), TextAnchor.LowerRight);
-            var t = pauseButton.GetComponentInChildren<TextMeshProUGUI>();
-            if (t != null) t.text = "Pause";
-        }
     }
 
     private TextMeshProUGUI CreateHudText(string name, Transform parent, Vector2 anchoredPos, TextAnchor anchor)

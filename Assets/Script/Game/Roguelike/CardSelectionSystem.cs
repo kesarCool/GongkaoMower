@@ -20,18 +20,18 @@ public class CardSelectionSystem : MonoBehaviour
     public CardSelectionPanel panel;
 
     [Header("刷新配置")]
-    [Tooltip("每次选卡允许免费刷新次数")]
+    [Tooltip("每局免费刷新次数")]
     public int freeRefreshCount = 1;
-
-    [Tooltip("是否有消耗货币刷新（预留后期）")]
-    public bool allowPaidRefresh = false;
+    [Tooltip("广告刷新次数")]
+    public int adRefreshCount = 1;
 
     // 状态
     private bool _isSelecting = false;
     private Queue<CardSelectionRequest> _pendingRequests = new Queue<CardSelectionRequest>();
     private List<CardDeck.DrawResult> _currentCards;
     private List<SkillId> _excludedSkills = new List<SkillId>();
-    private int _remainingRefresh;
+    private int _remainingFreeRefresh;
+    private int _remainingAdRefresh;
 
     private PlayerSkills _playerSkills;
 
@@ -46,6 +46,10 @@ public class CardSelectionSystem : MonoBehaviour
         _playerSkills = GetComponent<PlayerSkills>();
         if (_playerSkills == null)
             _playerSkills = FindObjectOfType<PlayerSkills>();
+
+        // 每局只初始化一次刷新次数
+        _remainingFreeRefresh = freeRefreshCount;
+        _remainingAdRefresh = adRefreshCount;
     }
 
     /// <summary>
@@ -79,10 +83,8 @@ public class CardSelectionSystem : MonoBehaviour
     {
         _selectionUsesUIManager = false;
         _isSelecting = true;
-        _remainingRefresh = freeRefreshCount;
         _excludedSkills.Clear();
 
-        // 抽卡 + 显示 UI；UIManager 路径下暂停由框架管理，异常时 EndSelection 会收尾
         try
         {
             DrawCards();
@@ -112,9 +114,8 @@ public class CardSelectionSystem : MonoBehaviour
 
         if (_currentCards == null || _currentCards.Count == 0)
         {
-            Debug.LogWarning("[CardSelectionSystem] No cards available");
-            EndSelection();
-            return;
+            Debug.LogWarning("[CardSelectionSystem] 无可用卡牌");
+            return; // 不关面板，只是这次刷新无效
         }
 
         if (UIManager.Instance != null)
@@ -124,7 +125,9 @@ public class CardSelectionSystem : MonoBehaviour
                 Cards = _currentCards,
                 OnCardSelected = OnCardSelected,
                 OnRefreshRequested = OnRefreshRequested,
-                RemainingRefresh = _remainingRefresh
+                OnAdRefreshRequested = OnAdRefreshRequested,
+                FreeRefreshCount = _remainingFreeRefresh,
+                AdRefreshCount = _remainingAdRefresh
             };
             var opts = new UiOpenOptions
             {
@@ -147,7 +150,8 @@ public class CardSelectionSystem : MonoBehaviour
             EnsurePanelInActiveSceneAndUnderCanvas();
             EnsureTransformHierarchyActive(panel.transform);
             Time.timeScale = 0f;
-            var showOk = panel.Show(_currentCards, OnCardSelected, OnRefreshRequested, _remainingRefresh);
+            var showOk = panel.Show(_currentCards, OnCardSelected, OnRefreshRequested, OnAdRefreshRequested,
+                _remainingFreeRefresh, _remainingAdRefresh);
             if (!showOk)
                 EndSelection();
         }
@@ -158,31 +162,63 @@ public class CardSelectionSystem : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 玩家点击刷新
-    /// </summary>
     private void OnRefreshRequested()
     {
-        if (_remainingRefresh <= 0 && !allowPaidRefresh)
-        {
-            Debug.Log("[CardSelectionSystem] No refresh remaining");
-            return;
-        }
+        if (_remainingFreeRefresh <= 0 && _remainingAdRefresh <= 0) return;
 
-        _remainingRefresh--;
+        var prevCards = _currentCards;
+        int prevFree = _remainingFreeRefresh;
+        int prevAd = _remainingAdRefresh;
 
-        // 将当前3张卡加入排除列表
         foreach (var c in _currentCards)
             _excludedSkills.Add(c.skillId);
 
-        // 重新抽卡
-        DrawCards();
-
-        if (_selectionUsesUIManager && UIManager.Instance != null &&
-            UIManager.Instance.TryGetInstance(out CardSelectionPanel csp))
-            csp.UpdateRefreshCount(_remainingRefresh);
+        if (_remainingFreeRefresh > 0)
+            _remainingFreeRefresh--;
         else
-            panel?.UpdateRefreshCount(_remainingRefresh);
+            _remainingAdRefresh--;
+
+        // 重新抽卡（先带排除，不足 3 张则清排除重抽）
+        int levelId = BattleLevelContext.LevelId;
+        _currentCards = DrawFromPoolInternal(levelId, _excludedSkills);
+
+        if (_currentCards == null || _currentCards.Count < 3)
+        {
+            Debug.Log("[CardSelectionSystem] 排除后不足 3 张，清排除重抽");
+            _excludedSkills.Clear();
+            _currentCards = DrawFromPoolInternal(levelId, null);
+        }
+
+        // 重抽仍无卡：回退，隐藏刷新按钮
+        if (_currentCards == null || _currentCards.Count == 0)
+        {
+            _currentCards = prevCards;
+            _remainingFreeRefresh = 0;
+            _remainingAdRefresh = 0;
+            Debug.LogWarning("[CardSelectionSystem] 刷新无可用卡牌，隐藏刷新按钮");
+        }
+
+        // 直接更新面板，不走 UIManager.Open（刷新不需要重建面板）
+        CardSelectionPanel targetPanel = null;
+        if (_selectionUsesUIManager && UIManager.Instance != null)
+            UIManager.Instance.TryGetInstance(out targetPanel);
+        if (targetPanel == null)
+            targetPanel = panel;
+
+        if (targetPanel != null)
+        {
+            targetPanel.Show(_currentCards, OnCardSelected, OnRefreshRequested, OnAdRefreshRequested,
+                _remainingFreeRefresh, _remainingAdRefresh);
+        }
+    }
+
+    /// <summary>
+    /// 广告刷新（预留接口，暂未实现广告加载）
+    /// </summary>
+    private void OnAdRefreshRequested()
+    {
+        Debug.Log("[CardSelectionSystem] 广告刷新——预留接口，暂未接入广告 SDK");
+        OnRefreshRequested();
     }
 
     /// <summary>
@@ -258,6 +294,15 @@ public class CardSelectionSystem : MonoBehaviour
         {
             StartSelection();
         }
+    }
+
+    private List<CardDeck.DrawResult> DrawFromPoolInternal(int levelId, List<SkillId> excluded)
+    {
+        if (RoguelikeCardManager.Instance != null)
+            return RoguelikeCardManager.Instance.DrawFromPool(levelId, _playerSkills, excluded);
+        if (deck != null)
+            return deck.Draw(levelId, _playerSkills, excluded);
+        return null;
     }
 
     private struct CardSelectionRequest { }

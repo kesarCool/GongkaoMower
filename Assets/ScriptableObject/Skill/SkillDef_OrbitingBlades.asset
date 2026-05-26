@@ -16,15 +16,15 @@ MonoBehaviour:
   maxLevel: 5
   displayName: "\u56DE\u98CE\u821E\u67F3"
   description: "\u5468\u8EAB\u73AF\u7ED5\u65CB\u8F6C\u98DE\u5203\uFF0C\u89E6\u53CA\u654C\u4EBA\u5982\u67F3\u53F6\u5272\u80A4\uFF0C\u6301\u7EED\u9020\u6210\u4F24\u5BB3\u3002"
-  icon: {fileID: 21300000, guid: 5bdaf111415cc4b4a8bb37d590f8be28, type: 3}
+  icon: {fileID: 21300000, guid: 15433f153a5f21a458bf6d62d7b81b3f, type: 3}
   levelDescriptions: []
   bladeCountByLevel: 0200000003000000040000000500000006000000
   damagePerTickByLevel:
-  - 20
-  - 24
-  - 30
-  - 36
-  - 43
+  - 35
+  - 40
+  - 45
+  - 50
+  - 55
   tickIntervalByLevel:
   - 0.15
   - 0.15
@@ -33,10 +33,10 @@ MonoBehaviour:
   - 0.12
   orbitRadiusByLevel:
   - 1.5
-  - 1.55
-  - 1.6
   - 1.65
-  - 1.8
+  - 1.75
+  - 1.85
+  - 2
   rotateSpeedByLevel:
   - 180
   - 200

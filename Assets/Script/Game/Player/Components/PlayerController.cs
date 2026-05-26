@@ -139,12 +139,15 @@ public class PlayerController : MonoBehaviour
         }
 
         GameObject bullet = GameObjectPool.Get(bulletPrefab, transform.position, Quaternion.identity);
+        if (bullet == null)
+            bullet = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+
         SpawnLimiter.Instance?.RegisterSpawned("Bullet", bullet);
 
-        Bullet b = bullet.GetComponent<Bullet>();
-        if (b != null)
+        PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
+        if (pb != null)
         {
-            b.SetDirection(dir, bulletSpeed);
+            pb.Launch(dir, bulletSpeed, 1f, 5f, SkillId.AutoProjectile);
         }
         else
         {

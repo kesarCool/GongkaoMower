@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -43,7 +42,6 @@ public class GamePausePanel : UIPanelBase
     {
         if (skillListParent == null || skillRowPrefab == null) return;
 
-        // 清掉旧行
         for (int i = skillListParent.childCount - 1; i >= 0; i--)
             Destroy(skillListParent.GetChild(i).gameObject);
 
@@ -64,20 +62,13 @@ public class GamePausePanel : UIPanelBase
 
             GameObject row = Instantiate(skillRowPrefab, skillListParent, false);
 
-            // 图标
-            var iconImg = row.transform.Find("Icon")?.GetComponent<Image>();
-            if (iconImg != null && def != null && def.icon != null)
-                iconImg.sprite = def.icon;
-
-            // 名字 + 等级
-            var nameTxt = row.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
-            if (nameTxt != null && def != null)
-                nameTxt.text = $"{def.displayName} Lv.{level}";
-
-            // 伤害
-            var dmgTxt = row.transform.Find("Damage")?.GetComponent<TextMeshProUGUI>();
-            if (dmgTxt != null)
-                dmgTxt.text = Mathf.CeilToInt(dmg).ToString();
+            var cell = row.GetComponent<GameResultSkillDamageCell>();
+            if (cell != null)
+            {
+                string name = def != null ? $"Lv.{level} {def.displayName}" : id.ToString();
+                Sprite icon = def != null ? def.icon : null;
+                cell.Bind(icon, name, dmg);
+            }
         }
     }
 

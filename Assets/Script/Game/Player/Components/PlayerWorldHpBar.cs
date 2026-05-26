@@ -1,17 +1,17 @@
 using UnityEngine;
 
 /// <summary>
-/// 驱动 <c>ObjHp/Hp</c> 子物体横向缩放表示血量（世界 Sprite 条，不随 Body 受击缩放）。
+/// 世界空间玩家血条：用 localScale.x 显示血量比例，无论如何 pivot 都从左侧缩。
 /// </summary>
 [DisallowMultipleComponent]
 public class PlayerWorldHpBar : MonoBehaviour
 {
-    [Tooltip("前景条 Transform（ObjHp 下的 Hp）；留空则自动查找")]
     [SerializeField] private Transform fillTransform;
-
     [SerializeField] private PlayerHealth playerHealth;
 
-    private Vector3 _fullLocalScale = Vector3.one;
+    private Vector3 _fullScale;
+    private float _fullWidth;
+    private float _pivotOffsetX;
 
     private void Awake()
     {
@@ -20,7 +20,32 @@ public class PlayerWorldHpBar : MonoBehaviour
 
         ResolveFillTransform();
         if (fillTransform != null)
-            _fullLocalScale = fillTransform.localScale;
+        {
+            _fullScale = fillTransform.localScale;
+            var sr = fillTransform.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                _fullWidth = sr.sprite.bounds.size.x;
+            }
+            else
+            {
+                _fullWidth = _fullScale.x;
+            }
+
+            _pivotOffsetX = 0f;
+
+            // 如果 pivot 在中心，scale 缩下去会往两边缩，补一个位置偏移让它从左边缩
+            var sr2 = fillTransform.GetComponent<SpriteRenderer>();
+            if (sr2 != null)
+            {
+                float pivotX = sr2.sprite != null ? sr2.sprite.pivot.x / sr2.sprite.rect.width : 0.5f;
+                if (pivotX > 0.1f)
+                    _pivotOffsetX = -_fullWidth * 0.5f * _fullScale.x;
+            }
+
+            // 确保初始状态满血
+            ApplyRatio(1f);
+        }
     }
 
     private void OnEnable()
@@ -40,10 +65,15 @@ public class PlayerWorldHpBar : MonoBehaviour
             playerHealth.OnHealthChanged.RemoveListener(OnHealthChanged);
     }
 
+    private void Start()
+    {
+        // 兜底：确保所有组件就绪后再刷一次
+        Refresh();
+    }
+
     private void ResolveFillTransform()
     {
-        if (fillTransform != null)
-            return;
+        if (fillTransform != null) return;
 
         Transform objHp = transform.Find("ObjHp");
         if (objHp == null)
@@ -51,18 +81,13 @@ public class PlayerWorldHpBar : MonoBehaviour
             foreach (Transform child in transform)
             {
                 if (child.name == "ObjHp" || child.name.StartsWith("ObjHp"))
-                {
-                    objHp = child;
-                    break;
-                }
+                { objHp = child; break; }
             }
         }
-
         if (objHp != null)
         {
             Transform hp = objHp.Find("Hp");
-            if (hp != null)
-                fillTransform = hp;
+            if (hp != null) fillTransform = hp;
         }
     }
 
@@ -74,13 +99,28 @@ public class PlayerWorldHpBar : MonoBehaviour
     public void Refresh()
     {
         if (fillTransform == null)
+        {
             ResolveFillTransform();
+            if (fillTransform == null) return;
+            _fullScale = fillTransform.localScale;
+        }
 
-        if (fillTransform == null || playerHealth == null)
-            return;
+        if (playerHealth == null) return;
 
-        float max = Mathf.Max(0.0001f, playerHealth.MaxHp);
-        float ratio = Mathf.Clamp01(playerHealth.Hp / max);
-        fillTransform.localScale = new Vector3(_fullLocalScale.x * ratio, _fullLocalScale.y, _fullLocalScale.z);
+        float ratio = Mathf.Clamp01(playerHealth.Hp / Mathf.Max(0.0001f, playerHealth.MaxHp));
+        ApplyRatio(ratio);
+    }
+
+    private void ApplyRatio(float ratio)
+    {
+        fillTransform.localScale = new Vector3(_fullScale.x * ratio, _fullScale.y, _fullScale.z);
+
+        // pivot 补偿：如果 pivot 不在最左边，调整位置让缩条始终从左边开始
+        if (Mathf.Abs(_pivotOffsetX) > 0.001f)
+        {
+            Vector3 pos = fillTransform.localPosition;
+            pos.x = _pivotOffsetX * (1f - ratio);
+            fillTransform.localPosition = pos;
+        }
     }
 }
