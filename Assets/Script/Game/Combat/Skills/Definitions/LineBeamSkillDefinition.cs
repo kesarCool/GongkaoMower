@@ -26,7 +26,7 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
 
     protected override string GenerateLevelDescription(int level)
     {
-        return $"伤害 {DamageAt(level):0.#}，间隔 {IntervalAt(level):0.##}s，随机散射射线 ×{BeamCountAt(level)}";
+        return $"伤害{DamageAt(level):0.#},间隔{IntervalAt(level):0.##}s,随机散射射线x{BeamCountAt(level)}";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

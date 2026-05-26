@@ -23,7 +23,7 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
     {
         float interval = IntervalAt(level);
         int count = ProjectileCountAt(level);
-        return $"伤害 {DamageAt(level):0.#}，射速 {interval:0.##}s，子弹 ×{count}";
+        return $"伤害{DamageAt(level):0.#},射速{interval:0.##}s,子弹x{count}";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

@@ -27,7 +27,7 @@ public class FieldGeneratorSkillDefinition : SkillDefinitionBase
 
     protected override string GenerateLevelDescription(int level)
     {
-        return $"力场半径 {RadiusAt(level):0.##}，{DamagePerSecondAt(level):0.#} DPS，间隔 {DamageTickIntervalAt(level):0.##}s";
+        return $"力场半径{RadiusAt(level):0.##},{DamagePerSecondAt(level):0.#} DPS,间隔 {DamageTickIntervalAt(level):0.##}s";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

@@ -30,7 +30,7 @@ public class GrenadeSkillDefinition : SkillDefinitionBase
 
     protected override string GenerateLevelDescription(int level)
     {
-        return $"伤害 {DamageAt(level):0.#}，CD {CooldownAt(level):0.##}s，范围 {AoeRadiusAt(level):0.##}";
+        return $"伤害{DamageAt(level):0.#},CD {CooldownAt(level):0.##}s,范围 {AoeRadiusAt(level):0.##}";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

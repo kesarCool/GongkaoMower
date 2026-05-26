@@ -26,7 +26,7 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
 
     protected override string GenerateLevelDescription(int level)
     {
-        return $"飞刀 ×{BladeCountAt(level)}，每跳伤害 {DamagePerTickAt(level):0.#}，间隔 {TickIntervalAt(level):0.##}s";
+        return $"飞刀x{BladeCountAt(level)},每跳伤害 {DamagePerTickAt(level):0.#},间隔 {TickIntervalAt(level):0.##}s";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

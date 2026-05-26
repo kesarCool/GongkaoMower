@@ -30,7 +30,7 @@ public class LightningStrikeSkillDefinition : SkillDefinitionBase
 
     protected override string GenerateLevelDescription(int level)
     {
-        return $"伤害 {DamageAt(level):0.#}，范围 {StrikeRadiusAt(level):0.##}，落雷 ×{StrikeCountAt(level)}，间隔 {IntervalAt(level):0.##}s";
+        return $"伤害 {DamageAt(level):0.#},范围 {StrikeRadiusAt(level):0.##},落雷 ×{StrikeCountAt(level)},间隔 {IntervalAt(level):0.##}s";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
