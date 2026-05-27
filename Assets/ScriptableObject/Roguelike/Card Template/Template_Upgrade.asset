@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7f7733bbad9dbc42942d74961de36aa, type: 3}
   m_Name: Template_Upgrade
   m_EditorClassIdentifier: 
-  templateType: 1
-  style: {fileID: 11400000, guid: be5f74cd28bd19242b0be3c4f45c6e12, type: 2}
+  background: {fileID: 21300000, guid: 26b2e9dfca9d1df439b1f2511f8689a6, type: 3}
   labelText: "\u5347\u7EA7\u5361"
-  titleFormat: '{0}'
-  descriptionFormat: "\u5F53\u524D\u7B49\u7EA7\uFF1A{0}\n{1}"
+  labelColor: {r: 1, g: 0.702765, b: 0, a: 1}

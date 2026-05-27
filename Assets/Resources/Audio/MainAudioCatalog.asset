@@ -91,7 +91,7 @@ MonoBehaviour:
       id: 104
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_throw_grenade.mp3
       group: 1
-      volume: 0.3
+      volume: 0.1
       minInterval: 0
       pitchVariation: 0
       pitchOffset: 0

@@ -9,12 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 474e7c935bfac804988f4548166be844, type: 3}
-  m_Name: ViewStyle_Break
+  m_Script: {fileID: 11500000, guid: b7f7733bbad9dbc42942d74961de36aa, type: 3}
+  m_Name: Template_Breakthrough
   m_EditorClassIdentifier: 
-  styleName: 
   background: {fileID: 21300000, guid: 4b3bdf7a18bf51d4db019cb9dc08edd2, type: 3}
-  labelIcon: {fileID: 0}
-  labelColor: {r: 1, g: 1, b: 1, a: 1}
-  borderGlowColor: {r: 1, g: 1, b: 1, a: 1}
-  rarityStars: 1
+  labelText: "\u6EE1\u7EA7\u5361"
+  labelColor: {r: 1, g: 0.10677304, b: 0, a: 1}

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 单张卡牌UI：根据模板动态显示技能信息
+/// 单张卡牌UI：根据 RoguelikeCardTemplate 显示技能信息。
 /// </summary>
 public class CardView : MonoBehaviour
 {
@@ -14,11 +14,8 @@ public class CardView : MonoBehaviour
     public TextMeshProUGUI titleText;
     public TextMeshProUGUI descText;
     public TextMeshProUGUI labelText;
- //   public Image labelIcon;
-    // public Image borderGlow;
 
     [Header("点击")]
-    [Tooltip("可为空：自动取同物体上的 Button；点击与 Animator 无关。")]
     public Button clickButton;
 
     [Header("动画（可选）")]
@@ -38,9 +35,6 @@ public class CardView : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 绑定卡牌数据
-    /// </summary>
     public void Bind(CardDeck.DrawResult data, Action onClick)
     {
         _onClick = onClick;
@@ -50,62 +44,30 @@ public class CardView : MonoBehaviour
         if (data == null) return;
 
         var tmpl = data.template;
-        if (tmpl == null)
-        {
-            if (labelText != null) labelText.text = "";
-            if (titleText != null) titleText.text = data.skillDef != null ? data.skillDef.displayName : "";
-            if (descText != null) descText.text = GetLevelUpPreview(data);
-            if (icon != null && data.skillDef != null) icon.sprite = data.skillDef.icon;
-            gameObject.SetActive(true);
-            return;
-        }
 
-        // 应用样式
-        var style = tmpl.style;
-        if (style != null)
-        {
-            if (background != null) background.sprite = style.background;
-        //    borderGlow.gameObject.SetActive(false);
-    //  //       if (borderGlow != null)
-    //   //      {
-    //   //          borderGlow.color = style.borderGlowColor;
-    //   //          borderGlow.gameObject.SetActive(style.rarityStars > 0);
-    //   //      }
+        // 背景
+        if (tmpl != null && background != null && tmpl.background != null)
+            background.sprite = tmpl.background;
 
-            // labelIcon.gameObject.SetActive(false);
-            // if (labelIcon != null)
-            // {
-            //     labelIcon.sprite = style.labelIcon;
-            //     labelIcon.color = style.labelColor;
-            //     labelIcon.gameObject.SetActive(true);
-            // }
-        }
-
-        // 标签文字
+        // 标签文字 + 颜色
         if (labelText != null)
-            labelText.text = tmpl.labelText;
+        {
+            labelText.text = tmpl != null ? tmpl.labelText : "";
+            labelText.color = tmpl != null ? tmpl.labelColor : Color.white;
+        }
 
         // 技能图标
         if (icon != null && data.skillDef != null)
             icon.sprite = data.skillDef.icon;
 
-        // 标题（动态替换格式）
+        // 标题
         if (titleText != null && data.skillDef != null)
-        {
-            string title = string.Format(tmpl.titleFormat, data.skillDef.displayName);
-            titleText.text = title;
-        }
+            titleText.text = data.skillDef.displayName;
 
-        // 描述（显示等级变化）
+        // 描述
         if (descText != null)
-        {
-            string desc = string.Format(tmpl.descriptionFormat,
-                data.currentLevel,
-                GetLevelUpPreview(data));
-            descText.text = desc;
-        }
+            descText.text = GetLevelUpPreview(data);
 
-        // 播放入场动画
         if (animator != null)
             animator.SetTrigger("Show");
 
@@ -117,7 +79,6 @@ public class CardView : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    /// <summary>选卡描述：各等级一行（数据来自 SkillDefinitionBase.levelDescriptions 或数值表自动生成）。</summary>
     private string GetLevelUpPreview(CardDeck.DrawResult data)
     {
         if (data.skillDef == null)
@@ -128,30 +89,21 @@ public class CardView : MonoBehaviour
             return data.skillDef.FormatAllLevelDescriptions(highlightLevel: 1);
 
         if (data.targetLevel >= max)
-            return data.skillDef.FormatAllLevelDescriptions(highlightLevel: max);
+            return data.skillDef.FormatAllLevelDescriptions(highlightLevel: max) + "\n满级突破！";
 
         return data.skillDef.FormatAllLevelDescriptions(highlightLevel: data.targetLevel);
     }
 
-    /// <summary>
-    /// 点击事件（由 Button 或 Inspector 绑定触发）
-    /// </summary>
     public void OnClick()
     {
         UiClickSound.Play();
         if (animator != null)
             animator.SetTrigger("Selected");
-
         _onClick?.Invoke();
     }
 
-    /// <summary>
-    /// 子层 Image/Text 若 raycastTarget=true 会拦截射线，导致根节点 <see cref="Button"/> 收不到点击。
-    /// </summary>
     private void StopClickPropagationFromDecorations()
     {
-        // if (borderGlow != null) borderGlow.raycastTarget = false;
-        // if (labelIcon != null) labelIcon.raycastTarget = false;
         if (icon != null) icon.raycastTarget = false;
         if (titleText != null) titleText.raycastTarget = false;
         if (descText != null) descText.raycastTarget = false;

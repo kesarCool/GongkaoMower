@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - id: 10001
-    enemyName: "\u8A00\u8BED\u602A"
+    enemyName: "\u6210\u8BED\u602A"
     prefab: {fileID: 4941738149415093580, guid: f521838753b685b459b2ef3e64c52e82, type: 3}
     sprite: {fileID: 0}
     bulletPrefab: {fileID: 0}
@@ -55,7 +55,7 @@ MonoBehaviour:
     damage: 0
     rewardKillCount: 1
   - id: 10002
-    enemyName: "\u5224\u65AD\u602A"
+    enemyName: "\u6210\u8BED\u602A"
     prefab: {fileID: 4941738149415093580, guid: e24bd47bb25be4b47b9b811f1ec380cc, type: 3}
     sprite: {fileID: 0}
     bulletPrefab: {fileID: 0}
@@ -64,9 +64,9 @@ MonoBehaviour:
     damage: 0
     rewardKillCount: 2
   - id: 10003
-    enemyName: "\u8D44\u6599\u602A"
+    enemyName: "\u6210\u8BED\u602A"
     prefab: {fileID: 4941738149415093580, guid: 76009b1810792f240ac0e9a927d3c633, type: 3}
-    sprite: {fileID: 21300000, guid: 84ce6042cad94e244a9af991e19fe104, type: 3}
+    sprite: {fileID: 0}
     bulletPrefab: {fileID: 0}
     moveSpeed: 3
     maxHp: 5

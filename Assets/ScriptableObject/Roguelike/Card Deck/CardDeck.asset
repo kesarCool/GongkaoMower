@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillCatalog: {fileID: 11400000, guid: 9d0bd947eb4540d479be3c7bce060432, type: 2}
   progression: {fileID: 11400000, guid: b75b3082edbe8ac45971b41330fe1597, type: 2}
-  newSkillTemplate: {fileID: 11400000, guid: 23f00cc61e88a23429a0a2bffb43eff6, type: 2}
-  upgradeTemplate: {fileID: 11400000, guid: e3ec3bf53fd33ae4d9578cf56f24d31c, type: 2}
-  breakthroughTemplate: {fileID: 11400000, guid: e745e338b0d07964d91d2f6afa440868, type: 2}
+  newSkillTemplate: {fileID: 11400000, guid: d288b360f43b97440b4331056c7ff26f, type: 2}
+  upgradeTemplate: {fileID: 11400000, guid: 8b7fc5ff650d30a47887913f89482018, type: 2}
+  breakthroughTemplate: {fileID: 11400000, guid: 3f31dec9847f16d4ab8218b0bc7a03db, type: 2}
   drawCount: 3
   upgradeWeightBonus: 1.5
   allowNewSkillWhenFull: 0

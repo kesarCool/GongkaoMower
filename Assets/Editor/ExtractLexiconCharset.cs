@@ -57,15 +57,15 @@ public static class ExtractLexiconCharset
         AddChars(charset, "！※");                                      // ！※
 
         // 箭头
-        AddChars(charset, "←↑→↓↔↕");             // ←↑→↓↔↕
-        AddChars(charset, "↖↗↘↙");                         // ↖↗↘↙
-        AddChars(charset, "➤➜➙➚");                         // ➤➜➙➚
+   //     AddChars(charset, "←↑→↓↔↕");             // ←↑→↓↔↕
+    //    AddChars(charset, "↖↗↘↙");                         // ↖↗↘↙
+    //    AddChars(charset, "➤➜➙➚");                         // ➤➜➙➚
 
         // UI 常用图形
-        AddChars(charset, "▼▶▲◀");                         // ▼▶▲◀
+    //    AddChars(charset, "▼▶▲◀");                         // ▼▶▲◀
         AddChars(charset, "◆●○★☆");                   // ◆●○★☆
-        AddChars(charset, "✓✗✘☐☑☒");             // ✓✗✘☐☑☒
-        AddChars(charset, "♠♣♥♦♪♫");             // ♠♣♥♦♪♫
+    //    AddChars(charset, "✓✗✘☐☑☒");             // ✓✗✘☐☑☒
+  //      AddChars(charset, "♠♣♥♦♪♫");             // ♠♣♥♦♪♫
 
         // 序号
         AddChars(charset, "①②③④⑤⑥⑦⑧⑨");  // ①②③④⑤⑥⑦⑧⑨
@@ -170,6 +170,8 @@ public static class ExtractLexiconCharset
     {
         int hits = 0;
         var chineseRe = new Regex(@"[一-鿿㐀-䶿豈-﫿]+", RegexOptions.Compiled);
+        // .asset / .prefab 中 Unity YAML 把中文转成 \uXXXX，需单独解析
+        var unicodeEscapeRe = new Regex(@"\\u([0-9a-fA-F]{4})", RegexOptions.Compiled);
 
         // 扫描 .cs、.prefab、.unity、.asset
         string[] dirs = { "Assets/Script", "Assets/Scenes", "Assets/Prefab", "Assets/Res/Prefabs", "Assets/ScriptableObject", "Assets/Resources" };
@@ -201,12 +203,29 @@ public static class ExtractLexiconCharset
                 }
                 catch { continue; }
 
+                // 1. 匹配直接写入的汉字（.cs 文件）
                 var matches = chineseRe.Matches(content);
                 foreach (Match m in matches)
                 {
                     foreach (char c in m.Value)
                     {
                         if (charset.Add(c)) hits++;
+                    }
+                }
+
+                // 2. 匹配 YAML Unicode 转义序列 \uXXXX（.asset / .prefab）
+                if (ext == ".asset" || ext == ".prefab" || ext == ".unity")
+                {
+                    var escMatches = unicodeEscapeRe.Matches(content);
+                    foreach (Match m in escMatches)
+                    {
+                        if (m.Groups.Count < 2) continue;
+                        int code = int.Parse(m.Groups[1].Value, System.Globalization.NumberStyles.HexNumber);
+                        if (code > 127) // 只收集非 ASCII（中文字符都在此范围内）
+                        {
+                            char c = (char)code;
+                            if (charset.Add(c)) hits++;
+                        }
                     }
                 }
             }

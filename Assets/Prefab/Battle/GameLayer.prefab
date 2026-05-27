@@ -38,7 +38,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -251}
+  m_AnchoredPosition: {x: 0, y: -256}
   m_SizeDelta: {x: 1000, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2236578660081287842
@@ -944,7 +944,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -251}
+  m_AnchoredPosition: {x: 0, y: -256}
   m_SizeDelta: {x: 800, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4302557238636700885
@@ -1919,6 +1919,11 @@ MonoBehaviour:
   pauseNormalDuringWaves: 0
   debugLogs: 0
   useLevelWaveTable: 1
+  waveWarningThreshold: 100
+  waveWarningColor: {r: 1, g: 0.08, b: 0.08, a: 0.35}
+  bossWarningColor: {r: 0.9, g: 0.2, b: 0, a: 0.45}
+  warningPulseCount: 2
+  warningDuration: 0.6
   wordMonsterWaveTintMode: 1
 --- !u!114 &5356562442776691772
 MonoBehaviour:
@@ -1961,6 +1966,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1b2b3b4b5b6b7b8b9b0b1b2b3b4b5b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  victoryDelaySeconds: 1.8
+  defeatDelaySeconds: 1.5
+  deathFlashDuration: 0.3
+  deathFadeTargetAlpha: 0.85
 --- !u!114 &8888534370413094956
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1988,7 +1997,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 168b4ce1ecb043d4aa8b832ff948dbcb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arenaHalfWidth: 12
+  arenaHalfWidth: 8
   arenaHalfHeight: 12
   wallPrefab: {fileID: 429840380190155030, guid: 65aa3e7118aa99e49892b61a5fa98fee, type: 3}
   wallThickness: 1

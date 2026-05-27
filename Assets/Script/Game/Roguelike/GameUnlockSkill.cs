@@ -40,8 +40,8 @@ public class GameUnlockSkill : MonoBehaviour
             UIManager.Instance.ShowAlert("操作指引",
                 "滑动屏幕操控角色移动\n"
                 + "角色会自动攻击附近的字灵\n"
-                + "击败字灵收集能量，能量攒满后\n可选择技能升级\n"
-                + "祝你一路披荆斩棘！",
+                + "击败字灵收集能量,能量攒满后\n可选择技能升级\n"
+                + "祝你一路披荆斩棘!",
                 () => done = true);
 
             yield return new WaitUntil(() => done);

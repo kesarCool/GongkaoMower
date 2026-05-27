@@ -71,29 +71,33 @@ public class CardDeck : ScriptableObject
             // 2. 检查排除列表（刷新用）
             if (excludeSkills.Contains(id)) continue;
 
-            // 3. 检查是否已满级
-            if (playerSkills.IsMaxLevel(id)) continue;
-
-            // 4. 判断是否已拥有
+            // 3. 判断是否已拥有
             bool hasSkill = playerSkills.HasSkill(id);
             int currentLv = hasSkill ? playerSkills.GetSkillLevel(id) : 0;
+            int maxLv = Mathf.Max(1, def.maxLevel);
 
-            // 5. 判断是否还有空槽位
+            // 已满级不再入选卡池
+            if (hasSkill && currentLv >= maxLv) continue;
+
+            // 4. 判断是否还有空槽位
             if (!hasSkill && !playerSkills.HasEmptySlot && !allowNewSkillWhenFull)
-                continue; // 满5个且不允许替换时，不出新技能
+                continue;
 
-            // 6. 确定模板类型
+            // 5. 确定模板类型
             RoguelikeCardTemplate template;
             float weight = progression.GetWeight(id);
+            int targetLv = currentLv + 1;
 
             if (!hasSkill)
             {
-                // 新技能 - 绿色
                 template = newSkillTemplate;
+            }
+            else if (targetLv >= maxLv)
+            {
+                template = breakthroughTemplate; // 等级4→5，满级突破卡
             }
             else
             {
-                // 升级 - 黄色
                 template = upgradeTemplate;
                 weight *= upgradeWeightBonus;
             }
@@ -104,7 +108,7 @@ public class CardDeck : ScriptableObject
                 skillDef = def,
                 template = template,
                 currentLevel = currentLv,
-                targetLevel = currentLv + 1,
+                targetLevel = targetLv,
                 weight = weight
             });
         }

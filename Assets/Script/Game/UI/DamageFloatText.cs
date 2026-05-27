@@ -31,6 +31,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     [Tooltip("为 true 时每帧朝向主相机（侧视/斜视角常用；纯俯视可关，沿用 Prefab 旋转）")]
     [SerializeField] private bool faceMainCamera;
 
+    private Vector3 _floatDirection;
     private Vector3 _driftVelocity;
     private Coroutine _co;
     private Transform _cam;
@@ -96,8 +97,11 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
                 transform.position = worldPosition - pivotDelta;
         }
 
-        float a = Random.Range(0f, Mathf.PI * 2f);
-        _driftVelocity = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f) * driftSpeed;
+        float mainAngle = Random.Range(0f, Mathf.PI * 2f);
+        _floatDirection = new Vector3(Mathf.Cos(mainAngle), Mathf.Sin(mainAngle), 0f);
+
+        float driftAngle = Random.Range(0f, Mathf.PI * 2f);
+        _driftVelocity = new Vector3(Mathf.Cos(driftAngle), Mathf.Sin(driftAngle), 0f) * driftSpeed;
 
         if (_co != null)
             StopCoroutine(_co);
@@ -124,7 +128,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             t += Time.deltaTime;
             float u = t / lifetime;
 
-            transform.position += (Vector3.up * riseSpeed + _driftVelocity) * Time.deltaTime;
+            transform.position += (_floatDirection * riseSpeed + _driftVelocity) * Time.deltaTime;
 
             if (_cam != null)
                 transform.rotation = Quaternion.LookRotation(_cam.position - transform.position, Vector3.up);

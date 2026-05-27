@@ -28,8 +28,15 @@ public abstract class SkillDefinitionBase : ScriptableObject
     public string GetLevelDescriptionLine(int level)
     {
         level = ClampLevel(level);
+        if(level == 1 && !string.IsNullOrWhiteSpace(description))
+        {
+            return description;
+        }
+                
         if (levelDescriptions != null && level <= levelDescriptions.Length)
         {
+
+           
             string custom = levelDescriptions[level - 1];
             if (!string.IsNullOrWhiteSpace(custom))
                 return custom.Trim();
@@ -43,14 +50,16 @@ public abstract class SkillDefinitionBase : ScriptableObject
     {
         int max = Mathf.Max(1, maxLevel);
         var sb = new StringBuilder(max * 24);
-        for (int lv = 1; lv <= max; lv++)
-        {
-            string line = GetLevelDescriptionLine(lv);
-            if (lv == highlightLevel)
-                sb.AppendLine($"▶ Lv.{lv} {line}");
-            else
-                sb.AppendLine($"Lv.{lv} {line}");
-        }
+        string line = GetLevelDescriptionLine(highlightLevel);
+        sb.AppendLine($"Lv.{highlightLevel} {line}");
+        // for (int lv = 1; lv <= max; lv++)
+        // {
+        //     string line = GetLevelDescriptionLine(lv);
+        //     if (lv == highlightLevel)
+        //         sb.AppendLine($"▶ Lv.{lv} {line}");
+        //     else
+        //         sb.AppendLine($"Lv.{lv} {line}");
+        // }
 
         return sb.ToString().TrimEnd();
     }

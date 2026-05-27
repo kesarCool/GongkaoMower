@@ -22,19 +22,26 @@ public class WordMonsterShatterRuntime : MonoBehaviour
     [SerializeField] private int digestSpreadFrames = 4;
 
     [Header("碎片运动与外观")]
-    [SerializeField] private float burstImpulseMin = 0.35f;
+    [Tooltip("爆炸冲量下限（值越大碎片飞得越远）")]
+    [SerializeField] private float burstImpulseMin = 1.0f;
 
-    [SerializeField] private float burstImpulseMax = 1.05f;
+    [Tooltip("爆炸冲量上限")]
+    [SerializeField] private float burstImpulseMax = 2.5f;
 
-    [SerializeField] private float torqueRangeDegPerSec = 380f;
+    [Tooltip("碎片旋转速度范围（度/秒），值越大转得越疯")]
+    [SerializeField] private float torqueRangeDegPerSec = 600f;
 
-    [SerializeField] private float fragmentLifetime = 1.15f;
+    [Tooltip("碎片存活时间（秒）")]
+    [SerializeField] private float fragmentLifetime = 1.0f;
 
+    [Tooltip("碎片字号倍率（1=跟原文字一样大）")]
     [SerializeField] private float fragmentFontSizeMul = 1f;
 
-    [SerializeField] private float fragmentDrag = 2.2f;
+    [Tooltip("线性阻力（越小飞得越远越有炸裂感）")]
+    [SerializeField] private float fragmentDrag = 0.8f;
 
-    [SerializeField] private float fragmentAngularDrag = 2f;
+    [Tooltip("角阻力（越小转得越久）")]
+    [SerializeField] private float fragmentAngularDrag = 0.6f;
 
     [Tooltip("待生成碎片队列过长时丢弃最旧条目，防极端内存")]
     [SerializeField] private int maxPendingFragments = 2048;

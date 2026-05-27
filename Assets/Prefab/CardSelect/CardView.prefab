@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 180077561925767492}
   - component: {fileID: 8251474063036185336}
   m_Layer: 0
-  m_Name: Card_1
+  m_Name: CardView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -62,8 +62,6 @@ MonoBehaviour:
   titleText: {fileID: 3653809755738642485}
   descText: {fileID: 3271567142266965901}
   labelText: {fileID: 6867257603592534659}
-  labelIcon: {fileID: 514232115989905088}
-  borderGlow: {fileID: 1207491841738984581}
   clickButton: {fileID: 8251474063036185336}
   animator: {fileID: 0}
 --- !u!114 &8251474063036185336
@@ -145,7 +143,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0.8614197, y: 44.100006}
+  m_AnchoredPosition: {x: 0, y: 44.644}
   m_SizeDelta: {x: 268, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4065481536835094063
@@ -176,7 +174,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u65B0"
+  m_text: "\u65B0\u6280\u80FD"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -473,8 +471,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 26
+  m_fontSizeBase: 26
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 0

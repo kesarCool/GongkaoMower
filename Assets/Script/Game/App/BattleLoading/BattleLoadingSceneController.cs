@@ -31,6 +31,9 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void Start()
     {
+        // 兜底：上局可能残留非 1 的 timeScale，重置后再开始加载流程
+        Time.timeScale = 1f;
+
         if (!string.IsNullOrEmpty(nextSceneName))
             GameObjectPool.BattleSceneNameForPoolClear = nextSceneName;
 

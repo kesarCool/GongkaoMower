@@ -47,10 +47,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   label: {fileID: 3338018620574423607}
   lifetime: 0.65
-  riseSpeed: 1.35
-  driftSpeed: 0.45
+  riseSpeed: 2
+  driftSpeed: 2
   spawnScalePunch: 1.2
-  textColor: {r: 1, g: 0.30283493, b: 0, a: 1}
+  textColor: {r: 0, g: 1, b: 0.4434402, a: 1}
   sortingOrder: 200
   faceMainCamera: 0
 --- !u!1 &8340708866548831996

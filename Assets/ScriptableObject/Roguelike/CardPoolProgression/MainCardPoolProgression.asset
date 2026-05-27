@@ -26,7 +26,7 @@ MonoBehaviour:
     unlockAtLevel: 101
     baseWeight: 20
   - skill: 5
-    unlockAtLevel: 201
+    unlockAtLevel: 101
     baseWeight: 20
   - skill: 6
     unlockAtLevel: 103

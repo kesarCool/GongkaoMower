@@ -19,8 +19,11 @@ public static class GameObjectPool
 
     private static readonly Dictionary<int, Pool> Pools = new Dictionary<int, Pool>(64);
 
-    /// <summary>当前由 <see cref="Get"/> 借出、尚未 <see cref="Release"/> 的实例（用于清池时 O(借出数) 销毁，避免全场景扫描）。</summary>
+    /// <summary>当前由 <see cref="Get"/> 借出、尚未 <see cref="Release"/> 的实例。</summary>
     private static readonly HashSet<GameObject> LeasedObjects = new HashSet<GameObject>();
+
+    /// <summary>全局池根节点（唯一 DontDestroyOnLoad 的容器，所有子池挂在下面）。</summary>
+    private static Transform _globalPoolRoot;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void InstallSceneHook()
@@ -83,6 +86,12 @@ public static class GameObjectPool
         }
 
         Pools.Clear();
+
+        if (_globalPoolRoot != null)
+        {
+            Object.Destroy(_globalPoolRoot.gameObject);
+            _globalPoolRoot = null;
+        }
     }
 
     private static Pool GetPool(GameObject prefab)
@@ -95,11 +104,20 @@ public static class GameObjectPool
         return p;
     }
 
+    private static Transform EnsureGlobalRoot()
+    {
+        if (_globalPoolRoot != null) return _globalPoolRoot;
+        var go = new GameObject("[Pool] GlobalRoot");
+        Object.DontDestroyOnLoad(go);
+        _globalPoolRoot = go.transform;
+        return _globalPoolRoot;
+    }
+
     private static Transform EnsureRoot(Pool p)
     {
         if (p.root != null) return p.root;
-        var go = new GameObject($"[Pool] {p.prefab.name}");
-        Object.DontDestroyOnLoad(go);
+        var go = new GameObject(p.prefab.name);
+        go.transform.SetParent(EnsureGlobalRoot(), false);
         p.root = go.transform;
         return p.root;
     }

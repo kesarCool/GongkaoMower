@@ -17,6 +17,9 @@ public class SkillLineBeam2D : SkillBase
         new Color(0.72f, 0.28f, 1f, 0.95f),
     };
 
+    /// <summary>仅 1 只怪时多射线的散布角度（度）。0=全部重叠，10=左右各 5° 扇形。</summary>
+    public float singleTargetSpreadDeg = 10f;
+
     public float beamLength = 8f;
     public float damage = 2f;
     public float interval = 0.8f;
@@ -89,7 +92,7 @@ public class SkillLineBeam2D : SkillBase
 
         for (int i = 0; i < count; i++)
         {
-            Vector2 d = ResolveBeamDirection(i, allAimAtMonster, nearest != null, aimDir);
+            Vector2 d = ResolveBeamDirection(i, count, allAimAtMonster, nearest != null, aimDir);
             UpdateBeamVisualLine(i, origin, d);
             RaycastHit2D[] hits = Physics2D.RaycastAll(origin, d, beamLength, hitMask);
 
@@ -111,9 +114,21 @@ public class SkillLineBeam2D : SkillBase
         PublishSkillCast(origin);
     }
 
-    private static Vector2 ResolveBeamDirection(int beamIndex, bool allAimAtMonster, bool hasNearest, Vector2 aimDir)
+    private Vector2 ResolveBeamDirection(int beamIndex, int totalBeams, bool allAimAtMonster, bool hasNearest, Vector2 aimDir)
     {
-        if (allAimAtMonster || (beamIndex == 0 && hasNearest))
+        if (allAimAtMonster)
+        {
+            // 仅 1 只怪：扇形散开，总角度 singleTargetSpreadDeg，中心对准目标
+            if (totalBeams <= 1 || singleTargetSpreadDeg <= 0.01f)
+                return aimDir;
+
+            float halfSpread = singleTargetSpreadDeg * 0.5f;
+            float t = totalBeams > 1 ? (float)beamIndex / (totalBeams - 1f) : 0.5f;
+            float angleOffset = Mathf.Lerp(-halfSpread, halfSpread, t);
+            return Quaternion.Euler(0f, 0f, angleOffset) * aimDir;
+        }
+
+        if (beamIndex == 0 && hasNearest)
             return aimDir;
 
         return RandomDirection2D();

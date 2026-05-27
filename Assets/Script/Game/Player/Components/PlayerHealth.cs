@@ -35,6 +35,15 @@ public class PlayerHealth : MonoBehaviour
         hp = Mathf.Max(1f, maxHp);
     }
 
+    /// <summary>外部控制无敌（如 Boss 击杀后延迟结算期间防止玩家意外死亡）。</summary>
+    public void SetInvulnerable(bool inv)
+    {
+        if (inv)
+            _invulnerableUntil = float.MaxValue;
+        else
+            _invulnerableUntil = 0f;
+    }
+
     public void ResetToFull()
     {
         _dead = false;

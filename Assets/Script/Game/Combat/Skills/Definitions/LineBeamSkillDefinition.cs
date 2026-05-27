@@ -12,6 +12,9 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
     public float[] damageByLevel = { 2f, 2.5f, 3f, 3.8f, 4.6f };
     public int[] beamCountByLevel = { 1, 1, 2, 2, 3 };
 
+    [Tooltip("仅 1 只怪时多射线的散布角度（度），避免全部重叠。")]
+    public float singleTargetSpreadDeg = 10f;
+
     [Tooltip("已废弃：多射线由 SkillLineBeam2D 做 360° 随机；仅保留字段兼容旧资源")]
     public float spreadDegrees = 180f;
 
@@ -51,5 +54,6 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
         s.interval = Mathf.Max(0.05f, IntervalAt(level));
         s.damage = Mathf.Max(0.01f, DamageAt(level));
         s.beamCount = Mathf.Max(1, BeamCountAt(level));
+        s.singleTargetSpreadDeg = Mathf.Max(0f, singleTargetSpreadDeg);
     }
 }

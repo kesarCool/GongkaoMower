@@ -109,7 +109,11 @@ public static class WeChatBuild
         Debug.Log("[WeChatBuild] PlayerSettings 已配置: Gamma, 256MB, NoThreads, Medium Strip");
     }
 
-    /// <summary>构建前清理旧输出目录，避免 Windows 文件占用导致 IOException。</summary>
+    /// <summary>
+    /// 构建前清理旧输出目录。
+    /// 先尝试直接删除；被占用时重命名为 .old 后缀再尝试删（让新构建能继续写）。
+    /// 常见锁文件元凶：微信开发者工具打开了 minigame 项目、文件资源管理器浏览 Build 目录。
+    /// </summary>
     private static void CleanBuildOutput()
     {
         string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
@@ -120,21 +124,62 @@ public static class WeChatBuild
             string fullPath = Path.Combine(projectRoot, dir);
             if (!Directory.Exists(fullPath)) continue;
 
+            // 先去只读属性
             try
             {
-                // 去掉只读属性（递归）
                 foreach (string f in Directory.GetFiles(fullPath, "*", SearchOption.AllDirectories))
                     File.SetAttributes(f, FileAttributes.Normal);
+            }
+            catch { /* 个别文件可能锁着，不管，继续 */ }
 
-                Directory.Delete(fullPath, true);
+            if (TryDeleteOrMoveAside(fullPath, out string error))
+            {
                 Debug.Log($"[WeChatBuild] 已清理: {dir}");
             }
-            catch (System.Exception ex)
+            else
             {
-                Debug.LogWarning($"[WeChatBuild] 清理失败({dir}): {ex.Message}。请手动删除后重试。");
-                EditorUtility.DisplayDialog("构建警告",
-                    $"无法删除 {dir}\n\n{ex.Message}\n\n请关闭微信开发者工具、文件资源管理器、VS Code 中占用该目录的窗口后重试。",
-                    "确定");
+                Debug.LogWarning($"[WeChatBuild] 清理失败({dir}): {error}");
+                bool retry = EditorUtility.DisplayDialog("构建警告",
+                    $"无法删除 {dir}\n\n{error}\n\n常见原因:\n• 微信开发者工具打开了该项目\n• 文件资源管理器正在浏览 Build 目录\n\n关掉上述窗口后点“重试”,或点“跳过”继续构建(可能仍会失败).",
+                    "重试", "跳过");
+                if (retry)
+                {
+                    // 再试一次
+                    if (TryDeleteOrMoveAside(fullPath, out error))
+                        Debug.Log($"[WeChatBuild] 重试清理成功: {dir}");
+                    else
+                        Debug.LogWarning($"[WeChatBuild] 重试清理仍失败({dir}): {error}");
+                }
+            }
+        }
+    }
+
+    /// <returns>成功返回 true。</returns>
+    private static bool TryDeleteOrMoveAside(string fullPath, out string error)
+    {
+        try
+        {
+            Directory.Delete(fullPath, true);
+            error = null;
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            // 文件被占用 → 尝试重命名到 .old，让 SDK 能写新文件
+            try
+            {
+                string oldPath = fullPath.TrimEnd('/', '\\') + ".old";
+                if (Directory.Exists(oldPath))
+                    Directory.Delete(oldPath, true);
+                Directory.Move(fullPath, oldPath);
+                Debug.Log($"[WeChatBuild] {fullPath} 被占用，已重命名为 {oldPath}（重启后可手动删除）");
+                error = null;
+                return true;
+            }
+            catch (System.Exception ex2)
+            {
+                error = $"{ex.Message}\n重命名也失败: {ex2.Message}";
+                return false;
             }
         }
     }

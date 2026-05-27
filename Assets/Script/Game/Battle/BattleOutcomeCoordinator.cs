@@ -1,20 +1,55 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
-/// 局内胜负判定 + 复活流程 + 结算入口。纯事件驱动，不轮询。
-/// 需要场景已有 UIManager 并注册 GameResultPanel / GameRevivePanel。
+/// 局内胜负判定 + 复活流程 + 结算延迟（让死亡/击杀动画播完再弹面板）。
 /// </summary>
 [DefaultExecutionOrder(-40)]
 public sealed class BattleOutcomeCoordinator : MonoBehaviour
 {
+    [Header("结算延迟")]
+    [Tooltip("Boss 击杀后等待多久再弹出胜利面板（让文字碎片飞完）。")]
+    [SerializeField] private float victoryDelaySeconds = 1.8f;
+
+    [Tooltip("玩家死亡后等待多久再弹出失败面板（闪红+黑屏过渡）。")]
+    [SerializeField] private float defeatDelaySeconds = 1.5f;
+
+    [Header("死亡过渡")]
+    [Tooltip("闪红持续时间（秒）。")]
+    [SerializeField] private float deathFlashDuration = 0.3f;
+
+    [Tooltip("黑屏过渡后的目标透明度（0=全透明, 1=全黑）。")]
+    [SerializeField] private float deathFadeTargetAlpha = 0.85f;
+
     private GameLayer _gameLayer;
     private PlayerHealth _playerHealth;
     private bool _battleEnded;
     private bool _reviveOfferUsed;
     private bool _reviveFlowActive;
 
+    // 全屏遮罩（死亡渐黑/闪红 + 后续波次警告共用）
+    private Image _screenOverlay;
+    private Coroutine _overlayRoutine;
+
+    public static BattleOutcomeCoordinator Instance { get; private set; }
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
     private void OnEnable()
     {
+        // 兜底：上局失败/复活等流程可能残留非 1 的 timeScale，新局强制复位
+        Time.timeScale = 1f;
+
         _gameLayer = FindObjectOfType<GameLayer>(true);
         _playerHealth = FindObjectOfType<PlayerHealth>(true);
         _reviveOfferUsed = false;
@@ -34,6 +69,12 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
         EventBus.Unsubscribe<BattleWavesCompletedEvent>(OnWavesCompleted);
+
+        if (_overlayRoutine != null)
+        {
+            StopCoroutine(_overlayRoutine);
+            _overlayRoutine = null;
+        }
     }
 
     // ── 失败：玩家死亡 ──
@@ -48,7 +89,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             return;
         }
 
-        EndBattleDefeat();
+        StartCoroutine(DefeatSequence());
     }
 
     // ── 胜利：Boss 被击杀 ──
@@ -59,7 +100,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
 
         if (BattleVictoryBossTracker.TryRegisterKill())
-            EndBattleVictory();
+            StartCoroutine(VictorySequence());
     }
 
     // ── 胜利（无 Boss 关卡）：波次刷完且场上无怪 ──
@@ -70,10 +111,83 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         if (BattleVictoryBossTracker.UsesBossVictory) return;
         if (CombatTargetRegistry.CountActive("monster") > 0) return;
 
-        EndBattleVictory();
+        StartCoroutine(VictorySequence());
     }
 
-    // ── 复活流程 ──
+    // ── 胜利延迟结算 ──
+
+    /// <summary>
+    /// 等待碎片/死亡动画播完再弹胜利面板。期间玩家无敌，防止残留小怪击杀。
+    /// </summary>
+    private IEnumerator VictorySequence()
+    {
+        _battleEnded = true;
+
+        // 玩家无敌，直到面板弹出
+        if (_playerHealth != null)
+            _playerHealth.SetInvulnerable(true);
+
+        yield return new WaitForSeconds(Mathf.Max(0.2f, victoryDelaySeconds));
+
+        int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
+        float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
+        TryRecordVictoryProgress(dur, kills);
+        ShowResultUi(new GameResultViewModel { victory = true, battleDurationUnscaled = dur, killCount = kills });
+    }
+
+    // ── 失败延迟结算 ──
+
+    /// <summary>
+    /// 死亡过渡：闪红 → 画面渐暗 → 弹出失败面板。
+    /// 期间 Time.timeScale 从 1 缓降到低速，营造"慢慢倒下"的感觉。
+    /// </summary>
+    private IEnumerator DefeatSequence()
+    {
+        _battleEnded = true;
+
+        EnsureScreenOverlay();
+
+        // 画面缓速（不直接到 0，保留慢动作感）
+        float startTs = Time.timeScale;
+        float targetTs = 0.15f;
+
+        // 阶段 1：闪红（正弦脉冲）
+        float t = 0f;
+        while (t < deathFlashDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float a = Mathf.Sin(t / Mathf.Max(0.01f, deathFlashDuration) * Mathf.PI) * 0.55f;
+            _screenOverlay.color = new Color(1f, 0.05f, 0.05f, a);
+            Time.timeScale = Mathf.Lerp(startTs, targetTs, t / deathFlashDuration);
+            yield return null;
+        }
+
+        // 阶段 2：红 → 黑过渡
+        float remain = Mathf.Max(0.3f, defeatDelaySeconds - deathFlashDuration);
+        t = 0f;
+        Color flashPeak = new Color(1f, 0.05f, 0.05f, 0.55f);
+        Color blackTarget = new Color(0f, 0f, 0f, deathFadeTargetAlpha);
+
+        while (t < remain)
+        {
+            t += Time.unscaledDeltaTime;
+            float u = Mathf.Clamp01(t / remain);
+            _screenOverlay.color = Color.Lerp(flashPeak, blackTarget, u);
+            Time.timeScale = Mathf.Lerp(targetTs, 0f, u);
+            yield return null;
+        }
+
+        _screenOverlay.color = blackTarget;
+
+        int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
+        float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
+        ShowResultUi(new GameResultViewModel { victory = false, battleDurationUnscaled = dur, killCount = kills });
+
+        // 面板弹出后清除遮罩
+        _screenOverlay.color = new Color(0f, 0f, 0f, 0f);
+    }
+
+    // ── 复活流程（不变）──
 
     private void BeginReviveOffer()
     {
@@ -96,7 +210,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         _reviveOfferUsed = true;
         _reviveFlowActive = false;
         UIManager.Instance.CloseTop();
-        EndBattleDefeat();
+        StartCoroutine(DefeatSequence());
     }
 
     private void OnReviveAccepted()
@@ -117,28 +231,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             Time.timeScale = 1f;
     }
 
-    // ── 结算 ──
-
-    private void EndBattleVictory()
-    {
-        if (_battleEnded) return;
-        _battleEnded = true;
-
-        int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
-        float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
-        TryRecordVictoryProgress(dur, kills);
-        ShowResultUi(new GameResultViewModel { victory = true, battleDurationUnscaled = dur, killCount = kills });
-    }
-
-    private void EndBattleDefeat()
-    {
-        if (_battleEnded) return;
-        _battleEnded = true;
-
-        int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
-        float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
-        ShowResultUi(new GameResultViewModel { victory = false, battleDurationUnscaled = dur, killCount = kills });
-    }
+    // ── 结算面板 ──
 
     private void ShowResultUi(GameResultViewModel vm)
     {
@@ -163,5 +256,79 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             ? LevelStarRules.ComputeStars(health.Hp, health.MaxHp)
             : 1;
         PlayerProfileService.Instance.RecordVictory(levelId, durationSec, killCount, stars);
+    }
+
+    // ── 全屏遮罩（死亡过渡 + 波次/Boss 警告共用）──
+
+    private void EnsureScreenOverlay()
+    {
+        if (_screenOverlay != null) return;
+
+        Canvas canvas = FindObjectOfType<Canvas>();
+        Transform parent = canvas != null ? canvas.transform : transform;
+
+        var overlayGo = new GameObject("ScreenFlashOverlay", typeof(RectTransform), typeof(Image));
+        overlayGo.transform.SetParent(parent, false);
+        var rt = overlayGo.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        _screenOverlay = overlayGo.GetComponent<Image>();
+        _screenOverlay.color = new Color(0f, 0f, 0f, 0f);
+        _screenOverlay.raycastTarget = false;
+
+        // 确保在最顶层（低于结算面板）
+        Canvas overlayCanvas = overlayGo.AddComponent<Canvas>();
+        overlayCanvas.overrideSorting = true;
+        overlayCanvas.sortingOrder = 900;
+        overlayGo.AddComponent<GraphicRaycaster>();
+    }
+
+    /// <summary>
+    /// 通用警告闪红（波次/Boss 等外部系统调用）。
+    /// </summary>
+    /// <param name="color">闪烁颜色</param>
+    /// <param name="pulseCount">脉冲次数</param>
+    /// <param name="duration">总时长（秒）</param>
+    public void FlashWarning(Color color, int pulseCount, float duration)
+    {
+        if (_overlayRoutine != null)
+            StopCoroutine(_overlayRoutine);
+        _overlayRoutine = StartCoroutine(FlashWarningRoutine(color, pulseCount, duration));
+    }
+
+    private IEnumerator FlashWarningRoutine(Color color, int pulseCount, float duration)
+    {
+        EnsureScreenOverlay();
+
+        int pulses = Mathf.Max(1, pulseCount);
+        float pulseLen = duration / (pulses * 2f); // 一亮一暗算一个脉冲
+
+        for (int i = 0; i < pulses; i++)
+        {
+            // 亮
+            float t = 0f;
+            while (t < pulseLen)
+            {
+                t += Time.unscaledDeltaTime;
+                float a = Mathf.Lerp(0f, color.a, Mathf.Clamp01(t / pulseLen));
+                _screenOverlay.color = new Color(color.r, color.g, color.b, a);
+                yield return null;
+            }
+            // 暗
+            t = 0f;
+            while (t < pulseLen)
+            {
+                t += Time.unscaledDeltaTime;
+                float a = Mathf.Lerp(color.a, 0f, Mathf.Clamp01(t / pulseLen));
+                _screenOverlay.color = new Color(color.r, color.g, color.b, a);
+                yield return null;
+            }
+        }
+
+        _screenOverlay.color = new Color(0f, 0f, 0f, 0f);
+        _overlayRoutine = null;
     }
 }

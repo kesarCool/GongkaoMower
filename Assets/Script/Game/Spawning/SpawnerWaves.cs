@@ -88,6 +88,22 @@ public class SpawnerWaves : MonoBehaviour
     [Tooltip("为 true 时优先从 TableManager 的 LevelWave 表按关卡取波次；无数据则回退到上方 waves 数组。")]
     public bool useLevelWaveTable = false;
 
+    [Header("屏幕警告闪红")]
+    [Tooltip("波次怪物数量超过此值时触发红色警告。")]
+    [SerializeField] private int waveWarningThreshold = 100;
+
+    [Tooltip("普通波次警告颜色（大批量怪物）。")]
+    [SerializeField] private Color waveWarningColor = new Color(1f, 0.08f, 0.08f, 0.35f);
+
+    [Tooltip("Boss 波次警告颜色。")]
+    [SerializeField] private Color bossWarningColor = new Color(0.9f, 0.2f, 0f, 0.45f);
+
+    [Tooltip("警告脉冲次数。")]
+    [SerializeField] private int warningPulseCount = 2;
+
+    [Tooltip("警告总时长（秒）。")]
+    [SerializeField] private float warningDuration = 0.6f;
+
     [Header("文字怪整波底色")]
     [Tooltip("每波开始时刷新一次「整波统一」面色；EnemyWordLabel 上 preferWaveSharedTint 为真时才会用")]
     [SerializeField] private WordMonsterWaveTintMode wordMonsterWaveTintMode = WordMonsterWaveTintMode.RandomPerWave;
@@ -372,6 +388,9 @@ public class SpawnerWaves : MonoBehaviour
         if (isLastWave && tw.isBoss)
             bossMarkBudget = tw.quantityBoss > 0 ? tw.quantityBoss : 1;
 
+        // 波次警告闪红（大批量 / Boss）
+        TryFlashWaveWarning(tw, displayIndex);
+
         int pre = Mathf.Max(0, tw.timeStart);
         if (pre > 0)
         {
@@ -433,6 +452,28 @@ public class SpawnerWaves : MonoBehaviour
 
         if (debugLogs)
             Debug.Log($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（表 wave={tw.wave}）结束：已刷 {spawned}/{cap}，窗长 {windowSec}s（0=不限）");
+    }
+
+    /// <summary>
+    /// 怪物数量超过阈值或 Boss 波次时，触发屏幕闪红警告。
+    /// </summary>
+    private void TryFlashWaveWarning(TableWaveRuntime tw, int displayIndex)
+    {
+        var coordinator = BattleOutcomeCoordinator.Instance;
+        if (coordinator == null) return;
+
+        if (tw.isBoss)
+        {
+            if (debugLogs)
+                Debug.Log($"[SpawnerWaves] Boss 波次警告 wave={tw.wave} displayIndex={displayIndex}");
+            coordinator.FlashWarning(bossWarningColor, warningPulseCount, warningDuration);
+        }
+        else if (tw.totalMonster >= waveWarningThreshold)
+        {
+            if (debugLogs)
+                Debug.Log($"[SpawnerWaves] 大批量波次警告 wave={tw.wave} totalMonster={tw.totalMonster} >= {waveWarningThreshold}");
+            coordinator.FlashWarning(waveWarningColor, warningPulseCount, warningDuration);
+        }
     }
 
     private List<TableWaveRuntime> BuildTableWavesForLevel(int levelId)

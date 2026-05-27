@@ -18,7 +18,7 @@ MonoBehaviour:
   description: "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u8FFD\u8E2A\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
   icon: {fileID: 21300000, guid: 0af94e125d23a4f4387e8b520f04096c, type: 3}
   levelDescriptions:
-  - "\u53D1\u5C04\u5B50\u5F39\u81EA\u52A8\u653B\u51FB"
+  - "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u8FFD\u8E2A\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
   - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
   - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u51CF5%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
   - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
@@ -32,10 +32,10 @@ MonoBehaviour:
   - 0.7
   - 0.65
   damageByLevel:
-  - 35
-  - 40
-  - 35
-  - 38
-  - 38
+  - 350
+  - 400
+  - 350
+  - 380
+  - 380
   projectileCountByLevel: 0100000001000000020000000200000003000000
   spreadDegrees: 10
