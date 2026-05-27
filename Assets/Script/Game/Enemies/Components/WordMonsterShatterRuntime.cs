@@ -37,6 +37,20 @@ public class WordMonsterShatterRuntime : MonoBehaviour
     [Tooltip("碎片字号倍率（1=跟原文字一样大）")]
     [SerializeField] private float fragmentFontSizeMul = 1f;
 
+    [Header("Boss 死亡强化（LastWaveBossMarker 敌人专属）")]
+    [Tooltip("Boss 每只怪最多入队字数倍率")]
+    [SerializeField] private float bossFragmentCountMul = 4f;
+
+    [Tooltip("Boss 碎片存活时间倍率")]
+    [SerializeField] private float bossLifetimeMul = 2.5f;
+
+    [Tooltip("Boss 碎片冲量倍率")]
+    [SerializeField] private float bossBurstMul = 1.8f;
+
+    [Tooltip("Boss 碎片字号额外放大倍率")]
+    [SerializeField] private float bossFontSizeMul = 1.5f;
+
+    [Header("普通碎片运动与外观")]
     [Tooltip("线性阻力（越小飞得越远越有炸裂感）")]
     [SerializeField] private float fragmentDrag = 0.8f;
 
@@ -68,6 +82,9 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         public float outlineWidth;
         public Color outlineColor;
         public int sortingOrder;
+        public bool isBoss;
+        public float lifeMul;
+        public float burstMul;
     }
 
     private void Awake()
@@ -114,7 +131,9 @@ public class WordMonsterShatterRuntime : MonoBehaviour
     {
         if (e.enemy == null)
             return;
-        var label = e.enemy.GetComponent<EnemyWordLabel>();
+        bool isBoss = e.enemy.GetComponent<LastWaveBossMarker>() != null;
+
+        var label = e.enemy.GetComponentInChildren<EnemyWordLabel>(true);
         if (label == null || !label.TryGetWorldTextForShatter(out TextMeshPro src))
             return;
 
@@ -123,9 +142,14 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         if (textInfo == null || textInfo.characterCount == 0)
             return;
 
+        int fragmentCap = isBoss
+            ? Mathf.Max(maxFragmentsPerEnemy, Mathf.RoundToInt(maxFragmentsPerEnemy * bossFragmentCountMul))
+            : maxFragmentsPerEnemy;
+        float fontSizeMul = fragmentFontSizeMul * (isBoss ? bossFontSizeMul : 1f);
+
         Transform srcTr = src.transform;
         int added = 0;
-        for (int i = 0; i < textInfo.characterCount && added < maxFragmentsPerEnemy; i++)
+        for (int i = 0; i < textInfo.characterCount && added < fragmentCap; i++)
         {
             TMP_CharacterInfo ch = textInfo.characterInfo[i];
             if (!ch.isVisible)
@@ -144,13 +168,16 @@ public class WordMonsterShatterRuntime : MonoBehaviour
                 character = ch.character,
                 font = src.font,
                 fontSharedMaterial = src.fontSharedMaterial,
-                fontSize = src.fontSize * fragmentFontSizeMul,
+                fontSize = src.fontSize * fontSizeMul,
                 color = src.color,
                 enableVertexGradient = src.enableVertexGradient,
                 colorGradient = src.colorGradient,
                 outlineWidth = src.outlineWidth,
                 outlineColor = src.outlineColor,
                 sortingOrder = src.sortingOrder + 2,
+                isBoss = isBoss,
+                lifeMul = isBoss ? bossLifetimeMul : 1f,
+                burstMul = isBoss ? bossBurstMul : 1f,
             });
             added++;
         }
@@ -196,12 +223,15 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         if (dir.sqrMagnitude < 1e-6f)
             dir = Vector2.right;
         dir.Normalize();
-        float imp = Random.Range(burstImpulseMin, burstImpulseMax);
+        float impMin = p.isBoss ? burstImpulseMin * p.burstMul : burstImpulseMin;
+        float impMax = p.isBoss ? burstImpulseMax * p.burstMul : burstImpulseMax;
+        float imp = Random.Range(impMin, impMax);
         rb.AddForce(dir * imp, ForceMode2D.Impulse);
         rb.angularVelocity = Random.Range(-torqueRangeDegPerSec, torqueRangeDegPerSec);
 
+        float life = p.isBoss ? fragmentLifetime * p.lifeMul : fragmentLifetime;
         var track = go.AddComponent<WordMonsterShatterFragmentTracker>();
-        track.Init(fragmentLifetime);
+        track.Init(life);
         s_globalActiveFragments++;
     }
 

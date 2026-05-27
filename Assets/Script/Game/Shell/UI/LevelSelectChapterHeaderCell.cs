@@ -21,6 +21,10 @@ public class LevelSelectChapterHeaderCell : MonoBehaviour
             return;
 
         if (titleText != null)
+        {
+            BattleChineseFontRuntime.EnsureLoaded();
+            BattleChineseFontRuntime.ApplyToTMP(titleText);
             titleText.text = $"第 {row.chapterId} 章";
+        }
     }
 }

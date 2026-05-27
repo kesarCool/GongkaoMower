@@ -76,7 +76,7 @@ public class LexiconPreviewLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSou
 
         _loop.totalCount = _lines.Count;
         _loop.RefillCells();
-        _loop.verticalNormalizedPosition = 1f;
+        _loop.verticalNormalizedPosition = 0f;
     }
 
     public GameObject GetObject(int index)

@@ -172,7 +172,11 @@ public class LexiconPreviewPanel : UIPanelBase
 
         var labelTx = toggle.GetComponentInChildren<TextMeshProUGUI>(true);
         if (labelTx != null)
+        {
+            BattleChineseFontRuntime.EnsureLoaded();
+            BattleChineseFontRuntime.ApplyToTMP(labelTx);
             labelTx.text = label;
+        }
 
         return toggle;
     }
@@ -276,6 +280,6 @@ public class LexiconPreviewPanel : UIPanelBase
         }
 
         if (loopScroll != null)
-            loopScroll.verticalNormalizedPosition = 1f;
+            loopScroll.verticalNormalizedPosition = 0f;
     }
 }

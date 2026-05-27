@@ -27,6 +27,10 @@ public class LexiconPreviewEntryRowCell : MonoBehaviour
         if (bodyText == null)
             return;
 
+        // 虚拟列表 Cell 被池回收/重用，Start() 时机不可靠；Bind 时确保中文字体已应用
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToTMP(bodyText);
+
         var t = displayText ?? string.Empty;
         if (displayOrdinal > 0)
             bodyText.text = $"{displayOrdinal}. {t}";

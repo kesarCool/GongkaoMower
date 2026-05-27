@@ -110,6 +110,20 @@ public class PlayerController : MonoBehaviour
     {
         if (bodyRenderer == null) return;
 
+        // 优先朝向最近怪物（攻击方向）
+        GameObject enemy = CombatTargetRegistry.FindNearest(enemyTag, transform.position);
+        if (enemy != null)
+        {
+            float dx = enemy.transform.position.x - transform.position.x;
+            if (Mathf.Abs(dx) > FacingEpsilon)
+            {
+                bodyRenderer.flipX = dx < 0f;
+                _lastPosition = transform.position; // 同步位置记录，避免下一帧移动方向覆盖
+                return;
+            }
+        }
+
+        // 无怪时退回移动方向
         float horizontal = transform.position.x - _lastPosition.x;
         _lastPosition = transform.position;
 

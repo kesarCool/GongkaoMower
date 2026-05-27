@@ -162,7 +162,7 @@ GameObject:
   - component: {fileID: 466349166603634489}
   - component: {fileID: 8275716369115611547}
   - component: {fileID: 5327603070917852804}
-  - component: {fileID: 1845972021495102412}
+  - component: {fileID: 7450612723146015738}
   m_Layer: 0
   m_Name: TextMesh
   m_TagString: Untagged
@@ -324,7 +324,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 8275716369115611547}
   m_maskType: 0
---- !u!114 &1845972021495102412
+--- !u!114 &7450612723146015738
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -336,7 +336,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f01ce8f682f612147b53b94605b7e305, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldText: {fileID: 5327603070917852804}
+  worldText: {fileID: 0}
   uiText: {fileID: 0}
   randomizeZRotation: 0
   rotationZDegreesRange: {x: -28, y: 28}
@@ -346,16 +346,16 @@ MonoBehaviour:
   fontSizeAbsoluteMin: 8
   enableStereoTextStyle: 1
   instanceMaterialPerEnemy: 1
-  stereoFaceBase: {r: 0.9, g: 0.97, b: 1, a: 1}
+  stereoFaceBase: {r: 1, g: 0.93, b: 0.7, a: 1}
   preferWaveSharedTint: 1
   perEnemyMicroHueJitter: 0.02
   randomizeStereoHue: 1
   stereoHueShift: 0.07
-  outlineWidthRange: {x: 0.14, y: 0.36}
+  outlineWidthRange: {x: 0.2, y: 0.4}
   outlineColor: {r: 0.04, g: 0.02, b: 0.14, a: 0.94}
   stereoUseVertexGradient: 1
-  gradientTopBrighten: 0.2
-  gradientBottomDarken: 0.32
+  gradientTopBrighten: 0.25
+  gradientBottomDarken: 0.12
   enableHitFeedback: 1
   playerTagForKnockback: Player
   hitFlashDuration: 0.1

@@ -57,6 +57,10 @@ MonoBehaviour:
   torqueRangeDegPerSec: 380
   fragmentLifetime: 1
   fragmentFontSizeMul: 1
+  bossFragmentCountMul: 4
+  bossLifetimeMul: 2.5
+  bossBurstMul: 3
+  bossFontSizeMul: 1.5
   fragmentDrag: 1
   fragmentAngularDrag: 1
   maxPendingFragments: 2048

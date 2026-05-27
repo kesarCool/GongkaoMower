@@ -36,6 +36,21 @@ public class CameraFollow2D : MonoBehaviour
 
     private Camera _cam;
     private Vector3 _vel;
+    private Vector3? _overrideTarget;
+
+    /// <summary>Boss 击杀后镜头锁定在指定世界坐标，直到 <see cref="ClearOverride"/>。</summary>
+    public void OverrideFollow(Vector3 worldPos) => _overrideTarget = worldPos;
+    public void ClearOverride() => _overrideTarget = null;
+
+    /// <summary>瞬间跳转到目标位置并锁定镜头（Boss 击杀定格，跳过 SmoothDamp 延迟）。</summary>
+    public void SnapAndLock(Vector3 worldPos)
+    {
+        _overrideTarget = worldPos;
+        _vel = Vector3.zero;
+        Vector3 desired = worldPos + followOffset;
+        desired.z = followOffset.z;
+        transform.position = desired;
+    }
 
     private void Awake()
     {
@@ -47,9 +62,17 @@ public class CameraFollow2D : MonoBehaviour
     {
         if (target == null) TryFindTarget();
         if (_cam == null) return;
-        if (target == null) return;
 
-        Vector3 desired = target.position + followOffset;
+        Vector3 desired;
+        if (_overrideTarget.HasValue)
+        {
+            desired = _overrideTarget.Value + followOffset;
+        }
+        else
+        {
+            if (target == null) return;
+            desired = target.position + followOffset;
+        }
         desired.z = followOffset.z;
 
         Vector3 smoothed = Vector3.SmoothDamp(transform.position, desired, ref _vel, Mathf.Max(0.001f, smoothTime));

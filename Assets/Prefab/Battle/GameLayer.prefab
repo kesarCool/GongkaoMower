@@ -1923,7 +1923,7 @@ MonoBehaviour:
   waveWarningColor: {r: 1, g: 0.08, b: 0.08, a: 0.35}
   bossWarningColor: {r: 0.9, g: 0.2, b: 0, a: 0.45}
   warningPulseCount: 2
-  warningDuration: 0.6
+  warningDuration: 1
   wordMonsterWaveTintMode: 1
 --- !u!114 &5356562442776691772
 MonoBehaviour:
@@ -1998,6 +1998,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   arenaHalfWidth: 8
-  arenaHalfHeight: 12
+  arenaHalfHeight: 10
   wallPrefab: {fileID: 429840380190155030, guid: 65aa3e7118aa99e49892b61a5fa98fee, type: 3}
   wallThickness: 1

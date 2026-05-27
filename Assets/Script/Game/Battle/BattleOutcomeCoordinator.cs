@@ -9,8 +9,11 @@ using UnityEngine.UI;
 public sealed class BattleOutcomeCoordinator : MonoBehaviour
 {
     [Header("结算延迟")]
-    [Tooltip("Boss 击杀后等待多久再弹出胜利面板（让文字碎片飞完）。")]
-    [SerializeField] private float victoryDelaySeconds = 1.8f;
+    [Tooltip("Boss 击杀后等待多久再弹出胜利面板。")]
+    [SerializeField] private float victoryDelaySeconds = 3.0f;
+
+    [Tooltip("Boss 击杀慢动作的目标 timeScale（越小越慢）。")]
+    [SerializeField] private float victoryTimeScale = 0.08f;
 
     [Tooltip("玩家死亡后等待多久再弹出失败面板（闪红+黑屏过渡）。")]
     [SerializeField] private float defeatDelaySeconds = 1.5f;
@@ -27,6 +30,10 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private bool _battleEnded;
     private bool _reviveOfferUsed;
     private bool _reviveFlowActive;
+
+    // Boss 死亡位置（供 VictorySequence 锁镜头用）
+    private Vector3 _bossDeathPosition;
+    private bool _hasBossDeathPosition;
 
     // 全屏遮罩（死亡渐黑/闪红 + 后续波次警告共用）
     private Image _screenOverlay;
@@ -55,6 +62,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         _reviveOfferUsed = false;
         _reviveFlowActive = false;
         _battleEnded = false;
+        _hasBossDeathPosition = false;
 
         BattleRunMetrics.BeginBattle();
         BattleVictoryBossTracker.Reset();
@@ -100,7 +108,11 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
 
         if (BattleVictoryBossTracker.TryRegisterKill())
+        {
+            _bossDeathPosition = e.position;
+            _hasBossDeathPosition = true;
             StartCoroutine(VictorySequence());
+        }
     }
 
     // ── 胜利（无 Boss 关卡）：波次刷完且场上无怪 ──
@@ -117,22 +129,41 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     // ── 胜利延迟结算 ──
 
     /// <summary>
-    /// 等待碎片/死亡动画播完再弹胜利面板。期间玩家无敌，防止残留小怪击杀。
+    /// 镜头锁定 Boss 死亡位置 → 立刻慢动作 → 碎片飞散 → 弹出胜利面板。
     /// </summary>
     private IEnumerator VictorySequence()
     {
         _battleEnded = true;
 
-        // 玩家无敌，直到面板弹出
         if (_playerHealth != null)
             _playerHealth.SetInvulnerable(true);
 
-        yield return new WaitForSeconds(Mathf.Max(0.2f, victoryDelaySeconds));
+        // 镜头锁定 Boss 死亡位置并瞬间跳转
+        var camFollow = FindObjectOfType<CameraFollow2D>(true);
+        if (_hasBossDeathPosition && camFollow != null)
+            camFollow.SnapAndLock(_bossDeathPosition);
 
+        // timeScale 从 1 线性降到 victoryTimeScale
+        float startTs = Time.timeScale;
+        float targetTs = Mathf.Max(0.01f, victoryTimeScale);
+        float t = 0f;
+        float duration = Mathf.Max(0.3f, victoryDelaySeconds);
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float u = Mathf.Clamp01(t / duration);
+            Time.timeScale = Mathf.Lerp(startTs, targetTs, u);
+            yield return null;
+        }
+
+        // 结算
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
         TryRecordVictoryProgress(dur, kills);
         ShowResultUi(new GameResultViewModel { victory = true, battleDurationUnscaled = dur, killCount = kills });
+
+        // 恢复
+        camFollow?.ClearOverride();
     }
 
     // ── 失败延迟结算 ──

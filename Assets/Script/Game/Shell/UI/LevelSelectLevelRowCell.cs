@@ -47,7 +47,9 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
         if (titleText != null)
         {
-        //    var prefix = row.levelOrdinalInList > 0 ? $"{row.levelOrdinalInList}. " : string.Empty;
+            BattleChineseFontRuntime.EnsureLoaded();
+            BattleChineseFontRuntime.ApplyToTMP(titleText);
+
             string name;
             if (!string.IsNullOrEmpty(row.mapName))
                 name = row.mapName;
