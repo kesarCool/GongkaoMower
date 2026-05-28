@@ -20,17 +20,17 @@ MonoBehaviour:
   levelDescriptions: []
   bladeCountByLevel: 0200000003000000040000000500000006000000
   damagePerTickByLevel:
-  - 35
+  - 28
+  - 32
+  - 36
   - 40
   - 45
-  - 50
-  - 55
   tickIntervalByLevel:
-  - 0.15
-  - 0.15
-  - 0.14
-  - 0.13
-  - 0.12
+  - 3
+  - 2
+  - 2
+  - 2
+  - 1
   orbitRadiusByLevel:
   - 1.5
   - 1.65

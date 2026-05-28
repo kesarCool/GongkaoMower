@@ -69,6 +69,9 @@ public static class LexiconPreviewCatalog
             if (row.ThemePackId != themePackId || row.CategoryTag != categoryTag)
                 continue;
 
+            if (!SensitiveWordFilter.Instance.IsLexiconAllowed(row.ID, row.DisplayText))
+                continue;
+
             var t = row.DisplayText ?? string.Empty;
             rows.Add((row.lexiconId, t));
         }
@@ -103,6 +106,9 @@ public static class LexiconPreviewCatalog
             if (kv.Value is not LexiconTable row)
                 continue;
             if (!themeSet.Contains(row.ThemePackId) || !catSet.Contains(row.CategoryTag))
+                continue;
+
+            if (!SensitiveWordFilter.Instance.IsLexiconAllowed(row.ID, row.DisplayText))
                 continue;
 
             var t = row.DisplayText ?? string.Empty;

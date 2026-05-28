@@ -97,6 +97,11 @@ public class BattleLoadingSceneController : MonoBehaviour
         if (initTableManagerInLoading && TableManager.Instance != null)
             TableManager.Instance.Init();
 
+        // 敏感词过滤：加载本地词库（毫秒级）+ 恢复远程缓存 + 启动后台上报
+        SensitiveWordFilter.Instance.LoadLocalBlacklist();
+        SensitiveWordFilter.Instance.LoadRemoteCache();
+        StartCoroutine(SensitiveWordFilter.Instance.BackgroundCheckAll(null));
+
         BattleChineseFontRuntime.EnsureLoaded();
 
         SetStatus("加载音效…");

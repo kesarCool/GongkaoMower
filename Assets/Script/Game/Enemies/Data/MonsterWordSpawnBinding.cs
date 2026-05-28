@@ -150,6 +150,10 @@ public static class MonsterWordSpawnBinding
             if (lx.CategoryTag != monster.CategoryTag)
                 continue;
 
+            // 敏感词过滤
+            if (!SensitiveWordFilter.Instance.IsLexiconAllowed(lx.ID, lx.DisplayText))
+                continue;
+
             loose.Add(lx);
             if (monster.ThemePackId > 0 && lx.ThemePackId == monster.ThemePackId)
                 strict.Add(lx);

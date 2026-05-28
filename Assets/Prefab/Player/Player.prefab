@@ -123,6 +123,8 @@ GameObject:
   - component: {fileID: 8771076658137708668}
   - component: {fileID: 7733221100889977666}
   - component: {fileID: 2167164036099694569}
+  - component: {fileID: 7839378820916240537}
+  - component: {fileID: 8121149140225794864}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -293,6 +295,32 @@ MonoBehaviour:
   playerSkills: {fileID: 7067422121645680188}
   damageRadiusColor: {r: 0, g: 1, b: 1, a: 0.9}
   drawPreviewWhenUnequipped: 0
+--- !u!114 &7839378820916240537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186490287265628212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d42e683e94304ec458902f7cf8d13c3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bodyRenderer: {fileID: 1655908898705443259}
+--- !u!114 &8121149140225794864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186490287265628212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f424caf0d46e5542b2f5e39650b07fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterCatalog: {fileID: 11400000, guid: 20d02f89708e396428bc4b0dd5bd54c5, type: 2}
 --- !u!1001 &1066185600145853123
 PrefabInstance:
   m_ObjectHideFlags: 0

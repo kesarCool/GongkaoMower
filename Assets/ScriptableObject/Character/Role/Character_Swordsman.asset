@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab6a92a6afaa5564083b2643be44cbdb, type: 3}
+  m_Name: Character_Swordsman
+  m_EditorClassIdentifier: 
+  characterId: character_02
+  displayName: "\u4E0A\u5CB8\u4FA0"
+  portrait: {fileID: 21300000, guid: af5c8b5acd2f83d4d95d22018949a59f, type: 3}
+  startingSkill: 1
+  bodySprite: {fileID: 21300000, guid: af5c8b5acd2f83d4d95d22018949a59f, type: 3}
+  defaultWeapon: {fileID: 11400000, guid: ac9544964fcf7884186c8e7adbcee187, type: 2}
+  boundSkills: 
+  baseAttack: 10
+  baseHp: 100
+  maxHpBonus: 20
+  moveSpeedBonus: 2
+  locked: 0

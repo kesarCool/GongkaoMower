@@ -129,10 +129,6 @@ public class GameUnlockSkill : MonoBehaviour
         if (skillCatalog != null)
             return skillCatalog.Get(id);
 
-        skillCatalog = FindObjectOfType<SkillCatalog>();
-        if (skillCatalog != null)
-            return skillCatalog.Get(id);
-
         skillCatalog = Resources.Load<SkillCatalog>("SkillCatalog");
         return skillCatalog?.Get(id);
     }

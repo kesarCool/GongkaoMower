@@ -120,6 +120,25 @@ public sealed class PlayerProfileService
         Persist();
     }
 
+    /// <summary>当前上阵角色 ID（持久化到本地存档）。</summary>
+    public string EquippedCharacterId
+    {
+        get
+        {
+            if (!_loaded) LoadOrCreate();
+            return _data?.equippedCharacterId ?? string.Empty;
+        }
+    }
+
+    /// <summary>设置上阵角色并持久化。</summary>
+    public void SetEquippedCharacter(string characterId)
+    {
+        if (!_loaded) LoadOrCreate();
+        if (_data == null) return;
+        _data.equippedCharacterId = characterId ?? string.Empty;
+        Persist();
+    }
+
     private void Persist()
     {
         var list = new List<LevelProgressEntry>(_levels.Count);

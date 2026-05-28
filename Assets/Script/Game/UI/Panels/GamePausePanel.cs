@@ -51,7 +51,6 @@ public class GamePausePanel : UIPanelBase
         _playerSkills.GetEquippedSkillIdsOrdered(ids);
 
         SkillCatalog catalog = _playerSkills.skillCatalog;
-        if (catalog == null) catalog = FindObjectOfType<SkillCatalog>();
         if (catalog == null) catalog = Resources.Load<SkillCatalog>("SkillCatalog");
 
         foreach (SkillId id in ids)

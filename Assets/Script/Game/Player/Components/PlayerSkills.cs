@@ -249,6 +249,35 @@ public class PlayerSkills : MonoBehaviour
         ApplyStatsFromDefinition(s, GetDef(s.Id));
     }
 
+    /// <summary>
+    /// 清空所有已装备技能（OnUnequip + 清列表）。供 <see cref="CharacterConfigApplier"/> 重建技能前调用。
+    /// </summary>
+    public void ClearAllSkills()
+    {
+        for (int i = 0; i < _skills.Count; i++)
+            _skills[i].OnUnequip();
+        _skills.Clear();
+        _skillById.Clear();
+        _lineBeamSkill = null;
+    }
+
+    /// <summary>
+    /// 以当前 <see cref="startingSkill"/> 重建初始技能列表并立即 Equip。
+    /// 供 <see cref="CharacterConfigApplier"/> 在修改 startingSkill 后调用。
+    /// </summary>
+    public void RebuildFromStartingSkill()
+    {
+        ClearAllSkills();
+        BuildInitialSkills();
+
+        if (isActiveAndEnabled)
+        {
+            var ctx = new SkillContext { player = transform, enemyTag = enemyTag };
+            for (int i = 0; i < _skills.Count; i++)
+                _skills[i].OnEquip(ctx);
+        }
+    }
+
     #region 肉鸽选卡接口
 
     /// <summary>

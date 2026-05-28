@@ -309,12 +309,21 @@ public class UIManager : MonoBehaviour
         if (_instanceByType.TryGetValue(type, out var exist) && exist != null)
             return exist;
 
-        if (!_prefabByType.TryGetValue(type, out var prefab) || prefab == null)
-            return null;
+        GameObject go;
+        if (_prefabByType.TryGetValue(type, out var prefab) && prefab != null)
+        {
+            go = Instantiate(prefab, stackRoot, false);
+        }
+        else
+        {
+            // 纯代码生成面板（如 CharacterSelectionPanel），无需 Prefab
+            go = new GameObject(type.Name, typeof(RectTransform));
+        }
 
-        var go = Instantiate(prefab, stackRoot, false);
         go.SetActive(false);
         var panel = go.GetComponent(type) as UIPanelBase;
+        if (panel == null)
+            panel = go.AddComponent(type) as UIPanelBase;
         if (panel == null)
         {
             Destroy(go);

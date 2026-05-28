@@ -19,6 +19,10 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("直接进入当前关卡（默认 = 最大已解锁关卡）。")]
     [SerializeField] private Button startGameButton;
 
+    [Header("选角")]
+    [Tooltip("打开角色选择弹窗。")]
+    [SerializeField] private Button openCharacterSelectionButton;
+
     [Header("词汇预览")]
     [Tooltip("打开词汇表预览弹窗（ThemePackId / CategoryTag 页签）。")]
     [SerializeField] private Button openLexiconPreviewButton;
@@ -32,6 +36,8 @@ public class HomeHubController : MonoBehaviour
             openLevelSelectButton.onClick.AddListener(OpenLevelSelect);
         if (startGameButton != null)
             startGameButton.onClick.AddListener(StartCurrentLevel);
+        if (openCharacterSelectionButton != null)
+            openCharacterSelectionButton.onClick.AddListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
     }
@@ -42,6 +48,8 @@ public class HomeHubController : MonoBehaviour
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
         if (startGameButton != null)
             startGameButton.onClick.RemoveListener(StartCurrentLevel);
+        if (openCharacterSelectionButton != null)
+            openCharacterSelectionButton.onClick.RemoveListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
     }
@@ -80,6 +88,19 @@ public class HomeHubController : MonoBehaviour
 
         SelectedLevelContext.Set(chapterId, levelId);
         BattleFlowLauncher.TryStartBattleLoading();
+    }
+
+    /// <summary>打开角色选择弹窗。</summary>
+    public void OpenCharacterSelection()
+    {
+        UiClickSound.Play();
+        if (UIManager.Instance == null)
+        {
+            GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing);
+            return;
+        }
+
+        UIManager.Instance.Open<CharacterSelectionPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
     /// <summary>打开词汇预览：先 <see cref="TableManager.Init"/> 再弹窗。</summary>

@@ -32,7 +32,7 @@ MonoBehaviour:
   - 0.7
   - 0.65
   damageByLevel:
-  - 350
+  - 1000
   - 400
   - 350
   - 380
