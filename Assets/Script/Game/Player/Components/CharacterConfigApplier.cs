@@ -57,56 +57,26 @@ public class CharacterConfigApplier : MonoBehaviour
 
         Debug.Log($"[CharacterConfigApplier] 应用角色: {def.displayName} (id={def.characterId})");
 
-        // 1. 基础属性（加法叠加到 Inspector 默认值上）
-        TryAddMaxHpBonus(def.maxHpBonus);
+        // 1. 属性（通过 attributes 干净写入，不再用反射）
+        var attr = def.attributes.SafeDefaults();
+        Debug.Log($"[CharacterConfigApplier] 属性讀取: raw=({def.attributes.moveSpeed:F1}) safe=({attr.moveSpeed:F1})");
+        _playerHealth.SetMaxHp(attr.maxHp);
+        _playerHealth.SetDefense(attr.defense);
         _playerHealth.ResetToFull();
-        _playerController.moveSpeed += def.moveSpeedBonus;
+        float prevSpeed = _playerController.moveSpeed;
+        _playerController.moveSpeed = attr.moveSpeed;
+        Debug.Log($"[CharacterConfigApplier] moveSpeed: {prevSpeed:F1} → {_playerController.moveSpeed:F1}");
+        _playerSkills.attackMultiplier = attr.attack;
+        _playerSkills.critRate = attr.critRate;
+        _playerSkills.critDamageMul = attr.critDamageMul;
+        _playerSkills.pierceCount = attr.pierceCount;
+        _playerSkills.pierceRate = attr.pierceRate;
 
         // 2. 技能
         ApplySkills(def);
 
         // 3. 外观
         ApplyAppearance(def);
-    }
-
-    private void TryAddMaxHpBonus(float bonus)
-    {
-        if (bonus == 0) return;
-
-        var type = typeof(PlayerHealth);
-        var field = type.GetField("maxHp", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
-        if (field != null)
-        {
-            object currentValue = field.GetValue(_playerHealth);
-            if (currentValue is int currentInt)
-            {
-                field.SetValue(_playerHealth, currentInt + bonus);
-                return;
-            }
-            if (currentValue is float currentFloat)
-            {
-                field.SetValue(_playerHealth, currentFloat + bonus);
-                return;
-            }
-        }
-
-        var property = type.GetProperty("maxHp", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
-        if (property != null && property.CanRead && property.CanWrite)
-        {
-            object currentValue = property.GetValue(_playerHealth);
-            if (currentValue is int currentInt)
-            {
-                property.SetValue(_playerHealth, currentInt + bonus);
-                return;
-            }
-            if (currentValue is float currentFloat)
-            {
-                property.SetValue(_playerHealth, currentFloat + bonus);
-                return;
-            }
-        }
-
-        Debug.LogWarning("[CharacterConfigApplier] 无法访问 PlayerHealth.maxHp，未应用 maxHp 奖励。");
     }
 
     private void ApplySkills(CharacterDefinition def)
@@ -152,11 +122,18 @@ public class CharacterConfigApplier : MonoBehaviour
         if (def.defaultWeapon == null || def.defaultWeapon.bulletOverridePrefab == null)
             return;
 
-        var autoSkill = _playerSkills.GetEquippedSkill<SkillAutoProjectile>(SkillId.AutoProjectile);
-        if (autoSkill != null)
+        // 查找任意 AutoProjectile 变体技能（不限定 SkillId）
+        var ids = new System.Collections.Generic.List<SkillId>(4);
+        _playerSkills.GetEquippedSkillIdsOrdered(ids);
+        foreach (var id in ids)
         {
-            autoSkill.bulletPrefab = def.defaultWeapon.bulletOverridePrefab;
-            Debug.Log($"[CharacterConfigApplier] AutoProjectile 子弹已覆盖为: {def.defaultWeapon.bulletOverridePrefab.name}");
+            var autoSkill = _playerSkills.GetEquippedSkill<SkillAutoProjectile>(id);
+            if (autoSkill != null)
+            {
+                autoSkill.bulletPrefab = def.defaultWeapon.bulletOverridePrefab;
+                Debug.Log($"[CharacterConfigApplier] AutoProjectile({id}) 子弹已覆盖为: {def.defaultWeapon.bulletOverridePrefab.name}");
+                return;
+            }
         }
     }
 }

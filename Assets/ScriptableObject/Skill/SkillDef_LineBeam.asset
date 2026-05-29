@@ -29,10 +29,11 @@ MonoBehaviour:
   - 1.25
   - 1
   damageByLevel:
-  - 50
-  - 60
-  - 72
-  - 84
-  - 100
+  - 2.5
+  - 2.6
+  - 2.7
+  - 2.8
+  - 2.9
   beamCountByLevel: 0100000001000000020000000200000003000000
+  singleTargetSpreadDeg: 10
   spreadDegrees: 14

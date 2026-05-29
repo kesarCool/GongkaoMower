@@ -50,6 +50,15 @@ public class CardDeck : ScriptableObject
     /// <summary>
     /// 根据当前状态抽卡
     /// </summary>
+    // AutoProjectile 家族：基础版 + 三个变体
+    private static readonly HashSet<SkillId> AutoProjectileFamily = new HashSet<SkillId>
+    {
+        SkillId.AutoProjectile,
+        SkillId.AutoProjectilePistol,
+        SkillId.AutoProjectileSword,
+        SkillId.AutoProjectileTalisman,
+    };
+
     /// <param name="currentLevel">当前关卡进度</param>
     /// <param name="playerSkills">玩家技能管理器</param>
     /// <param name="excludeSkills">本次抽卡要排除的技能（刷新用）</param>
@@ -58,6 +67,9 @@ public class CardDeck : ScriptableObject
     {
         var candidates = new List<DrawResult>();
         excludeSkills ??= new List<SkillId>();
+
+        // 确定此局允许的 AutoProjectile 变体
+        SkillId allowedAp = ResolveAllowedAutoProjectile(playerSkills);
 
         foreach (var def in skillCatalog.All())
         {
@@ -71,7 +83,10 @@ public class CardDeck : ScriptableObject
             // 2. 检查排除列表（刷新用）
             if (excludeSkills.Contains(id)) continue;
 
-            // 3. 判断是否已拥有
+            // 3. AutoProjectile 家族过滤：每局只允许一个变体
+            if (AutoProjectileFamily.Contains(id) && id != allowedAp) continue;
+
+            // 4. 判断是否已拥有
             bool hasSkill = playerSkills.HasSkill(id);
             int currentLv = hasSkill ? playerSkills.GetSkillLevel(id) : 0;
             int maxLv = Mathf.Max(1, def.maxLevel);
@@ -79,11 +94,11 @@ public class CardDeck : ScriptableObject
             // 已满级不再入选卡池
             if (hasSkill && currentLv >= maxLv) continue;
 
-            // 4. 判断是否还有空槽位
+            // 5. 判断是否还有空槽位
             if (!hasSkill && !playerSkills.HasEmptySlot && !allowNewSkillWhenFull)
                 continue;
 
-            // 5. 确定模板类型
+            // 6. 确定模板类型
             RoguelikeCardTemplate template;
             float weight = progression.GetWeight(id);
             int targetLv = currentLv + 1;
@@ -118,6 +133,27 @@ public class CardDeck : ScriptableObject
 
         // 加权随机抽取
         return WeightedRandomPick(candidates, Mathf.Min(drawCount, candidates.Count));
+    }
+
+    /// <summary>
+    /// 根据角色已装备的主技能确定卡池允许的 AutoProjectile 变体。
+    /// - 角色主技能是变体(7/8/9) → 只出该变体，不出其他 AP
+    /// - 角色主技能非 AP 系列 → 只出基础 AutoProjectile(1)，不出变体
+    /// </summary>
+    private static SkillId ResolveAllowedAutoProjectile(PlayerSkills playerSkills)
+    {
+        if (playerSkills == null) return SkillId.AutoProjectile;
+
+        var ids = new List<SkillId>(4);
+        playerSkills.GetEquippedSkillIdsOrdered(ids);
+
+        foreach (var id in ids)
+        {
+            if (AutoProjectileFamily.Contains(id))
+                return id; // 角色已装备某个 AP 变体，卡池只出该变体
+        }
+
+        return SkillId.AutoProjectile; // 无 AP 技能，允许基础版
     }
 
     /// <summary>

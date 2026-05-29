@@ -4,6 +4,7 @@ using UnityEngine;
 public class AutoProjectileSkillDefinition : SkillDefinitionBase
 {
     [Header("Combat")]
+    public SkillId targetSkillId = SkillId.AutoProjectile;
     public GameObject bulletPrefab;
     public float bulletSpeed = 10f;
 
@@ -31,7 +32,7 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
         if (bulletPrefab == null) return null;
 
         int lv = 1;
-        var s = new SkillAutoProjectile(bulletPrefab, bulletSpeed, IntervalAt(lv));
+        var s = new SkillAutoProjectile(bulletPrefab, bulletSpeed, IntervalAt(lv), targetSkillId);
         s.damage = Mathf.Max(0.01f, DamageAt(lv));
         return s;
     }

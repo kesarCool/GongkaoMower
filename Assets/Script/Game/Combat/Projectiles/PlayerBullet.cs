@@ -20,6 +20,8 @@ public abstract class PlayerBullet : MonoBehaviour
     protected Vector2 _dir;
     protected float _elapsed;
     protected bool _fired;
+    protected int _pierceRemaining;
+    protected float _pierceRate;
 
     public string targetTag = "monster";
 
@@ -40,14 +42,19 @@ public abstract class PlayerBullet : MonoBehaviour
     /// <summary>
     /// 统一发射入口：技能升级后数值通过此方法写入每一发子弹。
     /// </summary>
+    public bool IsCrit { get; private set; }
+
     public virtual void Launch(Vector2 direction, float overrideSpeed, float overrideDamage,
-        float overrideLifetime, SkillId source)
+        float overrideLifetime, SkillId source, int pierceCount = 0, bool isCrit = false, float pierceRate = 0f)
     {
         _dir = direction.normalized;
         if (overrideSpeed > 0f) speed = overrideSpeed;
         if (overrideDamage > 0f) damage = overrideDamage;
         if (overrideLifetime > 0f) lifetime = overrideLifetime;
         skillSource = source;
+        _pierceRemaining = pierceCount;
+        _pierceRate = pierceRate;
+        IsCrit = isCrit;
 
         float rot = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         _rb.MoveRotation(rot);
@@ -80,7 +87,7 @@ public abstract class PlayerBullet : MonoBehaviour
 
             if (eb != null)
             {
-                eb.TakeDamage(damage, skillSource);
+                eb.TakeDamage(damage, skillSource, IsCrit);
                 BattleRunMetrics.AddSkillDamage(skillSource, damage);
             }
 
@@ -94,9 +101,14 @@ public abstract class PlayerBullet : MonoBehaviour
             OnHitWall(collision);
     }
 
-    /// <summary>撞到怪时调用（子类可重写做穿透/反弹）。默认消失。</summary>
+    /// <summary>撞到怪时调用（子类可重写做穿透/反弹）。</summary>
     protected virtual void OnHitEnemy(Collider2D other)
     {
+        if (_pierceRemaining > 0 && (_pierceRate <= 0f || Random.value < _pierceRate))
+        {
+            _pierceRemaining--;
+            return; // 不回收，子弹继续飞行
+        }
         Release();
     }
 

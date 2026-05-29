@@ -44,7 +44,7 @@ public class DamageFloatTextPresenter : MonoBehaviour
         if (fx == null)
             fx = go.GetComponentInChildren<DamageFloatText>(true);
         if (fx != null)
-            fx.Play(e.damage, pos);
+            fx.Play(e.damage, pos, e.isCrit);
         else
             GameObjectPool.Release(go);
     }

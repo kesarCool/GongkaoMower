@@ -51,6 +51,8 @@ MonoBehaviour:
   driftSpeed: 2
   spawnScalePunch: 1.2
   textColor: {r: 0, g: 1, b: 0.4434402, a: 1}
+  critColor: {r: 1, g: 0.10395123, b: 0, a: 1}
+  critScaleMul: 1.5
   sortingOrder: 200
   faceMainCamera: 0
 --- !u!1 &8340708866548831996

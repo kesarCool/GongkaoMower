@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Move")]
-    public float moveSpeed = 6f;
+    public float moveSpeed = 2f;
 
     [Header("Attack (Legacy)")]
     [Tooltip("勾选后：禁用本脚本内的自动射击（改由 PlayerSkills / 技能系统驱动）")]

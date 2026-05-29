@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33d9f5a06cc44224694a7f57c6cc3e44, type: 3}
+  m_Name: SkillDef_AutoProjectileTalisman
+  m_EditorClassIdentifier: 
+  id: 9
+  maxLevel: 5
+  displayName: "\u5929\u5E08\u7B26\u4EE4"
+  description: "\u5929\u5E08\u6555\u4EE4\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
+  icon: {fileID: 21300000, guid: 0af94e125d23a4f4387e8b520f04096c, type: 3}
+  levelDescriptions:
+  - "\u9053\u6CD5\u7B26\u7B93\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
+  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%"
+  - "\u4F24\u5BB3+15%"
+  - "\u5B50\u5F39+1\uFF0C\u4F24\u5BB3+10%"
+  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%"
+  targetSkillId: 9
+  bulletPrefab: {fileID: 1613592626320682331, guid: a467d8ccecf1c9e43a734c2104178aee, type: 3}
+  bulletSpeed: 8
+  intervalByLevel:
+  - 1.2
+  - 1.14
+  - 1.08
+  - 1.02
+  - 0.97
+  damageByLevel:
+  - 1
+  - 1.12
+  - 1.28
+  - 1.42
+  - 1.58
+  projectileCountByLevel: 0100000001000000010000000200000002000000
+  spreadDegrees: 5

@@ -25,11 +25,11 @@ MonoBehaviour:
   - 1.55
   - 1.4
   damageByLevel:
-  - 150
-  - 180
-  - 210
-  - 240
-  - 270
+  - 1
+  - 1.25
+  - 1.5
+  - 1.75
+  - 2
   aoeRadiusByLevel:
   - 1.2
   - 1.35

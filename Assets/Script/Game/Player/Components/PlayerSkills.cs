@@ -38,6 +38,39 @@ public class PlayerSkills : MonoBehaviour
     [Tooltip("技能上阵槽位上限（蛋壳特工队风格，默认5个）")]
     public const int MAX_SKILL_SLOTS = 5;
 
+    [Header("角色属性加成（由 CharacterConfigApplier 写入）")]
+    [Tooltip("攻击力系数，乘到技能伤害上。")]
+    public float attackMultiplier = 1f;
+    [Tooltip("暴击率 (0~1)。")]
+    [Range(0f, 1f)]
+    public float critRate;
+    [Tooltip("暴击倍率。")]
+    public float critDamageMul = 2f;
+    [Tooltip("穿透数。")]
+    public int pierceCount;
+    [Tooltip("穿透率 (0~1，每次命中触发穿透的概率)。")]
+    [Range(0f, 1f)]
+    public float pierceRate;
+
+    /// <summary>结算暴击：返回伤害倍率（未暴击=1，暴击=critDamageMul）。</summary>
+    public float EvaluateCrit()
+    {
+        if (critRate <= 0f) return 1f;
+        return Random.value < critRate ? critDamageMul : 1f;
+    }
+
+    /// <summary>结算暴击并返回是否暴击（供 DamageFloatText 用）。</summary>
+    public float EvaluateCrit(out bool isCrit)
+    {
+        if (critRate > 0f && Random.value < critRate)
+        {
+            isCrit = true;
+            return critDamageMul;
+        }
+        isCrit = false;
+        return 1f;
+    }
+
     private readonly List<ISkill> _skills = new List<ISkill>(8);
     private readonly Dictionary<SkillId, ISkill> _skillById = new Dictionary<SkillId, ISkill>(8);
 

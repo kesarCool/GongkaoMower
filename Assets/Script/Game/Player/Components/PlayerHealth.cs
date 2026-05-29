@@ -14,8 +14,10 @@ public class PlayerHealth : MonoBehaviour
     [Serializable]
     public class HealthChangedEvent : UnityEvent<float, float> { }
 
-    [SerializeField] private float maxHp = 100f;
-    [SerializeField] private float hp = 100f;
+    // maxHp/hp/defense 由 CharacterConfigApplier 写入，不再暴露在 Inspector 上
+    private float maxHp = 100f;
+    private float hp = 100f;
+    private float defense = 0f;
 
     [Tooltip("受击后无敌时间（秒），0 表示不启用")]
     [SerializeField] private float invulnerabilityDuration = 0.35f;
@@ -25,6 +27,7 @@ public class PlayerHealth : MonoBehaviour
 
     public float Hp => hp;
     public float MaxHp => maxHp;
+    public float Defense => defense;
     public bool IsAlive => !_dead && hp > 0f;
 
     public HealthChangedEvent OnHealthChanged = new HealthChangedEvent();
@@ -33,6 +36,18 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         hp = Mathf.Max(1f, maxHp);
+    }
+
+    /// <summary>由 CharacterConfigApplier 写入角色属性。</summary>
+    public void SetMaxHp(float value)
+    {
+        maxHp = value;
+    }
+
+    /// <summary>由 CharacterConfigApplier 写入角色属性。</summary>
+    public void SetDefense(float value)
+    {
+        defense = value;
     }
 
     /// <summary>外部控制无敌（如 Boss 击杀后延迟结算期间防止玩家意外死亡）。</summary>
@@ -59,14 +74,18 @@ public class PlayerHealth : MonoBehaviour
         if (invulnerabilityDuration > 0f && Time.time < _invulnerableUntil)
             return;
 
-        hp -= amount;
+        float finalDmg = defense > 0f
+            ? amount * (100f / (100f + defense))
+            : amount;
+
+        hp -= finalDmg;
         if (hp < 0f) hp = 0f;
 
-        OnDamaged.Invoke(amount, damageSource);
+        OnDamaged.Invoke(finalDmg, damageSource);
         EventBus.Publish(new PlayerDamagedEvent
         {
             playerHealth = this,
-            damage = amount,
+            damage = finalDmg,
             hpLeft = hp,
             damageSource = damageSource
         });

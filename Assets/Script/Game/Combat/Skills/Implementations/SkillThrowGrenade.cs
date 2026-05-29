@@ -64,7 +64,8 @@ public class SkillThrowGrenade : SkillBase
         if (grenade == null)
             grenade = go.AddComponent<GrenadeProjectile>();
 
-        grenade.Launch(start, end, flight, arcHeight, damage, aoeRadius, SkillId.ThrowGrenade, _ctx.enemyTag, explosionFxPrefab);
+        float finalDmg = GetFinalDamage(damage, out bool isCrit);
+        grenade.Launch(start, end, flight, arcHeight, finalDmg, aoeRadius, SkillId.ThrowGrenade, _ctx.enemyTag, explosionFxPrefab, isCrit);
         SpawnLimiter.Instance?.RegisterSpawned(GrenadeProjectile.SpawnLimiterKey, go);
     }
 }

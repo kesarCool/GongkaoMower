@@ -23,6 +23,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
     private SkillId _skillId;
     private string _enemyTag;
     private bool _exploded;
+    private bool _isCrit;
 
     public void Launch(
         Vector2 start,
@@ -33,7 +34,8 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         float aoeRadius,
         SkillId skillId,
         string enemyTag,
-        GameObject explosionFxPrefab)
+        GameObject explosionFxPrefab,
+        bool isCrit = false)
     {
         _start = start;
         _end = end;
@@ -44,6 +46,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         _skillId = skillId;
         _enemyTag = enemyTag;
         _explosionFxPrefab = explosionFxPrefab != null ? explosionFxPrefab : defaultExplosionFxPrefab;
+        _isCrit = isCrit;
         _elapsed = 0f;
         _exploded = false;
 
@@ -120,7 +123,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
             if (((Vector2)eb.transform.position - center).sqrMagnitude > radiusSq)
                 continue;
 
-            eb.TakeDamage(_damage, _skillId);
+            eb.TakeDamage(_damage, _skillId, _isCrit);
         }
 
         Physics2D.queriesHitTriggers = prevQueries;

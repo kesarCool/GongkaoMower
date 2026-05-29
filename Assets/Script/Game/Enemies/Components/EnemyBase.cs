@@ -125,7 +125,7 @@ public class EnemyBase : MonoBehaviour
         }
     }
 
-    public virtual void TakeDamage(float amount, SkillId damageSource = SkillId.None)
+    public virtual void TakeDamage(float amount, SkillId damageSource = SkillId.None, bool isCrit = false)
     {
         if (amount <= 0f) return;
         if (hp <= 0f) return;
@@ -140,7 +140,8 @@ public class EnemyBase : MonoBehaviour
         {
             enemy = this,
             damage = amount,
-            worldPosition = transform.position
+            worldPosition = transform.position,
+            isCrit = isCrit,
         });
 
         if (hp <= 0f)

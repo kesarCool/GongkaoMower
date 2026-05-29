@@ -18,6 +18,7 @@ public struct EnemyDamagedEvent
     public EnemyBase enemy;
     public float damage;
     public Vector3 worldPosition;
+    public bool isCrit;
 }
 
 public struct CardSelectionTriggeredEvent

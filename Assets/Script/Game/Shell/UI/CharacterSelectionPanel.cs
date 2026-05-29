@@ -19,13 +19,14 @@ public class CharacterSelectionPanel : UIPanelBase
     [SerializeField] private CharacterSelectionElement cellPrefab;
 
     [Header("详情")]
-    [SerializeField] private Image detailPortrait;
+    [SerializeField] private UnityEngine.UI.Image detailPortrait;
     [SerializeField] private TextMeshProUGUI detailNameText;
     [SerializeField] private TextMeshProUGUI detailAttackText;
     [SerializeField] private TextMeshProUGUI detailHpText;
     [SerializeField] private TextMeshProUGUI detailSkillText;
+    [SerializeField] private TextMeshProUGUI detailPassiveText;
     [SerializeField] private GameObject detailPanel;
-
+    [SerializeField] private TextMeshProUGUI tipsText;
     [Header("按钮")]
     [SerializeField] private Button confirmButton;
     [SerializeField] private TextMeshProUGUI confirmButtonLabel;
@@ -81,8 +82,11 @@ public class CharacterSelectionPanel : UIPanelBase
         if (characterCatalog == null || characterCatalog.characters.Count == 0)
         {
             if (detailPanel != null) detailPanel.SetActive(false);
+            if (tipsText != null) { tipsText.text = "配置表为空"; tipsText.gameObject.SetActive(true); }
             return;
         }
+
+        if (tipsText != null) tipsText.gameObject.SetActive(false);
 
         // 排序：已上阵 > 可上阵 > 未解锁
         var sorted = new List<CharacterDefinition>(characterCatalog.characters);
@@ -199,12 +203,21 @@ public class CharacterSelectionPanel : UIPanelBase
             detailNameText.text = equipped ? $"{def.displayName}（已上阵）" : def.displayName;
         }
 
-        if (detailAttackText != null)
-            detailAttackText.text = $"攻击：{def.baseAttack:F0}";
+        var attr = def.attributes;
 
-        float hp = def.baseHp + def.maxHpBonus;
+        if (detailAttackText != null)
+        {
+            string atk = $"攻击：{attr.attack:F0}";
+            if (attr.moveSpeed > 0f) atk += $"  移速：{attr.moveSpeed:F1}";
+            detailAttackText.text = atk;
+        }
+
         if (detailHpText != null)
-            detailHpText.text = $"血量：{hp:F0}";
+        {
+            string hp = $"血量：{attr.maxHp:F0}";
+            if (attr.defense > 0f) hp += $"  防御：{attr.defense:F0}";
+            detailHpText.text = hp;
+        }
 
         if (detailSkillText != null)
         {
@@ -224,6 +237,20 @@ public class CharacterSelectionPanel : UIPanelBase
             {
                 detailSkillText.text = effectiveSkill != SkillId.None ? $"初始技能：{effectiveSkill}" : "";
             }
+        }
+
+        if (detailPassiveText != null)
+        {
+            var passive = new List<string>();
+            if (attr.critRate > 0f) passive.Add($"暴击率 {attr.critRate * 100f:F0}%");
+            if (attr.critDamageMul > 0f && attr.critDamageMul != 2f) passive.Add($"暴伤 {attr.critDamageMul * 100f:F0}%");
+            if (attr.pierceRate > 0f) passive.Add($"穿透率 {attr.pierceRate * 100f:F0}%");
+            if (attr.pierceCount > 0) passive.Add($"穿透数 +{attr.pierceCount}");
+            if (attr.attackSpeedMul > 0f && Mathf.Abs(attr.attackSpeedMul - 1f) > 0.001f)
+                passive.Add(attr.attackSpeedMul < 1f ? $"攻速 +{(1f / attr.attackSpeedMul - 1f) * 100f:F0}%" : $"攻速 -{(attr.attackSpeedMul - 1f) * 100f:F0}%");
+
+            detailPassiveText.text = passive.Count > 0 ? "被动：" + string.Join("  ", passive) : "";
+            detailPassiveText.gameObject.SetActive(passive.Count > 0);
         }
     }
 

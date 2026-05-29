@@ -24,6 +24,8 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     [SerializeField] private float spawnScalePunch = 1.2f;
 
     [SerializeField] private Color textColor = new Color(1f, 0.92f, 0.35f, 1f);
+    [SerializeField] private Color critColor = new Color(1f, 0.84f, 0f, 1f); // #FFD700 金色
+    [SerializeField] private float critScaleMul = 1.5f;
 
     [Tooltip("2D 下可抬高 sortingOrder，避免被地形挡住")]
     [SerializeField] private int sortingOrder = 200;
@@ -35,6 +37,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     private Vector3 _driftVelocity;
     private Coroutine _co;
     private Transform _cam;
+    private bool _isCrit;
 
     private void Awake()
     {
@@ -67,7 +70,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     }
 
     /// <summary>在调用方从对象池取出后调用，设置数值与起点。</summary>
-    public void Play(float damage, Vector3 worldPosition)
+    public void Play(float damage, Vector3 worldPosition, bool isCrit = false)
     {
         if (label == null)
         {
@@ -75,10 +78,12 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             return;
         }
 
-        label.text = FormatDamage(damage);
-        label.color = textColor;
+        bool crit = isCrit;
+        _isCrit = isCrit;
+        label.text = crit ? FormatCritDamage(damage) : FormatDamage(damage);
+        label.color = crit ? critColor : textColor;
         label.alpha = 1f;
-        label.transform.localScale = Vector3.one * spawnScalePunch;
+        label.transform.localScale = Vector3.one * (crit ? spawnScalePunch * critScaleMul : spawnScalePunch);
 
         transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
         label.ForceMeshUpdate(true);
@@ -117,6 +122,11 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
         return "-" + damage.ToString("0.#");
     }
 
+    private static string FormatCritDamage(float damage)
+    {
+        return FormatDamage(damage) + " 暴击!";
+    }
+
     private IEnumerator FloatRoutine()
     {
         float t = 0f;
@@ -136,8 +146,8 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             float scaleMul = Mathf.Lerp(spawnScalePunch, 1f, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.12f)));
             textTr.localScale = baseScale * scaleMul;
 
-            Color c = textColor;
-            c.a = textColor.a * (1f - Mathf.SmoothStep(0f, 1f, u));
+            Color c = _isCrit ? critColor : textColor;
+            c.a = (_isCrit ? critColor.a : textColor.a) * (1f - Mathf.SmoothStep(0f, 1f, u));
             label.color = c;
 
             yield return null;

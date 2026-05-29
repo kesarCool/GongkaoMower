@@ -100,6 +100,7 @@ public class SkillLightningStrike : SkillBase
     {
         if (string.IsNullOrEmpty(_ctx.enemyTag)) return;
 
+        float finalDmg = GetFinalDamage(damage, out bool isCrit);
         bool prevQueries = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
 
@@ -122,7 +123,7 @@ public class SkillLightningStrike : SkillBase
             if (((Vector2)eb.transform.position - center).sqrMagnitude > radiusSq)
                 continue;
 
-            eb.TakeDamage(damage, SkillId.LightningStrike);
+            eb.TakeDamage(finalDmg, SkillId.LightningStrike, isCrit);
         }
 
         Physics2D.queriesHitTriggers = prevQueries;

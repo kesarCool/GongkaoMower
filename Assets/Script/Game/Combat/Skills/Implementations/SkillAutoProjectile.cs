@@ -14,9 +14,9 @@ public class SkillAutoProjectile : SkillBase
 
     private float _timer;
 
-    public SkillAutoProjectile(GameObject bulletPrefab, float bulletSpeed, float interval)
+    public SkillAutoProjectile(GameObject bulletPrefab, float bulletSpeed, float interval, SkillId skillId = SkillId.AutoProjectile)
     {
-        Id = SkillId.AutoProjectile;
+        Id = skillId;
         this.bulletPrefab = bulletPrefab;
         this.bulletSpeed = bulletSpeed;
         this.interval = Mathf.Max(0.05f, interval);
@@ -79,7 +79,11 @@ public class SkillAutoProjectile : SkillBase
             PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
             if (pb != null)
             {
-                pb.Launch(d, bulletSpeed, damage, 5f, SkillId.AutoProjectile);
+                float finalDmg = GetFinalDamage(damage, out bool isCrit);
+                var ps = GetPlayerSkills();
+                int pierce = ps != null ? ps.pierceCount : 0;
+                float pRate = ps != null ? ps.pierceRate : 0f;
+                pb.Launch(d, bulletSpeed, finalDmg, 5f, Id, pierce, isCrit, pRate);
             }
             else
             {

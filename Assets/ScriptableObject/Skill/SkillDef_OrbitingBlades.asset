@@ -20,11 +20,11 @@ MonoBehaviour:
   levelDescriptions: []
   bladeCountByLevel: 0200000003000000040000000500000006000000
   damagePerTickByLevel:
-  - 28
-  - 32
-  - 36
-  - 40
-  - 45
+  - 1
+  - 1
+  - 1
+  - 1.1
+  - 1.2
   tickIntervalByLevel:
   - 3
   - 2

@@ -11,6 +11,29 @@ public abstract class SkillBase : ISkill
     protected SkillContext _ctx;
     protected bool _equipped;
 
+    private PlayerSkills _cachedPlayerSkills;
+
+    protected PlayerSkills GetPlayerSkills()
+    {
+        if (_cachedPlayerSkills == null && _ctx.player != null)
+            _cachedPlayerSkills = _ctx.player.GetComponent<PlayerSkills>();
+        return _cachedPlayerSkills;
+    }
+
+    /// <summary>
+    /// 根据 PlayerSkills 的 attackMultiplier + critRate 计算最终伤害。
+    /// rawDamage = 技能表 per-level 伤害值。
+    /// </summary>
+    protected float GetFinalDamage(float rawDamage, out bool isCrit)
+    {
+        isCrit = false;
+        var ps = GetPlayerSkills();
+        if (ps == null) return rawDamage;
+        float dmg = rawDamage * ps.attackMultiplier;
+        dmg *= ps.EvaluateCrit(out isCrit);
+        return dmg;
+    }
+
     public virtual void OnEquip(SkillContext ctx)
     {
         _ctx = ctx;

@@ -16,4 +16,10 @@ public enum SkillId
     FieldGenerator = 5,
     /// <summary>随机落雷，范围内 AOE 伤害；升级增加道数与伤害</summary>
     LightningStrike = 6,
+    /// <summary>自动索敌（手枪版）—— 奋斗哥</summary>
+    AutoProjectilePistol = 7,
+    /// <summary>自动索敌（飞刀版）—— 上岸侠</summary>
+    AutoProjectileSword = 8,
+    /// <summary>自动索敌（符箓版）—— 茅山道士</summary>
+    AutoProjectileTalisman = 9,
 }

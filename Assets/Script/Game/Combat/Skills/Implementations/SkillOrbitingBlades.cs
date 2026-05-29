@@ -166,6 +166,9 @@ public class SkillOrbitingBlades : SkillBase
         hit.tickInterval = tickInterval;
         hit.damageSourceSkillId = SkillId.OrbitingBlades;
 
+        var ps = GetPlayerSkills();
+        if (ps != null) hit.SetPlayerSkills(ps);
+
         OrbitingBladeVisual visual = blade.GetComponent<OrbitingBladeVisual>();
         if (visual != null)
         {

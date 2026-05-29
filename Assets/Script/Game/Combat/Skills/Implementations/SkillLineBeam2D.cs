@@ -105,7 +105,7 @@ public class SkillLineBeam2D : SkillBase
                 if (eb == null) eb = col.GetComponentInParent<EnemyBase>();
                 if (eb == null) continue;
 
-                eb.TakeDamage(damage, SkillId.LineBeam);
+                eb.TakeDamage(GetFinalDamage(damage, out bool isCrit), SkillId.LineBeam, isCrit);
             }
         }
 

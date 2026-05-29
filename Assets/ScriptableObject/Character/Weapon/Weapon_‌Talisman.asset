@@ -23,5 +23,5 @@ MonoBehaviour:
   attackBobOffset: {x: 0.06, y: 0.02, z: 0}
   attackSwingDuration: 0.1
   attackRecoverDuration: 0.08
-  weaponSkillId: 1
+  weaponSkillId: 9
   bulletOverridePrefab: {fileID: 1613592626320682331, guid: a467d8ccecf1c9e43a734c2104178aee, type: 3}

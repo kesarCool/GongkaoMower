@@ -15,8 +15,23 @@ public class DynamicJoystick : MonoBehaviour
     [Tooltip("当未手动指定主角 Rigidbody2D 时，用于查找主角的 Tag。")]
     public string playerTag = "Player";
 
-    [Tooltip("主角移动速度（通过 Rigidbody2D.velocity 设置）。")]
-    public float moveSpeed = 5f;
+    [Tooltip("主角移动速度。留空时自动从 PlayerController 读取。")]
+    public float moveSpeedFallback = 5f;
+
+    private PlayerController _playerController;
+    private float MoveSpeed
+    {
+        get
+        {
+            if (_playerController != null) return _playerController.moveSpeed;
+            if (playerRigidbody != null)
+            {
+                _playerController = playerRigidbody.GetComponent<PlayerController>();
+                if (_playerController != null) return _playerController.moveSpeed;
+            }
+            return moveSpeedFallback;
+        }
+    }
 
     [Header("Joystick UI")]
     [Tooltip("可选：你的摇杆预制体（根为 RectTransform，建议包含子物体 Outer 和 Inner）。\n" +
@@ -423,14 +438,25 @@ public class DynamicJoystick : MonoBehaviour
         }
     }
 
+    private float _lastLoggedSpeed = -1f;
     private void ApplyMovement()
     {
         if (playerRigidbody == null) return;
 
         if (_isTouching && _currentInput.sqrMagnitude > 0.0001f)
-            playerRigidbody.velocity = _currentInput * moveSpeed;
+        {
+            float spd = MoveSpeed;
+            playerRigidbody.velocity = _currentInput * spd;
+            if (debugLogs && Mathf.Abs(spd - _lastLoggedSpeed) > 0.01f)
+            {
+                Debug.Log($"[DynamicJoystick] ApplyMovement MoveSpeed={spd:F1} vel={playerRigidbody.velocity.magnitude:F1}");
+                _lastLoggedSpeed = spd;
+            }
+        }
         else
+        {
             playerRigidbody.velocity = Vector2.zero;
+        }
     }
 
     private void HandleHideTimer()

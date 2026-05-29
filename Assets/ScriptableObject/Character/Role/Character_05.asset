@@ -16,11 +16,17 @@ MonoBehaviour:
   displayName: "\u8305\u5C71\u9053\u58EB"
   portrait: {fileID: 21300000, guid: e4563b91fd556224d853486e7a721a89, type: 3}
   startingSkill: 1
+  attributes:
+    attack: 90
+    attackSpeedMul: 1
+    maxHp: 90
+    defense: 10
+    moveSpeed: 7
+    critRate: 0.25
+    critDamageMul: 2
+    pierceRate: 0.1
+    pierceCount: 2
   bodySprite: {fileID: 21300000, guid: e4563b91fd556224d853486e7a721a89, type: 3}
   defaultWeapon: {fileID: 11400000, guid: 68405ae73ce337146b7cfc2f580b92a3, type: 2}
   boundSkills: 
-  baseAttack: 10
-  baseHp: 100
-  maxHpBonus: 100
-  moveSpeedBonus: 0
   locked: 0

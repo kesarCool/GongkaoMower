@@ -12,6 +12,12 @@ public class SkillOrbBladeHit : MonoBehaviour, IPoolReceiver
     public SkillId damageSourceSkillId = SkillId.OrbitingBlades;
 
     private float _nextTick;
+    private PlayerSkills _playerSkills;
+
+    public void SetPlayerSkills(PlayerSkills ps)
+    {
+        _playerSkills = ps;
+    }
 
     public void OnPoolGet() => _nextTick = 0f;
 
@@ -32,6 +38,13 @@ public class SkillOrbBladeHit : MonoBehaviour, IPoolReceiver
         if (Time.time < _nextTick) return;
         _nextTick = Time.time + Mathf.Max(0.05f, tickInterval);
 
-        eb.TakeDamage(Mathf.Max(0.01f, damagePerTick), damageSourceSkillId);
+        float dmg = Mathf.Max(0.01f, damagePerTick);
+        bool isCrit = false;
+        if (_playerSkills != null)
+        {
+            dmg *= _playerSkills.attackMultiplier;
+            dmg *= _playerSkills.EvaluateCrit(out isCrit);
+        }
+        eb.TakeDamage(dmg, damageSourceSkillId, isCrit);
     }
 }
