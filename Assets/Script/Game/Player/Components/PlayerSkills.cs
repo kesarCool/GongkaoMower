@@ -37,6 +37,7 @@ public class PlayerSkills : MonoBehaviour
     [Header("肉鸽配置")]
     [Tooltip("技能上阵槽位上限（蛋壳特工队风格，默认5个）")]
     public const int MAX_SKILL_SLOTS = 5;
+    public const int MAX_PASSIVE_SLOTS = 5;
 
     [Header("角色属性加成（由 CharacterConfigApplier 写入）")]
     [Tooltip("攻击力系数，乘到技能伤害上。")]
@@ -74,6 +75,10 @@ public class PlayerSkills : MonoBehaviour
     private readonly List<ISkill> _skills = new List<ISkill>(8);
     private readonly Dictionary<SkillId, ISkill> _skillById = new Dictionary<SkillId, ISkill>(8);
 
+    // 被动技能独立槽位
+    private readonly List<ISkill> _passives = new List<ISkill>(8);
+    private readonly Dictionary<SkillId, ISkill> _passiveById = new Dictionary<SkillId, ISkill>(8);
+
     private PlayerController _pc;
     private SkillLineBeam2D _lineBeamSkill;
     private LineRenderer[] _beamLines;
@@ -82,6 +87,8 @@ public class PlayerSkills : MonoBehaviour
 
     private void Awake()
     {
+        PassiveSkillRegistry.SetPlayer(gameObject);
+
         _pc = GetComponent<PlayerController>();
         if (_pc != null)
         {
@@ -113,8 +120,10 @@ public class PlayerSkills : MonoBehaviour
         float dt = Time.deltaTime;
         for (int i = 0; i < _skills.Count; i++)
             _skills[i].Tick(dt);
+        for (int i = 0; i < _passives.Count; i++)
+            _passives[i].Tick(dt);
 
-        // 射线可视化：在技能 Tick 之外做“超时隐藏”，避免一直亮着
+        // 射线可视化：在技能 Tick 之外做”超时隐藏”，避免一直亮着
         if (_lineBeamSkill != null)
             _lineBeamSkill.TickVisual();
     }
@@ -131,8 +140,18 @@ public class PlayerSkills : MonoBehaviour
     private bool IsMaxLevel(ISkill skill, SkillDefinitionBase def)
     {
         if (skill == null) return true;
-        int max = def != null ? Mathf.Max(1, def.maxLevel) : 5;
-        return skill.Level >= max;
+        return skill.Level >= GetEffectiveMaxLevel(skill.Id, def);
+    }
+
+    /// <summary>
+    /// 有效满级：拥有羁绊被动 → maxLevel；没有羁绊被动 → maxLevel - 1。
+    /// 无羁绊配置（bondedPassiveId=None）时返回 maxLevel。
+    /// </summary>
+    public int GetEffectiveMaxLevel(SkillId id, SkillDefinitionBase def)
+    {
+        if (def == null) return 5;
+        if (def.bondedPassiveId == SkillId.None) return def.maxLevel;
+        return _passiveById.ContainsKey(def.bondedPassiveId) ? def.maxLevel : Mathf.Max(1, def.maxLevel - 1);
     }
 
     private SkillDefinitionBase GetDef(SkillId id)
@@ -360,6 +379,59 @@ public class PlayerSkills : MonoBehaviour
         var def = GetDef(id);
         return IsMaxLevel(s, def);
     }
+
+    #region 被动技能
+
+    public int EquippedPassiveCount => _passives.Count;
+    public bool HasPassiveEmptySlot => _passives.Count < MAX_PASSIVE_SLOTS;
+    public bool IsPassiveFull => _passives.Count >= MAX_PASSIVE_SLOTS;
+    public bool HasPassiveSkill(SkillId id) => _passiveById.ContainsKey(id);
+    public int GetPassiveSkillLevel(SkillId id) => _passiveById.TryGetValue(id, out var s) ? s.Level : 0;
+
+    public bool TryAddPassive(SkillId id)
+    {
+        if (id == SkillId.None) return false;
+        if (_passiveById.ContainsKey(id)) return false;
+
+        ISkill s = CreateSkill(id);
+        if (s == null) return false;
+
+        _passives.Add(s);
+        _passiveById[id] = s;
+
+        if (isActiveAndEnabled)
+            s.OnEquip(new SkillContext { player = transform, enemyTag = enemyTag });
+
+        return true;
+    }
+
+    public bool TryLevelUpPassive(SkillId id)
+    {
+        if (!_passiveById.TryGetValue(id, out var s)) return false;
+        var def = GetDef(id);
+        if (def != null && IsMaxLevel(s, def)) return false;
+
+        s.OnLevelUp();
+        ApplyStatsFromDefinition(s, def);
+        return true;
+    }
+
+    public bool IsPassiveMaxLevel(SkillId id)
+    {
+        if (!_passiveById.TryGetValue(id, out var s)) return false;
+        var def = GetDef(id);
+        return IsMaxLevel(s, def);
+    }
+
+    public void GetEquippedPassiveIdsOrdered(List<SkillId> into)
+    {
+        if (into == null) return;
+        into.Clear();
+        for (int i = 0; i < _passives.Count; i++)
+            into.Add(_passives[i].Id);
+    }
+
+    #endregion
 
     /// <summary>已装备技能 ID（上阵顺序）。</summary>
     public void GetEquippedSkillIdsOrdered(List<SkillId> into)

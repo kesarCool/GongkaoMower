@@ -20,6 +20,11 @@ public class AppBootstrap : MonoBehaviour
 
         DontDestroyOnLoad(root.gameObject);
 
+        // 全局性能设置：30fps + 物理对齐，降低 CPU/GPU 负载
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 30;
+        Time.fixedDeltaTime = 1f / 30f;
+
         PlayerProfileService.Instance.LoadOrCreate();
 
         if (!string.IsNullOrWhiteSpace(loadSceneOnStart))

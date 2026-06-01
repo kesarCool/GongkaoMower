@@ -24,6 +24,9 @@ public class CardDeck : ScriptableObject
     [Tooltip("突破卡模板（红色）- 预留后期使用")]
     public RoguelikeCardTemplate breakthroughTemplate;
 
+    [Tooltip("被动技能卡模板（蓝色）")]
+    public RoguelikeCardTemplate passiveTemplate;
+
     [Header("抽卡配置")]
     [Tooltip("每次抽几张卡供玩家选择")]
     public int drawCount = 3;
@@ -50,15 +53,6 @@ public class CardDeck : ScriptableObject
     /// <summary>
     /// 根据当前状态抽卡
     /// </summary>
-    // AutoProjectile 家族：基础版 + 三个变体
-    private static readonly HashSet<SkillId> AutoProjectileFamily = new HashSet<SkillId>
-    {
-        SkillId.AutoProjectile,
-        SkillId.AutoProjectilePistol,
-        SkillId.AutoProjectileSword,
-        SkillId.AutoProjectileTalisman,
-    };
-
     /// <param name="currentLevel">当前关卡进度</param>
     /// <param name="playerSkills">玩家技能管理器</param>
     /// <param name="excludeSkills">本次抽卡要排除的技能（刷新用）</param>
@@ -68,8 +62,8 @@ public class CardDeck : ScriptableObject
         var candidates = new List<DrawResult>();
         excludeSkills ??= new List<SkillId>();
 
-        // 确定此局允许的 AutoProjectile 变体
-        SkillId allowedAp = ResolveAllowedAutoProjectile(playerSkills);
+        // 确定此局允许的家族变体（基于已装备技能）
+        var equippedFamilies = ResolveEquippedFamilies(playerSkills);
 
         foreach (var def in skillCatalog.All())
         {
@@ -83,19 +77,30 @@ public class CardDeck : ScriptableObject
             // 2. 检查排除列表（刷新用）
             if (excludeSkills.Contains(id)) continue;
 
-            // 3. AutoProjectile 家族过滤：每局只允许一个变体
-            if (AutoProjectileFamily.Contains(id) && id != allowedAp) continue;
+            // 3. 家族互斥：家族已被某技能占用时，只允许该技能；变体未开放时，基础版放行
+            SkillId family = def.SkillFamily;
+            if (family != id || equippedFamilies.ContainsKey(family))
+            {
+                if (!equippedFamilies.TryGetValue(family, out SkillId allowedId) || id != allowedId)
+                    continue;
+            }
+
+            bool isPassive = id.IsPassive();
 
             // 4. 判断是否已拥有
-            bool hasSkill = playerSkills.HasSkill(id);
-            int currentLv = hasSkill ? playerSkills.GetSkillLevel(id) : 0;
-            int maxLv = Mathf.Max(1, def.maxLevel);
+            bool hasSkill = isPassive ? playerSkills.HasPassiveSkill(id)
+                                      : playerSkills.HasSkill(id);
+            int currentLv = isPassive ? playerSkills.GetPassiveSkillLevel(id)
+                                      : playerSkills.GetSkillLevel(id);
+            int maxLv = playerSkills.GetEffectiveMaxLevel(id, def);
 
             // 已满级不再入选卡池
             if (hasSkill && currentLv >= maxLv) continue;
 
-            // 5. 判断是否还有空槽位
-            if (!hasSkill && !playerSkills.HasEmptySlot && !allowNewSkillWhenFull)
+            // 5. 判断是否还有空槽位（主动/被动各自判断）
+            bool hasEmptySlot = isPassive ? playerSkills.HasPassiveEmptySlot
+                                          : playerSkills.HasEmptySlot;
+            if (!hasSkill && !hasEmptySlot && !allowNewSkillWhenFull)
                 continue;
 
             // 6. 确定模板类型
@@ -103,13 +108,18 @@ public class CardDeck : ScriptableObject
             float weight = progression.GetWeight(id);
             int targetLv = currentLv + 1;
 
-            if (!hasSkill)
+            if (isPassive)
+            {
+                template = passiveTemplate;
+            }
+            else if (!hasSkill)
             {
                 template = newSkillTemplate;
             }
-            else if (targetLv >= maxLv)
+            else if (targetLv >= def.maxLevel)
             {
-                template = breakthroughTemplate; // 等级4→5，满级突破卡
+                // 突破模板仅在达到绝对满级时使用（羁绊被动未装备时不会触发）
+                template = breakthroughTemplate;
             }
             else
             {
@@ -136,24 +146,27 @@ public class CardDeck : ScriptableObject
     }
 
     /// <summary>
-    /// 根据角色已装备的主技能确定卡池允许的 AutoProjectile 变体。
-    /// - 角色主技能是变体(7/8/9) → 只出该变体，不出其他 AP
-    /// - 角色主技能非 AP 系列 → 只出基础 AutoProjectile(1)，不出变体
+    /// 从已装备技能中提取家族信息。返回值：SkillFamily → 该家族已装备的具体 SkillId。
+    /// 家族 id == SkillId 时表示独立技能无家族，不写入结果。
     /// </summary>
-    private static SkillId ResolveAllowedAutoProjectile(PlayerSkills playerSkills)
+    private Dictionary<SkillId, SkillId> ResolveEquippedFamilies(PlayerSkills playerSkills)
     {
-        if (playerSkills == null) return SkillId.AutoProjectile;
+        var result = new Dictionary<SkillId, SkillId>();
+        if (playerSkills == null || skillCatalog == null) return result;
 
         var ids = new List<SkillId>(4);
         playerSkills.GetEquippedSkillIdsOrdered(ids);
 
         foreach (var id in ids)
         {
-            if (AutoProjectileFamily.Contains(id))
-                return id; // 角色已装备某个 AP 变体，卡池只出该变体
+            var def = skillCatalog.Get(id);
+            if (def == null) continue;
+            SkillId family = def.SkillFamily;
+            if (family != id) // 有家族归属（非默认独立技能）
+                result[family] = id;
         }
 
-        return SkillId.AutoProjectile; // 无 AP 技能，允许基础版
+        return result;
     }
 
     /// <summary>

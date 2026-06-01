@@ -1,13 +1,17 @@
+using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 世界空间玩家血条：用 localScale.x 显示血量比例，无论如何 pivot 都从左侧缩。
+/// 世界空间玩家血条：用 localScale.x 显示血量比例，无论 pivot 都从左侧缩。
+/// 同时更新血量数值（100/100）。
 /// </summary>
 [DisallowMultipleComponent]
 public class PlayerWorldHpBar : MonoBehaviour
 {
     [SerializeField] private Transform fillTransform;
     [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private TextMeshPro hpText;
+    [SerializeField] private int hpTextSortingOrder = 12;
 
     private Vector3 _fullScale;
     private float _fullWidth;
@@ -19,6 +23,8 @@ public class PlayerWorldHpBar : MonoBehaviour
             playerHealth = GetComponent<PlayerHealth>();
 
         ResolveFillTransform();
+        if (hpText != null)
+            hpText.sortingOrder = hpTextSortingOrder;
         if (fillTransform != null)
         {
             _fullScale = fillTransform.localScale;
@@ -109,6 +115,9 @@ public class PlayerWorldHpBar : MonoBehaviour
 
         float ratio = Mathf.Clamp01(playerHealth.Hp / Mathf.Max(0.0001f, playerHealth.MaxHp));
         ApplyRatio(ratio);
+
+        if (hpText != null)
+            hpText.text = $"{Mathf.RoundToInt(playerHealth.Hp)}/{Mathf.RoundToInt(playerHealth.MaxHp)}";
     }
 
     private void ApplyRatio(float ratio)

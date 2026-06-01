@@ -36,15 +36,35 @@ public class CardPoolProgression : ScriptableObject
         }
     }
 
+    private const string GlobalUnlockKeyPrefix = "global_skill_unlock_";
+
     /// <summary>
-    /// 检查技能是否已解锁
+    /// 检查技能是否已解锁（全局永久：一旦在某关解锁，回退到低关卡仍可用）。
     /// </summary>
     public bool IsUnlocked(SkillId skill, int currentLevel)
     {
         Initialize();
         if (!_map.TryGetValue(skill, out var cond))
             return true; // 未配置默认解锁
-        return currentLevel >= cond.unlockAtLevel;
+
+        int skillInt = (int)skill;
+        string persistentKey = GlobalUnlockKeyPrefix + skillInt;
+
+        // 当前关卡达线 → 记录为永久解锁
+        if (currentLevel >= cond.unlockAtLevel)
+        {
+            int prev = PlayerPrefs.GetInt(persistentKey, 0);
+            if (currentLevel > prev)
+            {
+                PlayerPrefs.SetInt(persistentKey, currentLevel);
+                PlayerPrefs.Save();
+            }
+            return true;
+        }
+
+        // 历史解锁：检查是否在高关卡号解锁过
+        int maxLv = PlayerPrefs.GetInt(persistentKey, 0);
+        return maxLv >= cond.unlockAtLevel;
     }
 
     /// <summary>

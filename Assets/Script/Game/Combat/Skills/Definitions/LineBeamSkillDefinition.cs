@@ -18,6 +18,12 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
     [Tooltip("已废弃：多射线由 SkillLineBeam2D 做 360° 随机；仅保留字段兼容旧资源")]
     public float spreadDegrees = 180f;
 
+    [Header("满级变体")]
+    [Tooltip("每 N 发普攻触发一次变体（如七色光）。")]
+    public int maxLevelVariantInterval = 5;
+    [Tooltip("变体时的光束数（如 7 条彩虹）。")]
+    public int variantBeamCount = 7;
+
     public float IntervalAt(int level) => intervalByLevel[Mathf.Clamp(level, 1, intervalByLevel.Length) - 1];
     public float DamageAt(int level) => damageByLevel[Mathf.Clamp(level, 1, damageByLevel.Length) - 1];
     public int BeamCountAt(int level)
@@ -55,5 +61,8 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
         s.damage = Mathf.Max(0.01f, DamageAt(level));
         s.beamCount = Mathf.Max(1, BeamCountAt(level));
         s.singleTargetSpreadDeg = Mathf.Max(0f, singleTargetSpreadDeg);
+        s.maxLevelVariantInterval = maxLevelVariantInterval;
+        s.variantBeamCount = variantBeamCount;
+        s.skillMaxLevel = maxLevel;
     }
 }

@@ -207,4 +207,22 @@ public static class CombatTargetRegistry
             list[index] = list[last];
         list.RemoveAt(last);
     }
+
+    /// <summary>收集范围内所有活跃目标的 Transform（调用方负责清空列表）。</summary>
+    public static void CollectTargets(string tag, Vector3 from, float maxRange, List<Transform> into)
+    {
+        into.Clear();
+        if (string.IsNullOrEmpty(tag)) return;
+        if (!Buckets.TryGetValue(tag, out TagBucket bucket)) return;
+
+        float maxSq = maxRange * maxRange;
+        var list = bucket.Active;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            Transform tr = list[i];
+            if (tr == null || !tr.gameObject.activeSelf) continue;
+            if (((Vector2)(tr.position - from)).sqrMagnitude <= maxSq)
+                into.Add(tr);
+        }
+    }
 }

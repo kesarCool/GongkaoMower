@@ -12,7 +12,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
     [SerializeField] private float spinSpeedDeg = 540f;
     [SerializeField] private GameObject defaultExplosionFxPrefab;
 
-    private GameObject _explosionFxPrefab;
+    protected GameObject _explosionFxPrefab;
     private Vector2 _start;
     private Vector2 _end;
     private float _arcHeight;
@@ -20,10 +20,10 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
     private float _elapsed;
     private float _damage;
     private float _aoeRadius;
-    private SkillId _skillId;
-    private string _enemyTag;
-    private bool _exploded;
-    private bool _isCrit;
+    protected SkillId _skillId;
+    protected string _enemyTag;
+    protected bool _exploded;
+    protected bool _isCrit;
 
     public void Launch(
         Vector2 start,
@@ -53,7 +53,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         transform.position = _start;
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         if (_exploded) return;
 
@@ -73,7 +73,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
             transform.Rotate(0f, 0f, spinSpeedDeg * Time.deltaTime, Space.Self);
     }
 
-    private void Explode()
+    protected virtual void Explode()
     {
         if (_exploded) return;
         _exploded = true;
@@ -96,7 +96,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         }
     }
 
-    private void ApplyAoeDamage(Vector2 center)
+    protected virtual void ApplyAoeDamage(Vector2 center)
     {
         if (string.IsNullOrEmpty(_enemyTag))
             return;
@@ -135,7 +135,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         _elapsed = 0f;
     }
 
-    public void OnPoolRelease()
+    public virtual void OnPoolRelease()
     {
         _exploded = true;
         SpawnLimiter.Instance?.Unregister(SpawnLimiterKey, gameObject);

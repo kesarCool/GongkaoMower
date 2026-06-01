@@ -44,10 +44,29 @@ public class PlayerHealth : MonoBehaviour
         maxHp = value;
     }
 
+    /// <summary>
+    /// 保持当前血量比值不变的前提下修改 maxHp（被动技能加成/移除时使用）。
+    /// </summary>
+    public void SetMaxHpKeepRatio(float value)
+    {
+        float ratio = maxHp > 0f ? hp / maxHp : 1f;
+        maxHp = value;
+        hp = Mathf.Max(1f, value * ratio);
+        NotifyHealthChanged();
+    }
+
     /// <summary>由 CharacterConfigApplier 写入角色属性。</summary>
     public void SetDefense(float value)
     {
         defense = value;
+    }
+
+    /// <summary>回复血量（不超过上限）。</summary>
+    public void Heal(float amount)
+    {
+        if (_dead || amount <= 0f) return;
+        hp = Mathf.Min(maxHp, hp + amount);
+        NotifyHealthChanged();
     }
 
     /// <summary>外部控制无敌（如 Boss 击杀后延迟结算期间防止玩家意外死亡）。</summary>

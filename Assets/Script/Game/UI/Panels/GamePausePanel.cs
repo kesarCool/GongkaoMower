@@ -11,7 +11,9 @@ public class GamePausePanel : UIPanelBase
     [Header("技能列表")]
     public Transform skillListParent;
     public GameObject skillRowPrefab;
-
+    [Header("被动技能列表")]
+    public Transform passiveSkillListParent;
+    public GameObject passiveSkillRowPrefab;
     [Header("按钮")]
     public Button resumeButton;
     public Button quitButton;
@@ -25,6 +27,7 @@ public class GamePausePanel : UIPanelBase
     {
         _playerSkills = playerSkills != null ? playerSkills : FindObjectOfType<PlayerSkills>();
         BuildSkillList();
+        BuildPassiveSkillList();
 
         if (resumeButton != null)
             resumeButton.onClick.AddListener(OnResume);
@@ -67,6 +70,38 @@ public class GamePausePanel : UIPanelBase
                 string name = def != null ? $"Lv.{level} {def.displayName}" : id.ToString();
                 Sprite icon = def != null ? def.icon : null;
                 cell.Bind(icon, name, dmg);
+            }
+        }
+    }
+
+    private void BuildPassiveSkillList()
+    {
+        if (passiveSkillListParent == null || passiveSkillRowPrefab == null) return;
+
+        for (int i = passiveSkillListParent.childCount - 1; i >= 0; i--)
+            Destroy(passiveSkillListParent.GetChild(i).gameObject);
+
+        if (_playerSkills == null) return;
+
+        var ids = new List<SkillId>();
+        _playerSkills.GetEquippedPassiveIdsOrdered(ids);
+
+        SkillCatalog catalog = _playerSkills.skillCatalog;
+        if (catalog == null) catalog = Resources.Load<SkillCatalog>("SkillCatalog");
+
+        foreach (SkillId id in ids)
+        {
+            var def = catalog != null ? catalog.Get(id) : null;
+            int level = _playerSkills.GetPassiveSkillLevel(id);
+
+            GameObject row = Instantiate(passiveSkillRowPrefab, passiveSkillListParent, false);
+
+            var cell = row.GetComponent<GamePassiveSkillCell>();
+            if (cell != null)
+            {
+                string name = def != null ? def.displayName : id.ToString();
+                Sprite icon = def != null ? def.icon : null;
+                cell.Bind(icon, name, level);
             }
         }
     }

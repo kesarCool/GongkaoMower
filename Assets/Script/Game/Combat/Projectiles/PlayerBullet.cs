@@ -44,20 +44,26 @@ public abstract class PlayerBullet : MonoBehaviour
     /// </summary>
     public bool IsCrit { get; private set; }
 
-    public virtual void Launch(Vector2 direction, float overrideSpeed, float overrideDamage,
-        float overrideLifetime, SkillId source, int pierceCount = 0, bool isCrit = false, float pierceRate = 0f)
+    public virtual void Launch(Vector2 direction, in BulletLaunchParams p)
     {
         _dir = direction.normalized;
-        if (overrideSpeed > 0f) speed = overrideSpeed;
-        if (overrideDamage > 0f) damage = overrideDamage;
-        if (overrideLifetime > 0f) lifetime = overrideLifetime;
-        skillSource = source;
-        _pierceRemaining = pierceCount;
-        _pierceRate = pierceRate;
-        IsCrit = isCrit;
+        if (p.Speed > 0f) speed = p.Speed;
+        if (p.Damage > 0f) damage = p.Damage;
+        if (p.Lifetime > 0f) lifetime = p.Lifetime;
+        skillSource = p.Source;
+        _pierceRemaining = p.PierceCount;
+        _pierceRate = p.PierceRate;
+        IsCrit = p.IsCrit;
 
         float rot = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         _rb.MoveRotation(rot);
+    }
+
+    // 兼容旧调用
+    public void Launch(Vector2 direction, float speed, float damage, float lifetime,
+        SkillId source, int pierceCount = 0, bool isCrit = false, float pierceRate = 0f)
+    {
+        Launch(direction, new BulletLaunchParams(speed, damage, lifetime, source, pierceCount, isCrit, pierceRate));
     }
 
     protected virtual void FixedUpdate()
@@ -104,7 +110,7 @@ public abstract class PlayerBullet : MonoBehaviour
     /// <summary>撞到怪时调用（子类可重写做穿透/反弹）。</summary>
     protected virtual void OnHitEnemy(Collider2D other)
     {
-        if (_pierceRemaining > 0 && (_pierceRate <= 0f || Random.value < _pierceRate))
+        if (_pierceRemaining > 0 && _pierceRate > 0f && Random.value < _pierceRate)
         {
             _pierceRemaining--;
             return; // 不回收，子弹继续飞行
@@ -118,7 +124,7 @@ public abstract class PlayerBullet : MonoBehaviour
         Release();
     }
 
-    protected void Release()
+    protected virtual void Release()
     {
         _fired = false;
         SpawnLimiter.Instance?.Unregister("Bullet", gameObject);

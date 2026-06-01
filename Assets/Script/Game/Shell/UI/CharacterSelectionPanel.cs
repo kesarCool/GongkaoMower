@@ -215,7 +215,11 @@ public class CharacterSelectionPanel : UIPanelBase
         if (detailHpText != null)
         {
             string hp = $"血量：{attr.maxHp:F0}";
-            if (attr.defense > 0f) hp += $"  防御：{attr.defense:F0}";
+            if (attr.defense > 0f)
+            {
+                float reduction = (1f - 100f / (100f + attr.defense)) * 100f;
+                hp += $"  防御：{attr.defense:F0}（减伤{reduction:F0}%）";
+            }
             detailHpText.text = hp;
         }
 

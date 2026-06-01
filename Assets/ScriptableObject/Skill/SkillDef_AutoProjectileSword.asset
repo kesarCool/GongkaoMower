@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 8
   maxLevel: 5
+  bondedPassiveId: 104
   displayName: "\u4E07\u5203\u9F50\u53D1"
   description: "\u4E07\u5203\u9F50\u98DE\uFF0C\u5F39\u5E55\u538B\u5236\uFF0C\u4EE5\u91CF\u53D6\u80DC\u3002"
   icon: {fileID: 21300000, guid: cb135778532c36b42b3a81c7c0fd18cb, type: 3}
@@ -39,4 +40,12 @@ MonoBehaviour:
   - 1.26
   - 1.35
   projectileCountByLevel: 0200000002000000030000000400000005000000
-  spreadDegrees: 15
+  spreadDegrees: 10
+  burstBulletPrefab: {fileID: 685301462951185581, guid: c635aa21375f5714889d3315163f1a67, type: 3}
+  burstCooldown: 8
+  burstCount: 16
+  burstOrbitDuration: 1
+  burstOrbitRadius: 1.2
+  burstLaunchSpeed: 0
+  burstTargetSingleEnemy: 0
+  burstTargetSingleRange: 10

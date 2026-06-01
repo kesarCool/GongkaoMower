@@ -8,8 +8,21 @@ public abstract class SkillDefinitionBase : ScriptableObject
 {
     public SkillId id;
 
+    /// <summary>
+    /// 技能家族 ID。同家族的技能在卡池中互斥（如 AutoProjectile 各变体）。
+    /// 默认返回自身 id，表示独立技能无家族。
+    /// </summary>
+    public virtual SkillId SkillFamily => id;
+
     [Min(1)]
     public int maxLevel = 5;
+
+    [Tooltip("羁绊被动技能 ID。拥有该被动后，本技能才能升到 maxLevel。留空 = 无羁绊限制。")]
+    public SkillId bondedPassiveId = SkillId.None;
+
+    [Header("满级变体")]
+    [Tooltip("满级后替换的预制体（弹丸/手雷/导弹），留空=保持原样。")]
+    public GameObject maxLevelPrefab;
 
     [Header("UI")]
     public string displayName;

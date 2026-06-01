@@ -75,6 +75,9 @@ public static class ExtractLexiconCharset
         // 单位
         AddChars(charset, "㎜㎝㎞㎡㏄㏎㏑㏒㏕");  // ㎜㎝㎞㎡㏄㏎㏑㏒㏕
 
+        // ── UI 伤害飘字用字（静态方法中的字符串常量，正则可能漏）──
+        AddChars(charset, "暴击");
+
         // ── 输出 ──
         string outputPath = Path.Combine(Application.dataPath, "..", "charset.txt");
         var sb = new StringBuilder();

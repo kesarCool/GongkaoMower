@@ -14,7 +14,7 @@ using UnityEngine;
 public static class EventBus
 {
     /// <summary>是否打印发布/订阅日志（建议开发期开启，发布时可关）</summary>
-    public static bool DebugLogs = true;
+    public static bool DebugLogs = false;
 
     private interface IHandlerList
     {

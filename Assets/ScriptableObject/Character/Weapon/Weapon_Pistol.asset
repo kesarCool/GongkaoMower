@@ -15,7 +15,7 @@ MonoBehaviour:
   weaponId: weapon_pistol
   displayName: "\u624B\u67AA"
   sprite: {fileID: 0}
-  localPosition: {x: 0.35, y: 0, z: 0}
+  localPosition: {x: 0.3, y: 0, z: 0}
   localRotation: {x: 0, y: 0, z: 0}
   localScale: {x: 1, y: 1, z: 1}
   sortingOrderOffset: 1

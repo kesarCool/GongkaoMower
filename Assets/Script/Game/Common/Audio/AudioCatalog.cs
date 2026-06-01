@@ -63,6 +63,7 @@ public sealed class AudioCatalog : ScriptableObject
         public Entry throwGrenade = new Entry { id = AudioId.SkillThrowGrenade, group = AudioLoadGroup.Battle };
         public Entry fieldGenerator = new Entry { id = AudioId.SkillFieldGenerator, group = AudioLoadGroup.Battle };
         public Entry lightningStrike = new Entry { id = AudioId.SkillLightningStrike, group = AudioLoadGroup.Battle };
+        public Entry autoProjectileTalisman = new Entry { id = AudioId.SkillAutoProjectileTalisman, group = AudioLoadGroup.Battle };
     }
 
     public CommonSection Common => common;
@@ -80,6 +81,9 @@ public sealed class AudioCatalog : ScriptableObject
             case SkillId.ThrowGrenade:    return AudioId.SkillThrowGrenade;
             case SkillId.FieldGenerator:  return AudioId.SkillFieldGenerator;
             case SkillId.LightningStrike: return AudioId.SkillLightningStrike;
+            case SkillId.AutoProjectilePistol: return AudioId.SkillAutoProjectile;
+            case SkillId.AutoProjectileSword: return AudioId.SkillAutoProjectile;
+            case SkillId.AutoProjectileTalisman: return AudioId.SkillAutoProjectileTalisman;
             default:                      return AudioId.None;
         }
     }
@@ -134,6 +138,7 @@ public sealed class AudioCatalog : ScriptableObject
             if (playerSkill.throwGrenade != null) { playerSkill.throwGrenade.id = AudioId.SkillThrowGrenade; playerSkill.throwGrenade.group = AudioLoadGroup.Battle; }
             if (playerSkill.fieldGenerator != null) { playerSkill.fieldGenerator.id = AudioId.SkillFieldGenerator; playerSkill.fieldGenerator.group = AudioLoadGroup.Battle; }
             if (playerSkill.lightningStrike != null) { playerSkill.lightningStrike.id = AudioId.SkillLightningStrike; playerSkill.lightningStrike.group = AudioLoadGroup.Battle; }
+            if (playerSkill.autoProjectileTalisman != null) { playerSkill.autoProjectileTalisman.id = AudioId.SkillAutoProjectileTalisman; playerSkill.autoProjectileTalisman.group = AudioLoadGroup.Battle; }
         }
     }
 

@@ -14,15 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 9
   maxLevel: 5
+  bondedPassiveId: 105
   displayName: "\u5929\u5E08\u7B26\u4EE4"
   description: "\u5929\u5E08\u6555\u4EE4\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
-  icon: {fileID: 21300000, guid: 0af94e125d23a4f4387e8b520f04096c, type: 3}
+  icon: {fileID: 21300000, guid: bde8bb0daba412745a4f2c60b316c6c4, type: 3}
   levelDescriptions:
   - "\u9053\u6CD5\u7B26\u7B93\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
   - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%"
   - "\u4F24\u5BB3+15%"
-  - "\u5B50\u5F39+1\uFF0C\u4F24\u5BB3+10%"
-  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%"
+  - "\u7B26\u7B93+1\uFF0C\u4F24\u5BB3+10%"
+  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%,\u73AF\u7ED5\u5468\u8EAB\u751F\u6210\u516B\u5F20\u7B26\u7B93\uFF1B"
   targetSkillId: 9
   bulletPrefab: {fileID: 1613592626320682331, guid: a467d8ccecf1c9e43a734c2104178aee, type: 3}
   bulletSpeed: 8
@@ -40,3 +41,11 @@ MonoBehaviour:
   - 1.58
   projectileCountByLevel: 0100000001000000010000000200000002000000
   spreadDegrees: 5
+  burstBulletPrefab: {fileID: 685301462951185581, guid: b7c6956794f785d4d9491a56b96d51bc, type: 3}
+  burstCooldown: 10
+  burstCount: 8
+  burstOrbitDuration: 1.5
+  burstOrbitRadius: 1.5
+  burstLaunchSpeed: 0
+  burstTargetSingleEnemy: 1
+  burstTargetSingleRange: 10

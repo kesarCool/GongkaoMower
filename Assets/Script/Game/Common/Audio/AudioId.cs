@@ -16,4 +16,6 @@ public enum AudioId
     SkillThrowGrenade = 104,
     SkillFieldGenerator = 105,
     SkillLightningStrike = 106,
+
+    SkillAutoProjectileTalisman = 108,
 }

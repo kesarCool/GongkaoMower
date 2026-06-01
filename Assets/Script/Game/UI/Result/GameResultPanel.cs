@@ -208,7 +208,10 @@ public class GameResultPanel : UIPanelBase
             if (cell == null) cell = row.AddComponent<GameResultSkillDamageCell>();
 
             SkillDefinitionBase def = ps.skillCatalog != null ? ps.skillCatalog.Get(id) : null;
-            string nm = def != null && !string.IsNullOrEmpty(def.displayName) ? def.displayName : id.ToString();
+            int lv = ps.GetSkillLevel(id);
+            string nm = def != null && !string.IsNullOrEmpty(def.displayName)
+                ? $"Lv.{lv} {def.displayName}"
+                : id.ToString();
             Sprite ic = def != null ? def.icon : null;
             float dmg = BattleRunMetrics.GetSkillDamage(id);
             cell.Bind(ic, nm, dmg);

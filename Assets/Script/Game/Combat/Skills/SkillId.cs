@@ -22,4 +22,29 @@ public enum SkillId
     AutoProjectileSword = 8,
     /// <summary>自动索敌（符箓版）—— 茅山道士</summary>
     AutoProjectileTalisman = 9,
+    /// <summary>追踪导弹，命中后 AOE 爆炸 —— 机甲小宝专属</summary>
+    HomingMissile = 10,
+    /// <summary>追踪弹（弱化版）—— 全角色通用</summary>
+    HomingMissileBasic = 11,
+    /// <summary>弹射雷，命中后弹跳再爆 —— 熊猫侠专属</summary>
+    BouncingGrenade = 12,
+
+    // ── 被动技能（101+，预留 13~100 给主动技能扩展）──
+    /// <summary>血量上限 +X%</summary>
+    PassiveMaxHp = 101,
+    /// <summary>攻击 +X%</summary>
+    PassiveAttack = 102,
+    /// <summary>移速 +X%</summary>
+    PassiveMoveSpeed = 103,
+    /// <summary>防御 +X%</summary>
+    PassiveDefense = 104,
+    /// <summary>暴击率 +X%</summary>
+    PassiveCritRate = 105,
+    /// <summary>每秒恢复 X% 最大血量</summary>
+    PassiveRegen = 106,
+}
+
+public static class SkillIdExtensions
+{
+    public static bool IsPassive(this SkillId id) => (int)id >= 100;
 }

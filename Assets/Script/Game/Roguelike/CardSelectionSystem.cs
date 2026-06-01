@@ -238,17 +238,22 @@ public class CardSelectionSystem : MonoBehaviour
     /// </summary>
     private void ApplyCard(CardDeck.DrawResult card)
     {
+        bool isPassive = card.skillId.IsPassive();
         if (card.currentLevel == 0)
         {
             // 新技能
-            bool added = _playerSkills.TryAddSkill(card.skillId);
-            Debug.Log($"[CardSelectionSystem] New skill {card.skillId}, added={added}");
+            bool added = isPassive
+                ? _playerSkills.TryAddPassive(card.skillId)
+                : _playerSkills.TryAddSkill(card.skillId);
+            Debug.Log($"[CardSelectionSystem] New {(isPassive ? "passive" : "skill")} {card.skillId}, added={added}");
         }
         else
         {
             // 升级
-            bool leveled = _playerSkills.TryLevelUp(card.skillId);
-            Debug.Log($"[CardSelectionSystem] Upgrade {card.skillId} to Lv.{card.targetLevel}, success={leveled}");
+            bool leveled = isPassive
+                ? _playerSkills.TryLevelUpPassive(card.skillId)
+                : _playerSkills.TryLevelUp(card.skillId);
+            Debug.Log($"[CardSelectionSystem] Upgrade {(isPassive ? "passive" : "skill")} {card.skillId} to Lv.{card.targetLevel}, success={leveled}");
         }
     }
 

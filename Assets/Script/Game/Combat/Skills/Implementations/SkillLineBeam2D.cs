@@ -25,6 +25,9 @@ public class SkillLineBeam2D : SkillBase
     public float interval = 0.8f;
     public LayerMask hitMask;
     public int beamCount = 1;
+    public int maxLevelVariantInterval = 5;
+    public int variantBeamCount = 7;
+    public int skillMaxLevel = 5;
 
     [Header("可视化（可选）")]
     public LineRenderer[] beamLines;
@@ -32,6 +35,7 @@ public class SkillLineBeam2D : SkillBase
 
     private float _timer;
     private float _visualUntil;
+    private int _shotCounter;
 
     public SkillLineBeam2D(float beamLength, float damage, float interval, LayerMask hitMask)
     {
@@ -74,7 +78,10 @@ public class SkillLineBeam2D : SkillBase
 
         _timer = 0f;
 
-        int count = Mathf.Max(1, beamCount);
+        _shotCounter++;
+        bool useVariant = Level >= skillMaxLevel && maxLevelVariantInterval > 0
+            && _shotCounter % maxLevelVariantInterval == 0;
+        int count = Mathf.Max(1, useVariant ? variantBeamCount : beamCount);
         GameObject nearest = FindNearestEnemy(origin, _ctx.enemyTag, senseRange);
         Vector2 aimDir = Vector2.right;
         if (nearest != null)
@@ -86,6 +93,9 @@ public class SkillLineBeam2D : SkillBase
 
         // 感知范围内仅 1 只：全部集中；否则第 0 条瞄最近，其余 360° 随机
         bool allAimAtMonster = livingEnemies == 1 && nearest != null;
+
+        // 一次释放的暴击判定共享
+        float finalDamage = GetFinalDamage(damage, out bool isCrit);
 
         bool prev = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
@@ -105,7 +115,7 @@ public class SkillLineBeam2D : SkillBase
                 if (eb == null) eb = col.GetComponentInParent<EnemyBase>();
                 if (eb == null) continue;
 
-                eb.TakeDamage(GetFinalDamage(damage, out bool isCrit), SkillId.LineBeam, isCrit);
+                eb.TakeDamage(finalDamage, SkillId.LineBeam, isCrit);
             }
         }
 

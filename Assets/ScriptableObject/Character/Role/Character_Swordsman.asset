@@ -15,13 +15,13 @@ MonoBehaviour:
   characterId: character_02
   displayName: "\u4E0A\u5CB8\u4FA0"
   portrait: {fileID: 21300000, guid: af5c8b5acd2f83d4d95d22018949a59f, type: 3}
-  startingSkill: 1
+  startingSkill: 8
   attributes:
-    attack: 35
-    attackSpeedMul: 0.9
+    attack: 28
+    attackSpeedMul: 0.95
     maxHp: 80
     defense: 10
-    moveSpeed: 8
+    moveSpeed: 6
     critRate: 0.2
     critDamageMul: 2
     pierceRate: 0.3

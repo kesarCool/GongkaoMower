@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bf36feed4d202f4393c55a7965b8822, type: 3}
+  m_Name: SkillDef_HomingMissileBasic
+  m_EditorClassIdentifier: 
+  id: 11
+  maxLevel: 5
+  bondedPassiveId: 104
+  maxLevelPrefab: {fileID: 1528860746325311857, guid: baebfb2361f942540a291c396ff4482c, type: 3}
+  displayName: "\u8FFD\u8E2A\u5F39"
+  description: "\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\u53D1\u5C04\u8FFD\u8E2A\u5BFC\u5F39\uFF0C\u547D\u4E2D\u540EAOE\u7206\u70B8\u3002"
+  icon: {fileID: 21300000, guid: 0a9a31511f7299e4c8b65dcdc7ce8c03, type: 3}
+  levelDescriptions: []
+  targetSkillId: 11
+  missilePrefab: {fileID: 1528860746325311857, guid: 2e16a1fd86b18564b853d9416b79bb90, type: 3}
+  missileSpeed: 6
+  turnRate: 90
+  missileLifetime: 4
+  explosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}
+  maxRange: 8
+  salvoInterval: 0.3
+  cooldownByLevel:
+  - 3
+  - 2.7
+  - 2.4
+  - 2.1
+  - 2
+  damageByLevel:
+  - 1
+  - 1.12
+  - 1.25
+  - 1.4
+  - 1.5
+  salvoByLevel: 0100000001000000020000000200000002000000
+  maxTargetsByLevel: 0100000001000000010000000100000001000000
+  aoeRadiusByLevel:
+  - 0.8
+  - 0.85
+  - 0.9
+  - 0.95
+  - 1

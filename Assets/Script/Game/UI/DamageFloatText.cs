@@ -9,7 +9,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class DamageFloatText : MonoBehaviour, IPoolReceiver
 {
-    [SerializeField] private TextMeshPro label;
+    [SerializeField] private TMP_Text label;
 
     [Tooltip("总存活时间（秒）")]
     [SerializeField] private float lifetime = 0.65f;
@@ -44,7 +44,11 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
         if (label == null)
             label = GetComponentInChildren<TextMeshPro>(true);
         if (label != null)
-            label.sortingOrder = sortingOrder;
+        {
+            var rend = label.GetComponent<Renderer>();
+            if (rend != null)
+                rend.sortingOrder = sortingOrder;
+        }
     }
 
     public void OnPoolGet()
@@ -58,6 +62,10 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             _cam = Camera.main.transform;
         else
             _cam = null;
+
+        // 池化复用时重新应用中文 SDF 字体（LiberationSans 无中文）
+        if (label != null)
+            BattleChineseFontRuntime.ApplyToTMP(label);
     }
 
     public void OnPoolRelease()
@@ -124,7 +132,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
 
     private static string FormatCritDamage(float damage)
     {
-        return FormatDamage(damage) + " 暴击!";
+        return  FormatDamage(damage) + "暴击!";
     }
 
     private IEnumerator FloatRoutine()

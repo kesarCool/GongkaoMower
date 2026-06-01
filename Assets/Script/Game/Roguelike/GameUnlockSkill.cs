@@ -17,6 +17,7 @@ public class GameUnlockSkill : MonoBehaviour
     public SkillCatalog skillCatalog;
 
     private const string PrefPrefix = "unlock_skill_seen_";
+    private const string GlobalUnlockKeyPrefix = "global_skill_unlock_";
     private const string TutorialSeenKey = "tutorial_seen";
 
     private IEnumerator Start()
@@ -56,6 +57,7 @@ public class GameUnlockSkill : MonoBehaviour
                     if (cond == null || cond.unlockAtLevel != currentLevel) continue;
                     string key = PrefPrefix + currentLevel + "_" + (int)cond.skill;
                     PlayerPrefs.SetInt(key, 1);
+                    PlayerPrefs.SetInt(GlobalUnlockKeyPrefix + (int)cond.skill, currentLevel);
                 }
                 PlayerPrefs.Save();
             }
@@ -106,6 +108,7 @@ public class GameUnlockSkill : MonoBehaviour
 
             string key = PrefPrefix + currentLevel + "_" + (int)id;
             PlayerPrefs.SetInt(key, 1);
+            PlayerPrefs.SetInt(GlobalUnlockKeyPrefix + (int)id, currentLevel);
         }
 
         PlayerPrefs.Save();

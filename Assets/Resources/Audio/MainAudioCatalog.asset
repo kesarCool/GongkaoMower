@@ -43,7 +43,7 @@ MonoBehaviour:
       volumeVariation: 0
     enemyDie:
       id: 11
-      relativePath: Audio/Battle/Combat/sfx_enemy_die.ogg
+      relativePath: Audio/Battle/Combat/sfx_enemy_die.mp3
       group: 1
       volume: 0.12
       minInterval: 0
@@ -98,7 +98,7 @@ MonoBehaviour:
       volumeVariation: 0
     fieldGenerator:
       id: 105
-      relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.ogg
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.mp3
       group: 1
       volume: 1
       minInterval: 0
@@ -114,3 +114,12 @@ MonoBehaviour:
       pitchVariation: 0
       pitchOffset: 0
       volumeVariation: 0
+    autoProjectileTalisman:
+      id: 108
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_talisman.wav
+      group: 1
+      volume: 1
+      minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0.15

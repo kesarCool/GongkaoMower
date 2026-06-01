@@ -16,12 +16,20 @@ public class SkillThrowGrenade : SkillBase
     public float maxFlightTime = 1.1f;
     public float maxTargetRange = 14f;
     public GameObject explosionFxPrefab;
+    public GameObject maxLevelPrefab;
+    public int skillMaxLevel = 5;
+
+    // 弹射雷参数
+    public int maxBounces = 3;
+    public float bounceSearchRadius = 8f;
+    public float bounceArcHeight = 2f;
+    public float bounceFlightTime;
 
     private float _timer;
 
-    public SkillThrowGrenade(GameObject grenadePrefab, float cooldown)
+    public SkillThrowGrenade(GameObject grenadePrefab, float cooldown, SkillId skillId = SkillId.ThrowGrenade)
     {
-        Id = SkillId.ThrowGrenade;
+        Id = skillId;
         this.grenadePrefab = grenadePrefab;
         this.cooldown = Mathf.Max(0.2f, cooldown);
     }
@@ -53,7 +61,8 @@ public class SkillThrowGrenade : SkillBase
         float flight = ArcMotor2D.ComputeFlightDuration(
             start, end, baseFlightTime, flightTimePerUnitDistance, minFlightTime, maxFlightTime);
 
-        GameObject go = GameObjectPool.Get(grenadePrefab, start, Quaternion.identity);
+        GameObject goPrefab = (maxLevelPrefab != null && Level >= skillMaxLevel) ? maxLevelPrefab : grenadePrefab;
+        GameObject go = GameObjectPool.Get(goPrefab, start, Quaternion.identity);
         if (go == null)
         {
             Debug.LogWarning("[SkillThrowGrenade] GameObjectPool.Get 返回 null，prefab=" + grenadePrefab.name);
@@ -65,7 +74,19 @@ public class SkillThrowGrenade : SkillBase
             grenade = go.AddComponent<GrenadeProjectile>();
 
         float finalDmg = GetFinalDamage(damage, out bool isCrit);
-        grenade.Launch(start, end, flight, arcHeight, finalDmg, aoeRadius, SkillId.ThrowGrenade, _ctx.enemyTag, explosionFxPrefab, isCrit);
+        grenade.Launch(start, end, flight, arcHeight, finalDmg, aoeRadius, Id, _ctx.enemyTag, explosionFxPrefab, isCrit);
+
+        // 弹射雷：配置弹跳参数
+        var bg = grenade as BouncingGrenade;
+        if (bg != null)
+        {
+            bg.maxBounces = maxBounces;
+            bg.bounceSearchRadius = bounceSearchRadius;
+            bg.bounceArcHeight = bounceArcHeight;
+            bg.bounceFlightTime = bounceFlightTime;
+            bg.SetBounceDamage(finalDmg, aoeRadius, Id);
+        }
+
         SpawnLimiter.Instance?.RegisterSpawned(GrenadeProjectile.SpawnLimiterKey, go);
     }
 }

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfdbf0e48b94ad0468f1e47720f5fe80, type: 3}
+  m_Name: PassiveCritRate
+  m_EditorClassIdentifier: 
+  id: 105
+  maxLevel: 5
+  displayName: "致命一击"
+  description: "暴击率提升，更高几率打出暴击伤害。"
+  icon: {fileID: 21300000, guid: 8cd0168400af460478853e29071431fd, type: 3}
+  levelDescriptions:
+  - "暴击率 +5%"
+  - "暴击率 +7%"
+  - "暴击率 +9%"
+  - "暴击率 +12%"
+  - "暴击率 +15%"
+  modType: 0
+  bonusByLevel:
+  - 0.05
+  - 0.07
+  - 0.09
+  - 0.12
+  - 0.15

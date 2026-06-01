@@ -17,6 +17,7 @@ MonoBehaviour:
   newSkillTemplate: {fileID: 11400000, guid: d288b360f43b97440b4331056c7ff26f, type: 2}
   upgradeTemplate: {fileID: 11400000, guid: 8b7fc5ff650d30a47887913f89482018, type: 2}
   breakthroughTemplate: {fileID: 11400000, guid: 3f31dec9847f16d4ab8218b0bc7a03db, type: 2}
+  passiveTemplate: {fileID: 11400000, guid: ad21774470ed4274da760f7e10ccba2f, type: 2}
   drawCount: 3
   upgradeWeightBonus: 1.5
   allowNewSkillWhenFull: 0

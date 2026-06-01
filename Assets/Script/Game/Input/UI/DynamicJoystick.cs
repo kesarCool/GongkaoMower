@@ -15,9 +15,6 @@ public class DynamicJoystick : MonoBehaviour
     [Tooltip("当未手动指定主角 Rigidbody2D 时，用于查找主角的 Tag。")]
     public string playerTag = "Player";
 
-    [Tooltip("主角移动速度。留空时自动从 PlayerController 读取。")]
-    public float moveSpeedFallback = 5f;
-
     private PlayerController _playerController;
     private float MoveSpeed
     {
@@ -29,7 +26,8 @@ public class DynamicJoystick : MonoBehaviour
                 _playerController = playerRigidbody.GetComponent<PlayerController>();
                 if (_playerController != null) return _playerController.moveSpeed;
             }
-            return moveSpeedFallback;
+            Debug.LogError("[DynamicJoystick] 无法获取 PlayerController，移速回退为 0。请检查 playerRigidbody 是否在同一 Player 对象上。");
+            return 0f;
         }
     }
 

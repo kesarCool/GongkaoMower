@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 5
   maxLevel: 5
+  bondedPassiveId: 101
   displayName: "\u7F61\u6C14\u62A4\u4F53"
   description: "\u4EE5\u7F61\u6C14\u5E03\u9635\uFF0C\u5728\u8EAB\u5468\u751F\u6210\u6301\u7EED\u4F24\u5BB3\u529B\u573A\uFF0C\u8303\u56F4\u5185\u654C\u4EBA\u6301\u7EED\u53D7\u635F\u3002"
   icon: {fileID: 21300000, guid: 71dabe83775c29645bff5152585fa07b, type: 3}

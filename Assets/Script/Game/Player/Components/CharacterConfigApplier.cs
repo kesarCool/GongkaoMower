@@ -58,7 +58,7 @@ public class CharacterConfigApplier : MonoBehaviour
         Debug.Log($"[CharacterConfigApplier] 应用角色: {def.displayName} (id={def.characterId})");
 
         // 1. 属性（通过 attributes 干净写入，不再用反射）
-        var attr = def.attributes.SafeDefaults();
+        var attr = def.attributes.ApplyMinimums();
         Debug.Log($"[CharacterConfigApplier] 属性讀取: raw=({def.attributes.moveSpeed:F1}) safe=({attr.moveSpeed:F1})");
         _playerHealth.SetMaxHp(attr.maxHp);
         _playerHealth.SetDefense(attr.defense);
