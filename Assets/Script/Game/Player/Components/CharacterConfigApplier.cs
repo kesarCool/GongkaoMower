@@ -71,6 +71,7 @@ public class CharacterConfigApplier : MonoBehaviour
         _playerSkills.critDamageMul = attr.critDamageMul;
         _playerSkills.pierceCount = attr.pierceCount;
         _playerSkills.pierceRate = attr.pierceRate;
+        _playerSkills.attackRangeMul = attr.attackRangeMul;
 
         // 2. 技能
         ApplySkills(def);

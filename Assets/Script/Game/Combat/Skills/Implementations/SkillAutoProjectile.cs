@@ -110,6 +110,9 @@ public class SkillAutoProjectile : SkillBase
                     isCrit,
                     ps != null ? ps.pierceRate : 0f);
                 pb.Launch(d, p);
+                // 散射弹需要玩家引用以避开向玩家方向散射
+                if (pb is ScatterBullet sc)
+                    sc.SetPlayerRef(_ctx.player);
             }
             else
             {

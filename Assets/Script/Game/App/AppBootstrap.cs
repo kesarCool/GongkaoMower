@@ -21,9 +21,11 @@ public class AppBootstrap : MonoBehaviour
         DontDestroyOnLoad(root.gameObject);
 
         // 全局性能设置：30fps + 物理对齐，降低 CPU/GPU 负载
-        QualitySettings.vSyncCount = 0;
+        // WebGL 下 vSync=0 会让浏览器无限制刷帧导致 CPU 空转，故设为 1
+        QualitySettings.vSyncCount = 1;
         Application.targetFrameRate = 30;
         Time.fixedDeltaTime = 1f / 30f;
+        Time.maximumDeltaTime = 1f / 15f;
 
         PlayerProfileService.Instance.LoadOrCreate();
 

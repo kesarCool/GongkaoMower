@@ -28,6 +28,13 @@ public class EnemyAI : MonoBehaviour
         FindPlayer();
     }
 
+    private BossBrain _brain;
+
+    private void Awake()
+    {
+        _brain = GetComponent<BossBrain>();
+    }
+
     private void FixedUpdate()
     {
         if (player == null)
@@ -36,9 +43,7 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
-        // Boss 放技能（如冲刺）时暂停追人
-        BossBrain brain = GetComponent<BossBrain>();
-        if (brain != null && brain.IsBusy)
+        if (_brain != null && _brain.IsBusy)
             return;
 
         Vector2 current = rb.position;

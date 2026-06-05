@@ -26,6 +26,9 @@ public struct CharacterAttributes
     public float moveSpeed;
 
     [Header("特殊")]
+    [Tooltip("攻击范围倍率（1.0=不变，1.3=范围+30%）。")]
+    public float attackRangeMul;
+
     [Tooltip("暴击率 (0~1，如 0.15 = 15%)。0 = 不暴击。")]
     [Range(0f, 1f)]
     public float critRate;
@@ -55,6 +58,7 @@ public struct CharacterAttributes
         critDamageMul = 2f,
         pierceRate = 0f,
         pierceCount = 0,
+        attackRangeMul = 1f,
     };
 
     /// <summary>将不可为零的字段补到保底值。defense/暴击/穿透原值保留。</summary>
@@ -66,6 +70,7 @@ public struct CharacterAttributes
         if (maxHp <= 0f) maxHp = m.maxHp;
         if (moveSpeed <= 0f) moveSpeed = m.moveSpeed;
         if (critDamageMul <= 0f) critDamageMul = m.critDamageMul;
+        if (attackRangeMul <= 0f) attackRangeMul = m.attackRangeMul;
         return this;
     }
 }

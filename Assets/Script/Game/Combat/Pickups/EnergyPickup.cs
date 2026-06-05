@@ -232,6 +232,15 @@ public class EnergyPickup : MonoBehaviour, IPoolReceiver
         StartBounce();
     }
 
+    /// <summary>强制开始向玩家回收（自动收集用）。</summary>
+    public void ForceCollectBy(Transform player)
+    {
+        if (player == null) return;
+        _player = player;
+        _state = State.FlyingBack;
+        _velocity = Vector3.zero;
+    }
+
     // ── Collect & Release ────────────────────────────────
 
     private void Collect(Transform player)

@@ -40,6 +40,8 @@ public class PlayerController : MonoBehaviour
             if (body != null)
                 bodyRenderer = body.GetComponent<SpriteRenderer>();
         }
+
+        _joystick = FindObjectOfType<DynamicJoystick>();
     }
 
     private void Update()
@@ -87,9 +89,6 @@ public class PlayerController : MonoBehaviour
 
     private void MoveToTarget()
     {
-        // 摇杆激活时不执行（避免和摇杆抢控）
-        if (_joystick == null)
-            _joystick = FindObjectOfType<DynamicJoystick>();
         if (_joystick != null && _joystick.JoystickActive)
         {
             hasTarget = false;

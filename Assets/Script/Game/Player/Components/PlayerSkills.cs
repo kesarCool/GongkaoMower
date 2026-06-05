@@ -52,6 +52,7 @@ public class PlayerSkills : MonoBehaviour
     [Tooltip("穿透率 (0~1，每次命中触发穿透的概率)。")]
     [Range(0f, 1f)]
     public float pierceRate;
+    public float attackRangeMul = 1f;
 
     /// <summary>结算暴击：返回伤害倍率（未暴击=1，暴击=critDamageMul）。</summary>
     public float EvaluateCrit()

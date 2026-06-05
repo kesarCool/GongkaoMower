@@ -42,6 +42,8 @@ public enum SkillId
     PassiveCritRate = 105,
     /// <summary>每秒恢复 X% 最大血量</summary>
     PassiveRegen = 106,
+    /// <summary>攻击范围 +X%</summary>
+    PassiveAttackRange = 107,
 }
 
 public static class SkillIdExtensions

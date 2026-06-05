@@ -11,6 +11,8 @@ public class SkillOrbitingBlades : SkillBase
     public float rotateSpeedDeg = 180f;
     public float damagePerTick = 1f;
     public float tickInterval = 0.15f;
+    public float activeDuration = 3f;
+    public float cooldownDuration = 5f;
 
     private readonly GameObject _bladePrefab;
     private readonly Sprite _bladeSprite;
@@ -20,6 +22,10 @@ public class SkillOrbitingBlades : SkillBase
 
     private Transform _orbitRoot;
     private float _angle;
+    private float _activeTimer;
+    private float _cooldownTimer;
+    private bool _inCooldown;
+    private bool _wasInCooldown;
     private readonly List<GameObject> _activeBlades = new List<GameObject>(8);
 
     public SkillOrbitingBlades(
@@ -74,8 +80,78 @@ public class SkillOrbitingBlades : SkillBase
         if (_orbitRoot == null) EnsureOrbitVisuals();
 
         _orbitRoot.position = _ctx.player.position;
-        _angle += rotateSpeedDeg * deltaTime;
-        _orbitRoot.rotation = Quaternion.Euler(0f, 0f, _angle);
+
+        // active/cooldown cycle（cooldownDuration <= 0 时无限旋转，不走冷却）
+        if (cooldownDuration > 0f)
+        {
+            if (_inCooldown)
+            {
+                _cooldownTimer += deltaTime;
+                if (_cooldownTimer >= cooldownDuration)
+                {
+                    _inCooldown = false;
+                    _activeTimer = 0f;
+                    _cooldownTimer = 0f;
+                    EnsureBladesActive();
+                }
+            }
+            else
+            {
+                _activeTimer += deltaTime;
+                if (activeDuration > 0f && _activeTimer >= activeDuration)
+                {
+                    _inCooldown = true;
+                    _cooldownTimer = 0f;
+                }
+            }
+
+            // 冷却状态切换时控制音效
+            if (_inCooldown && !_wasInCooldown)
+                AudioService.Ensure().StopLoop(AudioId.SkillOrbitingBlades);
+            else if (!_inCooldown && _wasInCooldown)
+                AudioService.Ensure().PlayLoop(AudioId.SkillOrbitingBlades);
+            _wasInCooldown = _inCooldown;
+        }
+        else if (_inCooldown)
+        {
+            // 升级到满级时冷却归零 → 强制退出冷却
+            _inCooldown = false;
+            _activeTimer = _cooldownTimer = 0f;
+            AudioService.Ensure().PlayLoop(AudioId.SkillOrbitingBlades);
+            _wasInCooldown = false;
+            EnsureBladesActive();
+        }
+
+        // 非冷却态（或无限旋转）才转
+        if (!_inCooldown)
+        {
+            _angle += rotateSpeedDeg * deltaTime;
+            _orbitRoot.rotation = Quaternion.Euler(0f, 0f, _angle);
+        }
+
+        // 攻击范围加成
+        var ps = GetPlayerSkills();
+        float rangeMul = ps != null ? ps.attackRangeMul : 1f;
+        _orbitRoot.localScale = Vector3.one * rangeMul;
+
+        // 冷却时整刀隐藏（含 collider/trail），active 时激活
+        for (int i = 0; i < _activeBlades.Count; i++)
+        {
+            if (_activeBlades[i] == null) continue;
+            if (_activeBlades[i].activeSelf == _inCooldown)
+                _activeBlades[i].SetActive(!_inCooldown);
+        }
+    }
+
+    public void NotifyHit() { }
+
+    private void EnsureBladesActive()
+    {
+        for (int i = 0; i < _activeBlades.Count; i++)
+        {
+            if (_activeBlades[i] != null && !_activeBlades[i].activeSelf)
+                _activeBlades[i].SetActive(true);
+        }
     }
 
     private void EnsureOrbitVisuals()
@@ -118,12 +194,15 @@ public class SkillOrbitingBlades : SkillBase
         }
     }
 
+    public GameObject maxLevelBladePrefab;
+
     private GameObject SpawnBlade(Vector3 localPos, Quaternion localRot)
     {
-        if (_bladePrefab != null)
+        GameObject prefab = (maxLevelBladePrefab != null && Level >= 5) ? maxLevelBladePrefab : _bladePrefab;
+        if (prefab != null)
         {
             return GameObjectPool.Get(
-                _bladePrefab,
+                prefab,
                 _orbitRoot.TransformPoint(localPos),
                 _orbitRoot.rotation * localRot,
                 _orbitRoot);
@@ -168,6 +247,7 @@ public class SkillOrbitingBlades : SkillBase
 
         var ps = GetPlayerSkills();
         if (ps != null) hit.SetPlayerSkills(ps);
+        hit.SetOnDamageDealt(NotifyHit);
 
         OrbitingBladeVisual visual = blade.GetComponent<OrbitingBladeVisual>();
         if (visual != null)
@@ -220,13 +300,16 @@ public class SkillOrbitingBlades : SkillBase
         }
     }
 
-    public void ApplyRuntimeStats(int bladeCount, float orbitRadius, float rotateSpeedDeg, float damagePerTick, float tickInterval)
+    public void ApplyRuntimeStats(int bladeCount, float orbitRadius, float rotateSpeedDeg, float damagePerTick, float tickInterval,
+        float activeDuration, float cooldownDuration)
     {
         this.bladeCount = Mathf.Max(1, bladeCount);
         this.orbitRadius = Mathf.Max(0.1f, orbitRadius);
         this.rotateSpeedDeg = rotateSpeedDeg;
         this.damagePerTick = Mathf.Max(0.01f, damagePerTick);
         this.tickInterval = Mathf.Max(0.05f, tickInterval);
+        this.activeDuration = activeDuration;
+        this.cooldownDuration = cooldownDuration;
         RebuildBlades();
     }
 }

@@ -97,11 +97,6 @@ public class BattleLoadingSceneController : MonoBehaviour
         if (initTableManagerInLoading && TableManager.Instance != null)
             TableManager.Instance.Init();
 
-        // 敏感词过滤：加载本地词库（毫秒级）+ 恢复远程缓存 + 启动后台上报
-        SensitiveWordFilter.Instance.LoadLocalBlacklist();
-        SensitiveWordFilter.Instance.LoadRemoteCache();
-        StartCoroutine(SensitiveWordFilter.Instance.BackgroundCheckAll(null));
-
         BattleChineseFontRuntime.EnsureLoaded();
 
         SetStatus("加载音效…");
@@ -134,6 +129,11 @@ public class BattleLoadingSceneController : MonoBehaviour
 
         SetProgress(1f);
         op.allowSceneActivation = true;
+
+        // 场景加载后再初始化敏感词过滤（不阻塞首帧渲染）
+        SensitiveWordFilter.Instance.LoadLocalBlacklist();
+        SensitiveWordFilter.Instance.LoadRemoteCache();
+        StartCoroutine(SensitiveWordFilter.Instance.BackgroundCheckAll(null));
     }
 
     private void SetStatus(string msg)

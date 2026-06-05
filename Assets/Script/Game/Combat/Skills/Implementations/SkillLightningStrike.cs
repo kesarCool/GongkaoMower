@@ -69,7 +69,8 @@ public class SkillLightningStrike : SkillBase
         _cooldownTimer += deltaTime;
         if (_cooldownTimer < interval) return;
 
-        if (CombatTargetRegistry.CountInRange(_ctx.enemyTag, _ctx.player.position, maxRange) <= 0)
+        float rangeMul = (GetPlayerSkills()?.attackRangeMul) ?? 1f;
+        if (CombatTargetRegistry.CountInRange(_ctx.enemyTag, _ctx.player.position, maxRange * rangeMul) <= 0)
             return;
 
         _cooldownTimer = 0f;
@@ -84,8 +85,9 @@ public class SkillLightningStrike : SkillBase
 
     private void TryStrikeOnce()
     {
+        float range = maxRange * (GetPlayerSkills()?.attackRangeMul ?? 1f);
         if (!CombatTargetRegistry.TryPickRandomInRange(
-                _ctx.enemyTag, _ctx.player.position, maxRange, out Transform target) ||
+                _ctx.enemyTag, _ctx.player.position, range, out Transform target) ||
             target == null)
             return;
 

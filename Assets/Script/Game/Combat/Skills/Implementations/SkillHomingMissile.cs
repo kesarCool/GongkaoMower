@@ -59,7 +59,9 @@ public class SkillHomingMissile : SkillBase
         if (_timer < cooldown) return;
 
         // 收集目标
-        CombatTargetRegistry.CollectTargets(_ctx.enemyTag, _ctx.player.position, maxRange, _savedTargets);
+        var ps = GetPlayerSkills();
+        float rangeMul = ps != null ? ps.attackRangeMul : 1f;
+        CombatTargetRegistry.CollectTargets(_ctx.enemyTag, _ctx.player.position, maxRange * rangeMul, _savedTargets);
         if (_savedTargets.Count == 0) return;
 
         // 始终发射 salvoCount 枚导弹，敌少时多枚追同一目标

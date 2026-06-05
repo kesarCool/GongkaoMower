@@ -147,8 +147,10 @@ public class SkillFieldGenerator : SkillBase
         if (string.IsNullOrEmpty(_ctx.enemyTag)) return;
 
         float finalDmg = GetFinalDamage(damageAmount, out bool isCrit);
+        var ps = GetPlayerSkills();
+        float effectiveRadius = radius * (ps != null ? ps.attackRangeMul : 1f);
         Vector2 center = _ctx.player.position;
-        float radiusSq = radius * radius;
+        float radiusSq = effectiveRadius * effectiveRadius;
 
         bool prevQueries = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;

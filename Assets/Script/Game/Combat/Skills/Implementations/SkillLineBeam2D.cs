@@ -33,6 +33,8 @@ public class SkillLineBeam2D : SkillBase
     public LineRenderer[] beamLines;
     public float visualDuration = 0.08f;
 
+    private static readonly RaycastHit2D[] _sharedRayHits = new RaycastHit2D[32];
+
     private float _timer;
     private float _visualUntil;
     private int _shotCounter;
@@ -97,18 +99,21 @@ public class SkillLineBeam2D : SkillBase
         // 一次释放的暴击判定共享
         float finalDamage = GetFinalDamage(damage, out bool isCrit);
 
+        var ps = GetPlayerSkills();
+        float effectiveLength = beamLength * (ps != null ? ps.attackRangeMul : 1f);
+
         bool prev = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
 
         for (int i = 0; i < count; i++)
         {
             Vector2 d = ResolveBeamDirection(i, count, allAimAtMonster, nearest != null, aimDir);
-            UpdateBeamVisualLine(i, origin, d);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(origin, d, beamLength, hitMask);
+            UpdateBeamVisualLine(i, origin, d, effectiveLength);
+            int hitCount = Physics2D.RaycastNonAlloc(origin, d, _sharedRayHits, effectiveLength, hitMask);
 
-            for (int h = 0; h < hits.Length; h++)
+            for (int h = 0; h < hitCount; h++)
             {
-                Collider2D col = hits[h].collider;
+                Collider2D col = _sharedRayHits[h].collider;
                 if (col == null) continue;
 
                 EnemyBase eb = col.GetComponent<EnemyBase>();
@@ -144,7 +149,7 @@ public class SkillLineBeam2D : SkillBase
         return RandomDirection2D();
     }
 
-    private void UpdateBeamVisualLine(int index, Vector2 origin, Vector2 dir)
+    private void UpdateBeamVisualLine(int index, Vector2 origin, Vector2 dir, float effectiveLength)
     {
         if (beamLines == null || index < 0 || index >= beamLines.Length)
             return;
@@ -158,7 +163,7 @@ public class SkillLineBeam2D : SkillBase
         lr.endColor = c;
 
         Vector3 a = new Vector3(origin.x, origin.y, 0f);
-        Vector3 b = a + (Vector3)(dir.normalized * beamLength);
+        Vector3 b = a + (Vector3)(dir.normalized * effectiveLength);
 
         lr.positionCount = 2;
         lr.SetPosition(0, a);

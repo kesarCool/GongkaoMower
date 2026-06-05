@@ -97,6 +97,7 @@ public sealed class BattleMapLoader : MonoBehaviour
 
         _groundTilemap = FindGroundTilemap(_mapInstance.transform);
         WireConsumers(_groundTilemap);
+        BuildPerimeterWalls(_mapInstance.transform, _groundTilemap);
 
         if (loadedPath != requestedPath)
         {
@@ -108,6 +109,51 @@ public sealed class BattleMapLoader : MonoBehaviour
             Debug.Log(
                 $"[BattleMapLoader] levelId={levelId} 已加载地图 {loadedPath}，Ground={(_groundTilemap != null ? _groundTilemap.name : "null")}");
         }
+    }
+
+    /// <summary>运行时自动围绕 Tilemap 边界生成四面围墙。</summary>
+    private static void BuildPerimeterWalls(Transform mapRoot, Tilemap reference)
+    {
+        if (reference == null) return;
+
+        reference.CompressBounds();
+        BoundsInt bounds = reference.cellBounds;
+        Vector3 min = reference.CellToWorld(bounds.min);
+        Vector3 max = reference.CellToWorld(bounds.max);
+
+        float left = min.x, right = max.x, bottom = min.y, top = max.y;
+        float thickness = 0.3f;
+
+        // Wall 父节点挂在 mapRoot 下，与 Tilemap 同生命周期
+        Transform wallParent = mapRoot.Find("Wall");
+        if (wallParent == null)
+        {
+            var go = new GameObject("Wall");
+            go.transform.SetParent(mapRoot, false);
+            wallParent = go.transform;
+        }
+        else
+        {
+            for (int i = wallParent.childCount - 1; i >= 0; i--)
+                Object.Destroy(wallParent.GetChild(i).gameObject);
+        }
+
+        CreateWall(wallParent, "Wall_Left",   new Vector2(left, (top + bottom) / 2f), new Vector2(thickness, top - bottom));
+        CreateWall(wallParent, "Wall_Right",  new Vector2(right, (top + bottom) / 2f), new Vector2(thickness, top - bottom));
+        CreateWall(wallParent, "Wall_Top",    new Vector2((left + right) / 2f, top), new Vector2(right - left, thickness));
+        CreateWall(wallParent, "Wall_Bottom", new Vector2((left + right) / 2f, bottom), new Vector2(right - left, thickness));
+    }
+
+    private static void CreateWall(Transform parent, string name, Vector2 pos, Vector2 size)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = pos;
+        var col = go.AddComponent<BoxCollider2D>();
+        col.size = size;
+        var rb = go.AddComponent<Rigidbody2D>();
+        rb.bodyType = RigidbodyType2D.Static;
+        rb.gravityScale = 0f;
     }
 
     private static GameObject LoadMapPrefab(string resourcesPath, out string loadedPath)

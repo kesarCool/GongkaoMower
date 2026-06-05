@@ -37,6 +37,9 @@ public class CardDeck : ScriptableObject
     [Tooltip("新技能在满5个后是否还出现（建议false）")]
     public bool allowNewSkillWhenFull = false;
 
+    [Tooltip("羁绊突破卡权重加成（被动已装配时，Lv4→Lv5 的突破卡权重乘以该值）")]
+    public float bondedBreakthroughWeightBonus = 3f;
+
     /// <summary>
     /// 抽卡结果数据（包含技能定义和应使用的模板）
     /// </summary>
@@ -120,6 +123,9 @@ public class CardDeck : ScriptableObject
             {
                 // 突破模板仅在达到绝对满级时使用（羁绊被动未装备时不会触发）
                 template = breakthroughTemplate;
+                // 羁绊被动已装配 → 突破卡权重加成
+                if (def.bondedPassiveId != SkillId.None && playerSkills.HasPassiveSkill(def.bondedPassiveId))
+                    weight *= bondedBreakthroughWeightBonus;
             }
             else
             {

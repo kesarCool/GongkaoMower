@@ -38,6 +38,11 @@ public static class PassiveSkillRegistry
             case SkillId.PassiveRegen:
                 return new SkillPassiveRegen(id, bonus);
 
+            case SkillId.PassiveAttackRange:
+                return new SkillPassiveStat(id, type, bonus,
+                    () => GetPlayerSkills() != null ? GetPlayerSkills().attackRangeMul : 0f,
+                    v => { if (GetPlayerSkills() != null) GetPlayerSkills().attackRangeMul = v; });
+
             default:
                 return null;
         }

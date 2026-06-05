@@ -45,7 +45,8 @@ public class SkillThrowGrenade : SkillBase
         if (_timer < cooldown) return;
 
         Vector3 from = _ctx.player.position;
-        GameObject enemy = FindNearestEnemy(from, _ctx.enemyTag, maxTargetRange);
+        float range = maxTargetRange * (GetPlayerSkills()?.attackRangeMul ?? 1f);
+        GameObject enemy = FindNearestEnemy(from, _ctx.enemyTag, range);
         if (enemy == null) return;
 
         if (SpawnLimiter.Instance != null && !SpawnLimiter.Instance.CanSpawn(GrenadeProjectile.SpawnLimiterKey, out _))

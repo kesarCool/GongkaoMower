@@ -1,62 +1,46 @@
 using UnityEngine;
 
 /// <summary>
-/// 追踪小刀技能：每隔 interval 秒发射一枚追踪玩家的刀。
-/// 参数格式：elementNum = "3,120,5,20"
-///   [0]=cooldown(秒), [1]=turnRate(度/秒), [2]=lifetime(秒), [3]=damage
+/// 追踪小刀技能：每隔 interval 秒发射追踪玩家的刀。
+/// elementNum = "3,120,5,20,4" = cooldown, turnRate, lifetime, damage, knifeSpeed
 /// </summary>
 public class HomingKnifeModule : BossSkillModule
 {
-    public GameObject knifePrefab;
-    public float turnRate = 120f;
-    public float lifetime = 5f;
-    public float damage = 20f;
-    public float knifeSpeed = 4f;
-    public string targetTag = "Player";
-
-    private Transform _target;
+    private GameObject _knifePrefab;
+    private float _turnRate = 120f;
+    private float _lifetime = 5f;
+    private float _damage = 20f;
+    private float _knifeSpeed = 4f;
 
     public override void Init(string rawParams, BossBrain owner)
     {
         base.Init(rawParams, owner);
         requiresTarget = true;
 
-        float[] p = ParseFloats(rawParams, 4);
+        float[] p = ParseFloats(rawParams, 5);
         interval   = p[0] > 0f ? p[0] : 3f;
-        turnRate   = p[1] > 0f ? p[1] : 120f;
-        lifetime   = p[2] > 0f ? p[2] : 5f;
-        damage     = p[3] > 0f ? p[3] : 20f;
-        cooldown   = interval * 0.3f; // 出场后 30% 冷却就首次攻击
+        _turnRate  = p[1] > 0f ? p[1] : 120f;
+        _lifetime  = p[2] > 0f ? p[2] : 5f;
+        _damage    = p[3] > 0f ? p[3] : 20f;
+        _knifeSpeed = p[4] > 0f ? p[4] : 4f;
+        cooldown   = interval * firstDelayMul;
 
-        // 缓存 prefab（只查一次）
-        knifePrefab = brain.FindPrefab("HomingBullet");
+        _knifePrefab = brain.FindPrefab("HomingBullet");
     }
 
-    public override bool CanTrigger()
-    {
-        if (!base.CanTrigger()) return false;
-        if (knifePrefab == null) return false;
-        return true;
-    }
+    public override bool CanTrigger() => base.CanTrigger() && _knifePrefab != null;
 
     public override void Execute()
     {
-        if (_target == null)
-        {
-            GameObject go = GameObject.FindGameObjectWithTag(targetTag);
-            _target = go != null ? go.transform : null;
-        }
-        if (_target == null) return;
+        Transform target = FindPlayer();
+        if (target == null) return;
 
-        float dmg = damage > 0f ? damage : boss.GetComponent<EnemyBase>()?.ContactDamage ?? 20f;
-        Vector2 dir = ((Vector2)_target.position - (Vector2)boss.position).normalized;
+        float dmg = ResolveDamage(_damage, 20f);
+        Vector2 dir = ((Vector2)target.position - (Vector2)boss.position).normalized;
 
-        GameObject bullet = GameObjectPool.Get(knifePrefab, boss.position, Quaternion.identity);
-        if (bullet == null)
-            bullet = Object.Instantiate(knifePrefab, boss.position, Quaternion.identity);
-
-        HomingBullet hb = bullet.GetComponent<HomingBullet>();
-        if (hb != null) hb.Launch(dir, knifeSpeed, dmg, lifetime);
+        GameObject bullet = SpawnBullet(_knifePrefab, boss.position, Quaternion.identity);
+        var hb = bullet != null ? bullet.GetComponent<HomingBullet>() : null;
+        if (hb != null) hb.Launch(dir, _knifeSpeed, dmg, _lifetime);
 
         ResetCooldown();
     }

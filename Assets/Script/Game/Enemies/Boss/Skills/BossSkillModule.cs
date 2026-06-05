@@ -2,54 +2,97 @@ using UnityEngine;
 
 /// <summary>
 /// Boss 技能模块基类（非 MonoBehaviour）。
-/// BossBrain 在每个技能初始化时 new 一个实例，参数从 Excel elementNum[] 来。
+/// 提供 Target 查找、伤害回退、子弹生成、Sprite 闪烁的公共实现。
 /// </summary>
 public abstract class BossSkillModule
 {
-    public float interval;       // 冷却时间（秒）
-    public float cooldown;       // 当前剩余冷却
-    public bool requiresTarget;  // Execute 前是否需要目标存在
+    public float interval;
+    public float cooldown;
+    public bool requiresTarget;
+    public float firstDelayMul = 0.3f; // 出场后首次冷却的比例
 
     protected Transform boss;
     protected BossBrain brain;
 
-    /// <summary>elementNum[i] 的逗号分隔参数 → 技能专属解析。</summary>
+    private Transform _target;
+    private static readonly string PlayerTag = "Player";
+
+    // Sprite 闪烁缓存（子类调用 CacheSprites 后可用 SetSpritesFlash）
+    private SpriteRenderer[] _sprites;
+    private Color[] _originalColors;
+
     public virtual void Init(string rawParams, BossBrain owner)
     {
         brain = owner;
         boss = owner.transform;
-        // 子类重写，按固定顺序解析 rawParams
     }
 
-    /// <summary>能否触发（冷却到 + 可选条件）。</summary>
-    public virtual bool CanTrigger()
-    {
-        return cooldown <= 0f;
-    }
-
-    /// <summary>执行技能，子类实现。</summary>
+    public virtual bool CanTrigger() => cooldown <= 0f;
     public abstract void Execute();
 
-    /// <summary>BossBrain.Update 中调用，倒计时冷却。</summary>
     public virtual void Tick(float dt)
     {
-        if (cooldown > 0f)
-            cooldown -= dt;
+        if (cooldown > 0f) cooldown -= dt;
     }
 
-    /// <summary>Execute 后重置冷却。</summary>
-    protected void ResetCooldown()
+    protected void ResetCooldown() => cooldown = interval;
+
+    // ── 公共工具 ──
+
+    protected Transform FindPlayer()
     {
-        cooldown = interval;
+        if (_target == null)
+        {
+            var go = GameObject.FindGameObjectWithTag(PlayerTag);
+            _target = go != null ? go.transform : null;
+        }
+        return _target;
     }
 
-    /// <summary>把逗号分隔字符串解析成浮点数组。</summary>
+    protected float ResolveDamage(float configured, float fallbackDefault)
+    {
+        if (configured > 0f) return configured;
+        var eb = boss != null ? boss.GetComponent<EnemyBase>() : null;
+        return eb != null ? eb.ContactDamage : fallbackDefault;
+    }
+
+    protected GameObject SpawnBullet(GameObject prefab, Vector2 position, Quaternion rotation)
+    {
+        if (prefab == null) return null;
+        var bullet = GameObjectPool.Get(prefab, position, rotation);
+        if (bullet == null)
+            bullet = Object.Instantiate(prefab, position, rotation);
+        return bullet;
+    }
+
+    // ── Sprite 闪烁 ──
+
+    protected void CacheSprites()
+    {
+        _sprites = boss.GetComponentsInChildren<SpriteRenderer>();
+        if (_sprites != null && _sprites.Length > 0)
+        {
+            _originalColors = new Color[_sprites.Length];
+            for (int i = 0; i < _sprites.Length; i++)
+                _originalColors[i] = _sprites[i].color;
+        }
+    }
+
+    protected void SetSpritesFlash(bool flash, Color? flashColorOverride = null)
+    {
+        if (_sprites == null || _originalColors == null) return;
+        Color fc = flashColorOverride ?? Color.red;
+        for (int i = 0; i < _sprites.Length; i++)
+        {
+            if (_sprites[i] != null)
+                _sprites[i].color = flash ? fc : _originalColors[i];
+        }
+    }
+
     protected static float[] ParseFloats(string raw, int expectedCount)
     {
         float[] defaults = new float[expectedCount];
-        if (string.IsNullOrWhiteSpace(raw))
-            return defaults;
-
+        if (string.IsNullOrWhiteSpace(raw)) return defaults;
         string[] parts = raw.Split(',');
         for (int i = 0; i < Mathf.Min(parts.Length, expectedCount); i++)
         {
