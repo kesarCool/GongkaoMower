@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 2167164036099694569}
   - component: {fileID: 7839378820916240537}
   - component: {fileID: 8121149140225794864}
+  - component: {fileID: 5532448899483801947}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -213,6 +214,7 @@ MonoBehaviour:
   critDamageMul: 2
   pierceCount: 0
   pierceRate: 0
+  attackRangeMul: 1
 --- !u!50 &-9110866368867753895
 Rigidbody2D:
   serializedVersion: 4
@@ -326,6 +328,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterCatalog: {fileID: 11400000, guid: 20d02f89708e396428bc4b0dd5bd54c5, type: 2}
+--- !u!114 &5532448899483801947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186490287265628212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e54c88bfc0a2d2488631333c35f5987, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collectInterval: 10
+  collectRadius: 5
 --- !u!1001 &3935105086640193254
 PrefabInstance:
   m_ObjectHideFlags: 0

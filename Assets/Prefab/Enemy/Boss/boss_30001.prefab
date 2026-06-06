@@ -594,6 +594,11 @@ MonoBehaviour:
   prefabRegistry:
   - key: HomingBullet
     prefab: {fileID: 7310771668734871517, guid: 58c1edadaa651964389783403b116297, type: 3}
+  - key: ZoneIndicator
+    prefab: {fileID: 4513392073522607518, guid: 04cbccbf59804074aba6e6692d1dc14d, type: 3}
+  - key: ZoneExplosion
+    prefab: {fileID: 5378322831329218194, guid: f751184e56945b74e8aaa5870a902c71, type: 3}
+  inspectorSkills: []
 --- !u!1 &8369144161366609782
 GameObject:
   m_ObjectHideFlags: 0

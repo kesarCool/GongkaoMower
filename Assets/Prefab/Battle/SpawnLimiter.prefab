@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   configs:
   - key: Bullet
-    maxAlive: 100
+    maxAlive: 60
     recycleOldest: 1
     spawnPerFrame: 10
     currentAlive: 0

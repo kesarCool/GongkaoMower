@@ -1790,6 +1790,7 @@ GameObject:
   - component: {fileID: 932421029969048788}
   - component: {fileID: 8888534370413094956}
   - component: {fileID: 14157737639012328}
+  - component: {fileID: 9144626187420720931}
   m_Layer: 0
   m_Name: GameLayer
   m_TagString: Untagged
@@ -1967,6 +1968,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   victoryDelaySeconds: 1.8
+  victoryTimeScale: 0.08
   defeatDelaySeconds: 1.5
   deathFlashDuration: 0.3
   deathFadeTargetAlpha: 0.85
@@ -2001,3 +2003,24 @@ MonoBehaviour:
   arenaHalfHeight: 10
   wallPrefab: {fileID: 429840380190155030, guid: 65aa3e7118aa99e49892b61a5fa98fee, type: 3}
   wallThickness: 1
+--- !u!114 &9144626187420720931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9036049177900440394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 233e6d2ba6a46304baaa82e3b81ab7c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapImage: {fileID: 0}
+  playerDot: {fileID: 0}
+  mapResolution: 200
+  panelSize: 200
+  miniCamera: {fileID: 0}
+  cullingMask:
+    serializedVersion: 2
+    m_Bits: 8
+  player: {fileID: 0}
