@@ -86,9 +86,12 @@ public class GameUnlockSkill : MonoBehaviour
             }
         }
 
+        // 只展示当前角色能用到的技能（家族过滤）
+        FilterByEquippedCharacter(unseen);
+
         if (unseen.Count == 0)
         {
-            Debug.Log($"[GameUnlockSkill] 关卡 {currentLevel} 没有待展示的新技能。");
+            Debug.Log($"[GameUnlockSkill] 关卡 {currentLevel} 没有待展示的新技能（家族过滤后）。");
             yield break;
         }
 
@@ -126,6 +129,61 @@ public class GameUnlockSkill : MonoBehaviour
         UnityEditor.EditorUtility.DisplayDialog("清除完成", "新手引导和 101 技能解锁记录已清除。", "确定");
     }
 #endif
+
+    /// <summary>移除当前角色不会出现在卡池的技能（如非本变体的 AutoProjectile）。</summary>
+    private void FilterByEquippedCharacter(List<SkillId> unseen)
+    {
+        if (unseen.Count == 0 || skillCatalog == null) return;
+
+        // 收集已装备技能的家族
+        var ps = FindObjectOfType<PlayerSkills>();
+        if (ps == null) return;
+
+        var equippedFamilies = new Dictionary<SkillId, SkillId>();
+        // PlayerSkills 在 GameUnlockSkill.Start 协程里可能还未装备技能，
+        // 从 SelectedCharacterContext 拿角色主技能兜底
+        string charId = SelectedCharacterContext.GetEffective(null);
+        SkillId mainSkill = SkillId.None;
+        if (!string.IsNullOrEmpty(charId))
+        {
+            var charCatalog = Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
+            if (charCatalog != null)
+            {
+                var charDef = charCatalog.Get(charId);
+                if (charDef != null) mainSkill = charDef.startingSkill;
+            }
+        }
+
+        // 从已装备技能 + 角色主技能收集家族
+        var activeIds = new List<SkillId>(5);
+        ps.GetEquippedSkillIdsOrdered(activeIds);
+        if (mainSkill != SkillId.None && !activeIds.Contains(mainSkill))
+            activeIds.Add(mainSkill);
+
+        foreach (var id in activeIds)
+        {
+            var def = skillCatalog.Get(id);
+            if (def != null && def.SkillFamily != id)
+                equippedFamilies[def.SkillFamily] = id;
+        }
+
+        // 过滤：家族已被其他变体占用 → 排除
+        for (int i = unseen.Count - 1; i >= 0; i--)
+        {
+            var def = skillCatalog.Get(unseen[i]);
+            if (def == null) continue;
+
+            SkillId family = def.SkillFamily;
+            if (family != def.id || equippedFamilies.ContainsKey(family))
+            {
+                if (!equippedFamilies.TryGetValue(family, out SkillId allowedId) || def.id != allowedId)
+                {
+                    Debug.Log($"[GameUnlockSkill] 过滤技能 {def.displayName}({def.id})：家族 {family} 已被 {allowedId} 占用");
+                    unseen.RemoveAt(i);
+                }
+            }
+        }
+    }
 
     private SkillDefinitionBase FindSkillDef(SkillId id)
     {

@@ -55,9 +55,7 @@ public class ScatterBullet : PlayerBullet
 
         for (int i = 0; i < scatterCount; i++)
         {
-            float deg = scatterCount > 1
-                ? baseAngle + Mathf.Lerp(-halfAngle, halfAngle, (float)i / (scatterCount - 1))
-                : baseAngle + Random.Range(-halfAngle, halfAngle);
+            float deg = baseAngle + Random.Range(-halfAngle, halfAngle);
             Vector2 dir = new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad));
 
             GameObject sub = Instantiate(scatterBulletPrefab, hitPos, Quaternion.identity);

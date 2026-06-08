@@ -80,11 +80,12 @@ public class CharacterSelectionElement : MonoBehaviour
         }
 
         // 锁定状态
-        bool unlocked = !def.locked;
+        bool unlocked = CharacterUnlockEvaluator.IsUnlocked(def);
         if (lockedOverlay != null)
             lockedOverlay.SetActive(!unlocked);
+        // 按钮保持可点击，未解锁时点击弹出提示
         if (clickButton != null)
-            clickButton.interactable = unlocked;
+            clickButton.interactable = true;
 
         // 选中高亮
         SetSelected(isSelected);
@@ -103,9 +104,6 @@ public class CharacterSelectionElement : MonoBehaviour
 
     private void OnClicked()
     {
-        if (CharacterDef != null && CharacterDef.locked)
-            return;
-
         UiClickSound.Play();
         _onClick?.Invoke(this);
     }

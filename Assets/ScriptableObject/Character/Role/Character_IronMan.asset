@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab6a92a6afaa5564083b2643be44cbdb, type: 3}
   m_Name: Character_IronMan
   m_EditorClassIdentifier: 
-  characterId: character_03
+  characterId: character_05
   displayName: "\u673A\u7532\u5C0F\u5B9D"
   portrait: {fileID: 21300000, guid: aa1a271a50efdc7499bf1181ac3d1ec3, type: 3}
   startingSkill: 10
@@ -22,6 +22,7 @@ MonoBehaviour:
     maxHp: 200
     defense: 50
     moveSpeed: 4
+    attackRangeMul: 0
     critRate: 0.1
     critDamageMul: 2
     pierceRate: 0
@@ -29,4 +30,7 @@ MonoBehaviour:
   bodySprite: {fileID: 21300000, guid: aa1a271a50efdc7499bf1181ac3d1ec3, type: 3}
   defaultWeapon: {fileID: 11400000, guid: 327dd138b45d56c44a67f78006fe8aa7, type: 2}
   boundSkills: 
-  locked: 0
+  upgradeData: {fileID: 11400000, guid: 31d09140718ef1849970e0000adb09e0, type: 2}
+  locked: 1
+  unlockLevelId: 301
+  unlockFragmentCount: 30

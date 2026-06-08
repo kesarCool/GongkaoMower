@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Effect_58_Lighting5
+  m_Shader: {fileID: 4800000, guid: b8c1cca2e9a1689499e04f4c6b54b281, type: 3}
+  m_ValidKeywords:
+  - _CUSTOM2XYKEY_MESH
+  - _IF_MODEDEPTHFADE1_OFF
+  - _MASKCUSTOMDATAKEY2_OFF
+  - _MASK_RORA_R
+  - _UVORDISTORTION_UV
+  m_InvalidKeywords:
+  - BlendAdd
+  - Clip_OFF
+  - FrameBlend_OFF
+  - SoftParticles_OFF
+  - VertLight_OFF
+  - _BLENDMODE_ADD
+  m_LightmapFlags: 1
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _DissolveTex:
+        m_Texture: {fileID: 2800000, guid: afe9a7c2164775645b204ecf97b2a09b, type: 3}
+        m_Scale: {x: 1, y: 10}
+        m_Offset: {x: 0, y: 0}
+    - _DistortionMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Distortion_Tex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: fecbc2dbf76d9ab4089330c3e5ee2423, type: 3}
+        m_Scale: {x: 0, y: 4}
+        m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 2800000, guid: afe9a7c2164775645b204ecf97b2a09b, type: 3}
+        m_Scale: {x: 0.5, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _tex4coord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _tex4coord2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _tex4coord3:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CullMode: 0
+    - _Custom2xyKey: 0
+    - _DissolveIntensityCustom1z: 0.5
+    - _DissolveTex_U1: 0
+    - _DissolveTex_V1: 0
+    - _DistortionMask_Offset_U: 0
+    - _DistortionMask_Offset_V1: 0
+    - _Distortion_Intensity: 0
+    - _Distortion_U: 0
+    - _Distortion_V: 0
+    - _Dst: 10
+    - _MainTexRotator: 0
+    - _MainTexToDissolve1: 0
+    - _MainTex_U: 1
+    - _MainTex_V: 1
+    - _MaskCustomDataKey2: 1
+    - _MaskPolarSwich: 0
+    - _MaskTex1Rotator1: 0
+    - _MaskTexRotator: 0
+    - _MaskTex_U1: 2
+    - _MaskTex_V1: -2
+    - _Mask_RorA: 0
+    - _PolarOffset1: 0
+    - _PolarScale: 0
+    - _SoftaDissolve: 1
+    - _StencilComp: 0
+    - _StencilID: 0
+    - _StencilOp: 0
+    - _TimeFmod: 30
+    - _TimeScale: 30
+    - _UseUIAlphaClip: 0
+    - _UvorDistortion: 0
+    - _ZWrite: 0
+    - _Ztest: 0
+    - __dirty: 0
+    - _if_ModeDepthFade1: 0
+    m_Colors:
+    - DistortionMaskTiling: {r: 0, g: 0, b: 0, a: 0}
+    - _Color: {r: 7.999999, g: 7.999999, b: 7.999999, a: 1}
+  m_BuildTextureStacks: []

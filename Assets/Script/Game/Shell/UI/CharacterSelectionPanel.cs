@@ -21,12 +21,34 @@ public class CharacterSelectionPanel : UIPanelBase
     [Header("详情")]
     [SerializeField] private UnityEngine.UI.Image detailPortrait;
     [SerializeField] private TextMeshProUGUI detailNameText;
-    [SerializeField] private TextMeshProUGUI detailAttackText;
-    [SerializeField] private TextMeshProUGUI detailHpText;
+    [SerializeField] private TextMeshProUGUI detailLevelText;
+    [SerializeField] private Image detailSkillIcon;
     [SerializeField] private TextMeshProUGUI detailSkillText;
-    [SerializeField] private TextMeshProUGUI detailPassiveText;
     [SerializeField] private GameObject detailPanel;
     [SerializeField] private TextMeshProUGUI tipsText;
+
+    [Header("属性行")]
+    [Tooltip("UpgradeAttrRow 预制体，动态实例化 8 行。")]
+    [SerializeField] private GameObject attrRowPrefab;
+    [Tooltip("属性行容器（挂 VerticalLayoutGroup）。")]
+    [SerializeField] private Transform attrRowsContainer;
+
+    [Header("升级操作")]
+    [SerializeField] private TextMeshProUGUI upgradeCostText;
+    [SerializeField] private Button upgradeButton;
+
+    [Header("升阶操作")]
+    [Tooltip("升阶面板（含碎片消耗 + 升阶按钮），与升级按钮互斥。")]
+    [SerializeField] private GameObject promotePanel;
+    [SerializeField] private TextMeshProUGUI promoteFragmentCostText;
+    [SerializeField] private Button promoteButton;
+
+    [Header("升阶技能描述")]
+    [Tooltip("一阶 Rare 技能描述文本。")]
+    [SerializeField] private TextMeshProUGUI promoteRareDescText;
+    [Tooltip("二阶 Legend 技能描述文本。")]
+    [SerializeField] private TextMeshProUGUI promoteLegendDescText;
+
     [Header("按钮")]
     [SerializeField] private Button confirmButton;
     [SerializeField] private TextMeshProUGUI confirmButtonLabel;
@@ -39,6 +61,7 @@ public class CharacterSelectionPanel : UIPanelBase
     private string _selectedCharId;
     private int _selectedIndex = -1;
     private readonly List<CharacterSelectionElement> _cells = new List<CharacterSelectionElement>();
+    private readonly List<UpgradeAttrRow> _attrRows = new List<UpgradeAttrRow>();
 
     public override void OnOpen(object payload)
     {
@@ -50,6 +73,21 @@ public class CharacterSelectionPanel : UIPanelBase
         if (characterCatalog == null)
             characterCatalog = Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
 
+        // 新号首次进入：自动上阵第一个已解锁角色
+        if (string.IsNullOrEmpty(_equippedCharId) && characterCatalog != null)
+        {
+            foreach (var def in characterCatalog.characters)
+            {
+                if (def != null && CharacterUnlockEvaluator.IsUnlocked(def))
+                {
+                    _equippedCharId = def.characterId;
+                    PlayerProfileService.Instance.SetEquippedCharacter(def.characterId);
+                    SelectedCharacterContext.Set(def.characterId);
+                    break;
+                }
+            }
+        }
+
         // 字体——UIManager 已在 Open 时 ApplyToHierarchy，此处兜底
         BattleChineseFontRuntime.ApplyToHierarchy(transform);
 
@@ -60,6 +98,10 @@ public class CharacterSelectionPanel : UIPanelBase
             confirmButton.onClick.AddListener(OnConfirmClicked);
         if (startGameButton != null)
             startGameButton.onClick.AddListener(OnStartGameClicked);
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(OnUpgradeClicked);
+        if (promoteButton != null)
+            promoteButton.onClick.AddListener(OnPromoteClicked);
 
         PopulateList();
         AutoSelectDefault();
@@ -70,7 +112,19 @@ public class CharacterSelectionPanel : UIPanelBase
         if (closeButton != null) closeButton.onClick.RemoveListener(OnCloseClicked);
         if (confirmButton != null) confirmButton.onClick.RemoveListener(OnConfirmClicked);
         if (startGameButton != null) startGameButton.onClick.RemoveListener(OnStartGameClicked);
+        if (upgradeButton != null) upgradeButton.onClick.RemoveListener(OnUpgradeClicked);
+        if (promoteButton != null) promoteButton.onClick.RemoveListener(OnPromoteClicked);
         ClearCells();
+        ClearAttrRows();
+    }
+
+    private void ClearAttrRows()
+    {
+        for (int i = _attrRows.Count - 1; i >= 0; i--)
+        {
+            if (_attrRows[i] != null) Destroy(_attrRows[i].gameObject);
+        }
+        _attrRows.Clear();
     }
 
     // ── 列表 ──────────────────────────────────────────
@@ -96,7 +150,7 @@ public class CharacterSelectionPanel : UIPanelBase
             {
                 if (c == null) return 3;
                 if (c.characterId == _equippedCharId) return 0;
-                if (!c.locked) return 1;
+                if (CharacterUnlockEvaluator.IsUnlocked(c)) return 1;
                 return 2;
             }
             return Priority(a).CompareTo(Priority(b));
@@ -136,7 +190,7 @@ public class CharacterSelectionPanel : UIPanelBase
             {
                 if (_cells[i].CharacterDef != null &&
                     _cells[i].CharacterDef.characterId == _equippedCharId &&
-                    !_cells[i].CharacterDef.locked)
+                    CharacterUnlockEvaluator.IsUnlocked(_cells[i].CharacterDef))
                 {
                     SelectCell(i, isEquipped: true);
                     return;
@@ -147,7 +201,7 @@ public class CharacterSelectionPanel : UIPanelBase
         // 其次选第一个未锁定角色
         for (int i = 0; i < _cells.Count; i++)
         {
-            if (_cells[i].CharacterDef != null && !_cells[i].CharacterDef.locked)
+            if (_cells[i].CharacterDef != null && CharacterUnlockEvaluator.IsUnlocked(_cells[i].CharacterDef))
             {
                 bool isEquipped = _cells[i].CharacterDef.characterId == _equippedCharId;
                 SelectCell(i, isEquipped);
@@ -160,8 +214,15 @@ public class CharacterSelectionPanel : UIPanelBase
 
     private void OnCellClicked(CharacterSelectionElement cell)
     {
-        if (cell.CharacterDef == null || cell.CharacterDef.locked)
+        if (cell.CharacterDef == null) return;
+
+        if (!CharacterUnlockEvaluator.IsUnlocked(cell.CharacterDef))
+        {
+            string hint = CharacterUnlockEvaluator.GetUnlockHint(cell.CharacterDef);
+            if (!string.IsNullOrEmpty(hint))
+                UIManager.Instance.ShowToast(hint, 1f);
             return;
+        }
 
         bool isEquipped = cell.CharacterDef.characterId == _equippedCharId;
         SelectCell(cell.Index, isEquipped);
@@ -191,38 +252,41 @@ public class CharacterSelectionPanel : UIPanelBase
         if (detailPanel != null)
             detailPanel.SetActive(true);
 
+        // 头像 + 名称
         if (detailPortrait != null)
         {
             detailPortrait.sprite = def.portrait;
             detailPortrait.enabled = def.portrait != null;
         }
-
         if (detailNameText != null)
         {
             bool equipped = def.characterId == _equippedCharId;
             detailNameText.text = equipped ? $"{def.displayName}（已上阵）" : def.displayName;
         }
 
-        var attr = def.attributes;
+        // 等级 + 阶位
+        var data = def.upgradeData;
+        var svc = PlayerProfileService.Instance;
+        int lv = svc.GetHeroLevel(def.characterId);
+        int stage = data != null ? svc.GetHeroStage(def.characterId) : 0;
+        int maxLv = data != null ? svc.GetEffectiveMaxLevel(def.characterId, data) : 1;
+        bool isMax = lv >= maxLv;
+        bool canPromote = data != null && stage < 2; // 还能升阶
+        int nextLv = isMax ? lv : lv + 1;
 
-        if (detailAttackText != null)
+        string stageLabel = stage == 0 ? "" : (stage == 1 ? "<color=#88CCFF>[稀有]</color> " : "<color=#FFAA00>[传说]</color> ");
+        if (detailLevelText != null)
         {
-            string atk = $"攻击：{attr.attack:F0}";
-            if (attr.moveSpeed > 0f) atk += $"  移速：{attr.moveSpeed:F1}";
-            detailAttackText.text = atk;
+            detailLevelText.text = isMax && !canPromote
+                ? $"{stageLabel}Lv.{lv} / {maxLv}  <color=#FFD700>满级</color>"
+                : $"{stageLabel}Lv.{lv} / {maxLv}";
+            detailLevelText.gameObject.SetActive(true);
         }
 
-        if (detailHpText != null)
-        {
-            string hp = $"血量：{attr.maxHp:F0}";
-            if (attr.defense > 0f)
-            {
-                float reduction = (1f - 100f / (100f + attr.defense)) * 100f;
-                hp += $"  防御：{attr.defense:F0}（减伤{reduction:F0}%）";
-            }
-            detailHpText.text = hp;
-        }
+        // 属性行（8 行：攻/血/防/移速/暴击率/暴伤/穿透/范围）
+        BuildAttrRows(def, data, lv, nextLv, isMax && !canPromote);
 
+        // 技能
         if (detailSkillText != null)
         {
             SkillId effectiveSkill = def.defaultWeapon != null && def.defaultWeapon.weaponSkillId != SkillId.None
@@ -230,6 +294,11 @@ public class CharacterSelectionPanel : UIPanelBase
                 : def.startingSkill;
 
             var skillDef = skillCatalog != null ? skillCatalog.Get(effectiveSkill) : null;
+            if (detailSkillIcon != null)
+            {
+                detailSkillIcon.sprite = skillDef != null ? skillDef.icon : null;
+                detailSkillIcon.enabled = skillDef != null && skillDef.icon != null;
+            }
             if (skillDef != null)
             {
                 string desc = skillDef.description;
@@ -243,18 +312,64 @@ public class CharacterSelectionPanel : UIPanelBase
             }
         }
 
-        if (detailPassiveText != null)
-        {
-            var passive = new List<string>();
-            if (attr.critRate > 0f) passive.Add($"暴击率 {attr.critRate * 100f:F0}%");
-            if (attr.critDamageMul > 0f && attr.critDamageMul != 2f) passive.Add($"暴伤 {attr.critDamageMul * 100f:F0}%");
-            if (attr.pierceRate > 0f) passive.Add($"穿透率 {attr.pierceRate * 100f:F0}%");
-            if (attr.pierceCount > 0) passive.Add($"穿透数 +{attr.pierceCount}");
-            if (attr.attackSpeedMul > 0f && Mathf.Abs(attr.attackSpeedMul - 1f) > 0.001f)
-                passive.Add(attr.attackSpeedMul < 1f ? $"攻速 +{(1f / attr.attackSpeedMul - 1f) * 100f:F0}%" : $"攻速 -{(attr.attackSpeedMul - 1f) * 100f:F0}%");
+        // 升级 or 升阶（互斥）
+        bool atLevelCap = isMax;
+        bool showPromote = data != null && atLevelCap && canPromote;
+        bool showUpgrade = data != null && !atLevelCap;
 
-            detailPassiveText.text = passive.Count > 0 ? "被动：" + string.Join("  ", passive) : "";
-            detailPassiveText.gameObject.SetActive(passive.Count > 0);
+        // 升级消耗 + 按钮
+        if (upgradeCostText != null)
+        {
+            upgradeCostText.gameObject.SetActive(showUpgrade);
+            if (showUpgrade)
+            {
+                int cost = data.GetCostForLevel(nextLv);
+                bool canAfford = svc.CanAffordGold(cost);
+                upgradeCostText.text = $"金币 <color={(canAfford ? "#FFFFFF" : "#FF4444")}>{PlayerProfileService.FormatGold(cost)}</color>";
+            }
+        }
+        if (upgradeButton != null)
+        {
+            upgradeButton.gameObject.SetActive(showUpgrade);
+            if (showUpgrade) upgradeButton.interactable = svc.CanAffordGold(data.GetCostForLevel(nextLv));
+        }
+
+        // 升阶技能描述（始终可见，未解锁置灰）
+        string gray = "#666666";
+        string bright = "#FFFFFF";
+        string gold = "#FFAA00";
+
+        if (promoteRareDescText != null && data != null)
+        {
+            bool rareUnlocked = stage >= 1;
+            string c = rareUnlocked ? bright : gray;
+            string tag = rareUnlocked ? $"[<color={gold}>已解锁</color>]" : "[未解锁]";
+            promoteRareDescText.text = $"一阶：<color={c}>{data.rareTraitDescription}</color> {tag}";
+            promoteRareDescText.gameObject.SetActive(!string.IsNullOrEmpty(data.rareTraitDescription));
+        }
+        if (promoteLegendDescText != null && data != null)
+        {
+            bool legendUnlocked = stage >= 2;
+            string c = legendUnlocked ? bright : gray;
+            string tag = legendUnlocked ? $"[<color={gold}>已解锁</color>]" : "[未解锁]";
+            promoteLegendDescText.text = $"二阶：<color={c}>{data.legendBreakthroughDescription}</color> {tag}";
+            promoteLegendDescText.gameObject.SetActive(!string.IsNullOrEmpty(data.legendBreakthroughDescription));
+        }
+
+        // 升阶面板 + 按钮（仅在达到等级上限且可升阶时显示）
+        if (promotePanel != null) promotePanel.SetActive(showPromote);
+        if (promoteFragmentCostText != null && showPromote)
+        {
+            int needFrags = stage == 0 ? data.rareFragmentCost : data.legendFragmentCost;
+            int haveFrags = svc.GetFragmentCount(def.characterId);
+            string color = haveFrags >= needFrags ? "#FFFFFF" : "#FF4444";
+            promoteFragmentCostText.text = $"碎片 <color={color}>{haveFrags}/{needFrags}</color>";
+        }
+        if (promoteButton != null)
+        {
+            promoteButton.gameObject.SetActive(showPromote);
+            if (showPromote)
+                promoteButton.interactable = svc.CanPromoteStage(def.characterId, data, out _, out _);
         }
     }
 
@@ -318,5 +433,148 @@ public class CharacterSelectionPanel : UIPanelBase
     {
         UiClickSound.PlayClose();
         UIManager.Instance.CloseTop();
+    }
+
+    // ── 属性行 ──────────────────────────────────────────
+
+    private void BuildAttrRows(CharacterDefinition def, HeroUpgradeData data, int curLv, int nextLv, bool isMax)
+    {
+        // 清旧行
+        for (int i = _attrRows.Count - 1; i >= 0; i--)
+        {
+            if (_attrRows[i] != null) Destroy(_attrRows[i].gameObject);
+        }
+        _attrRows.Clear();
+
+        if (attrRowPrefab == null || attrRowsContainer == null) return;
+
+        var baseAttr = def.attributes.ApplyMinimums();
+
+        // 1. 攻击（乘算）
+        float curAtk = baseAttr.attack * Mul(data, data?.attackMulAtMax ?? 0f, curLv);
+        float nextAtk = baseAttr.attack * Mul(data, data?.attackMulAtMax ?? 0f, nextLv);
+        AddAttrRow("攻击", $"{curAtk:F0}", isMax ? "" : $"{nextAtk:F0}", isMax);
+
+        // 2. 血量（乘算）
+        float curHp = baseAttr.maxHp * Mul(data, data?.maxHpMulAtMax ?? 0f, curLv);
+        float nextHp = baseAttr.maxHp * Mul(data, data?.maxHpMulAtMax ?? 0f, nextLv);
+        AddAttrRow("血量", $"{curHp:F0}", isMax ? "" : $"{nextHp:F0}", isMax);
+
+        // 3. 防御（乘算）
+        float curDef = baseAttr.defense * Mul(data, data?.defenseMulAtMax ?? 0f, curLv);
+        float nextDef = baseAttr.defense * Mul(data, data?.defenseMulAtMax ?? 0f, nextLv);
+        AddAttrRow("防御", $"{curDef:F0}", isMax ? "" : $"{nextDef:F0}", isMax);
+
+        // 4. 移速（乘算）
+        float curSpd = baseAttr.moveSpeed * Mul(data, data?.moveSpeedMulAtMax ?? 0f, curLv);
+        float nextSpd = baseAttr.moveSpeed * Mul(data, data?.moveSpeedMulAtMax ?? 0f, nextLv);
+        AddAttrRow("移速", $"{curSpd:F1}", isMax ? "" : $"{nextSpd:F1}", isMax);
+
+        // 5. 暴击率（加算，显示 %）
+        float curCrit = baseAttr.critRate + Add(data, data?.critRateAddAtMax ?? 0f, curLv);
+        float nextCrit = baseAttr.critRate + Add(data, data?.critRateAddAtMax ?? 0f, nextLv);
+        AddAttrRow("暴击率", $"{curCrit * 100f:F0}%", isMax ? "" : $"{nextCrit * 100f:F0}%", isMax);
+
+        // 6. 暴伤（乘算，base 始终 ≥2.0）
+        float curCdm = baseAttr.critDamageMul * Mul(data, data?.critDmgMulAtMax ?? 0f, curLv);
+        float nextCdm = baseAttr.critDamageMul * Mul(data, data?.critDmgMulAtMax ?? 0f, nextLv);
+        AddAttrRow("暴伤", $"×{curCdm:F1}", isMax ? "" : $"×{nextCdm:F1}", isMax);
+
+        // 7. 穿透率（加算，显示 %）
+        float curPr = baseAttr.pierceRate + Add(data, data?.pierceRateAddAtMax ?? 0f, curLv);
+        float nextPr = baseAttr.pierceRate + Add(data, data?.pierceRateAddAtMax ?? 0f, nextLv);
+        AddAttrRow("穿透率", $"{curPr * 100f:F0}%", isMax ? "" : $"{nextPr * 100f:F0}%", isMax);
+
+        // 8. 范围（乘算）
+        float curRange = baseAttr.attackRangeMul * Mul(data, data?.attackRangeMulAtMax ?? 0f, curLv);
+        float nextRange = baseAttr.attackRangeMul * Mul(data, data?.attackRangeMulAtMax ?? 0f, nextLv);
+        AddAttrRow("范围", $"×{curRange:F1}", isMax ? "" : $"×{nextRange:F1}", isMax);
+    }
+
+    private void AddAttrRow(string name, string curValue, string nextValue, bool isMax)
+    {
+        var go = Instantiate(attrRowPrefab, attrRowsContainer, false);
+        BattleChineseFontRuntime.ApplyToHierarchy(go.transform); // 动态实例化的 TMP 需要手动挂中文字体
+        var row = go.GetComponent<UpgradeAttrRow>();
+        if (row == null) { Destroy(go); return; }
+        row.Bind(name, curValue, nextValue, isMax);
+        _attrRows.Add(row);
+    }
+
+    // ── 升级 ──────────────────────────────────────────
+
+    private void OnUpgradeClicked()
+    {
+        if (string.IsNullOrEmpty(_selectedCharId)) return;
+        var def = characterCatalog?.Get(_selectedCharId);
+        if (def?.upgradeData == null) return;
+
+        var svc = PlayerProfileService.Instance;
+        bool ok = svc.UpgradeHero(_selectedCharId, def.upgradeData);
+        if (ok)
+        {
+            UiClickSound.Play();
+            ShowDetail(def);
+            RefreshGoldHudIfPresent();
+        }
+        else
+        {
+            int lv = svc.GetHeroLevel(_selectedCharId);
+            int maxLv = svc.GetEffectiveMaxLevel(_selectedCharId, def.upgradeData);
+            if (lv >= maxLv)
+                UIManager.Instance?.ShowToast("已达当前阶位满级，请升阶", 1f);
+            else
+            {
+                int cost = def.upgradeData.GetCostForLevel(lv + 1);
+                UIManager.Instance?.ShowToast($"升级需要 {PlayerProfileService.FormatGold(cost)} 金币", 1f);
+            }
+        }
+    }
+
+    private void OnPromoteClicked()
+    {
+        if (string.IsNullOrEmpty(_selectedCharId)) return;
+        var def = characterCatalog?.Get(_selectedCharId);
+        if (def?.upgradeData == null) return;
+
+        var svc = PlayerProfileService.Instance;
+        bool ok = svc.PromoteStage(_selectedCharId, def.upgradeData);
+        if (ok)
+        {
+            UiClickSound.Play();
+            ShowDetail(def);
+        }
+        else
+        {
+            svc.CanPromoteStage(_selectedCharId, def.upgradeData, out int missing, out bool lvOk);
+            if (!lvOk)
+                UIManager.Instance?.ShowToast("等级未达到升阶要求", 1f);
+            else if (missing > 0)
+                UIManager.Instance?.ShowToast($"碎片不足，还需 {missing} 片", 1f);
+            else
+                UIManager.Instance?.ShowToast("升阶失败", 1f);
+        }
+    }
+
+    private void RefreshGoldHudIfPresent()
+    {
+        var hub = FindObjectOfType<HomeHubController>();
+        if (hub != null) hub.RefreshCurrencyHud();
+    }
+
+    // ── 辅助公式 ──────────────────────────────────────
+
+    private static float Mul(HeroUpgradeData data, float atMax, int level)
+    {
+        if (data == null || level <= 1) return 1f;
+        float t = (level - 1f) / Mathf.Max(1, data.maxLevel - 1);
+        return Mathf.Lerp(1f, atMax, Mathf.Clamp01(t));
+    }
+
+    private static float Add(HeroUpgradeData data, float atMax, int level)
+    {
+        if (data == null || level <= 1) return 0f;
+        float t = (level - 1f) / Mathf.Max(1, data.maxLevel - 1);
+        return Mathf.Lerp(0f, atMax, Mathf.Clamp01(t));
     }
 }

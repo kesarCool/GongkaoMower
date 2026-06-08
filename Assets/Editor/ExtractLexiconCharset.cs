@@ -28,6 +28,8 @@ public static class ExtractLexiconCharset
         CollectFromTable("Monster",         "beizhu",          ref charset, ref tableTotalRows, sources);
         CollectFromTable("ChapterLevel",    "mapName",         ref charset, ref tableTotalRows, sources);
         CollectFromTable("ErrorCodeTable",  "errMsg",          ref charset, ref tableTotalRows, sources);
+        CollectFromTable("ItemTable",       "ItemName",        ref charset, ref tableTotalRows, sources);
+        CollectFromTable("ItemTable",       "Description",     ref charset, ref tableTotalRows, sources);
 
         // ── 2. 扫描代码和 UI 中的硬编码中文 ──
         int codeHits = CollectFromCodeAndPrefabs(ref charset);

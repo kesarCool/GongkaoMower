@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fa598672904ab84daa345d8439aa630, type: 3}
+  m_Name: PandaManUpgradeData
+  m_EditorClassIdentifier:
+  characterId: character_03
+  maxLevel: 20
+  baseGoldCost: 200
+  goldGrowth: 200
+  rareFragmentCost: 20
+  legendFragmentCost: 50
+  rareRequiredLevel: 10
+  legendRequiredLevel: 20
+  rareTrait: 4
+  rareTraitParams:
+  - 0.5
+  - 0.3
+  - 0.15
+  rareTraitDescription: "熊猫之怒——血量低于50%时攻击+30%，移速+15%"
+  legendBreakthroughDescription: "连环爆破——弹射次数+1，爆炸后0.3秒生成余爆(50%伤害)"
+  attackMulAtMax: 3
+  maxHpMulAtMax: 3
+  defenseMulAtMax: 2
+  moveSpeedMulAtMax: 1.3
+  attackRangeMulAtMax: 1.5
+  critRateAddAtMax: 0
+  critDmgMulAtMax: 2.5
+  pierceRateAddAtMax: 0
+  pierceCountAddAtMax: 0

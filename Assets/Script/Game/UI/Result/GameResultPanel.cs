@@ -4,6 +4,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>单个奖励物品展示信息。</summary>
+public sealed class RewardItemEntry
+{
+    public int itemId;
+    public string itemName;
+    public string iconPath;
+    public int count;
+    public int grade;
+}
+
 /// <summary>
 /// 传入 <see cref="GameResultPanel"/> 的结算数据（由 <see cref="BattleOutcomeCoordinator"/> 组装）。
 /// </summary>
@@ -12,6 +22,9 @@ public sealed class GameResultViewModel
     public bool victory;
     public float battleDurationUnscaled;
     public int killCount;
+    public List<string> unlockedCharacters;
+    /// <summary>本次获得的奖励物品列表（含金币）。</summary>
+    public List<RewardItemEntry> rewardItems;
 }
 
 /// <summary>
@@ -26,6 +39,18 @@ public class GameResultPanel : UIPanelBase
 
     [Header("技能行预制体（默认空则运行时 Load：见 skillRowPrefabResourcesPath）")]
     [SerializeField] private GameObject skillDamageRowPrefab;
+    [SerializeField] private TextMeshProUGUI unlockLabel;
+    [SerializeField] private Button unlockGoButton;
+
+    [Header("奖励物品")]
+    [Tooltip("ItemCell 预制体（挂 ItemCell 脚本）。")]
+    [SerializeField] private GameObject itemCellPrefab;
+    [Tooltip("ScrollViewReward 的 Content 节点。")]
+    [SerializeField] private Transform scrollViewRewardContent;
+
+    [Header("金币展示（可选：汇总行，与 ScrollViewReward 互斥时留空其一）")]
+    [SerializeField] private TextMeshProUGUI goldEarnedText;
+    [SerializeField] private TextMeshProUGUI goldBalanceText;
 
     [SerializeField] private string skillRowPrefabResourcesPath = string.Empty;
 
@@ -57,6 +82,31 @@ public class GameResultPanel : UIPanelBase
         if (_btnExit != null) _btnExit.onClick.AddListener(OnExitClicked);
         if (_btnAgain != null) _btnAgain.onClick.AddListener(OnAgainClicked);
         if (_btnNext != null) _btnNext.onClick.AddListener(OnNextClicked);
+    }
+
+    private void EnsureRewardContentLayout()
+    {
+        if (scrollViewRewardContent == null) return;
+        var go = scrollViewRewardContent.gameObject;
+
+        // 已有任意 LayoutGroup 就不再强加，尊重 Prefab 上的手动布局
+        if (go.GetComponent<HorizontalOrVerticalLayoutGroup>() != null) return;
+
+        var v = go.AddComponent<VerticalLayoutGroup>();
+        v.childAlignment = TextAnchor.UpperCenter;
+        v.childControlHeight = true;
+        v.childControlWidth = true;
+        v.childForceExpandHeight = false;
+        v.childForceExpandWidth = true;
+        v.spacing = 6f;
+        v.padding = new RectOffset(8, 8, 8, 8);
+
+        if (go.GetComponent<ContentSizeFitter>() == null)
+        {
+            var f = go.AddComponent<ContentSizeFitter>();
+            f.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            f.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        }
     }
 
     private void EnsureScrollContentLayout()
@@ -99,6 +149,72 @@ public class GameResultPanel : UIPanelBase
         }
 
         bool win = _vm.victory;
+
+        // 新解锁角色提示
+        bool hasUnlock = _vm.unlockedCharacters != null && _vm.unlockedCharacters.Count > 0;
+        if (unlockLabel != null)
+        {
+            if (hasUnlock)
+            {
+                var nameTags = new List<string>();
+                foreach (var n in _vm.unlockedCharacters)
+                    nameTags.Add($"<size=+12><color=#FFD700><b>{n}</b></color></size>");
+                string names = string.Join(" ", nameTags);
+                unlockLabel.text = $"新角色解锁：{names}";
+                unlockLabel.gameObject.SetActive(true);
+            }
+            else
+            {
+                unlockLabel.gameObject.SetActive(false);
+            }
+        }
+        if (unlockGoButton != null)
+        {
+            if (hasUnlock)
+            {
+                unlockGoButton.gameObject.SetActive(true);
+                unlockGoButton.onClick.RemoveAllListeners();
+                unlockGoButton.onClick.AddListener(() =>
+                {
+                    Time.timeScale = 1f;
+                    SceneManager.LoadScene("Home");
+                });
+            }
+            else
+            {
+                unlockGoButton.gameObject.SetActive(false);
+            }
+        }
+
+        // 奖励物品（ScrollViewReward + ItemCell）
+        BuildRewardItems();
+
+        // 金币汇总行（可选，与 ScrollViewReward 互斥时留空）
+        if (goldEarnedText != null)
+        {
+            int goldEarned = 0;
+            if (win && _vm.rewardItems != null)
+            {
+                foreach (var ri in _vm.rewardItems)
+                    if (ri.itemId == 1) { goldEarned = ri.count; break; }
+            }
+            if (win && goldEarned > 0)
+            {
+                goldEarnedText.text = $"金币 <color=#FFD700>+{goldEarned}</color>";
+                goldEarnedText.gameObject.SetActive(true);
+            }
+            else { goldEarnedText.gameObject.SetActive(false); }
+        }
+        if (goldBalanceText != null)
+        {
+            if (win)
+            {
+                int balance = PlayerProfileService.Instance.Gold;
+                goldBalanceText.text = $"余额：{balance}";
+                goldBalanceText.gameObject.SetActive(true);
+            }
+            else { goldBalanceText.gameObject.SetActive(false); }
+        }
 
         if (_bannerImage != null)
         {
@@ -179,6 +295,53 @@ public class GameResultPanel : UIPanelBase
     {
         if (loseBannerSprite != null) return loseBannerSprite;
         return Resources.Load<Sprite>("pic_sb");
+    }
+
+    private void BuildRewardItems()
+    {
+        EnsureRewardContentLayout();
+
+        if (scrollViewRewardContent == null)
+        {
+            Debug.LogWarning("[GameResult] scrollViewRewardContent 未拖入，跳过奖励展示。");
+            return;
+        }
+        if (itemCellPrefab == null)
+        {
+            Debug.LogWarning("[GameResult] itemCellPrefab 未拖入，跳过奖励展示。");
+            return;
+        }
+
+        // 清空旧 children
+        for (int i = scrollViewRewardContent.childCount - 1; i >= 0; i--)
+            Destroy(scrollViewRewardContent.GetChild(i).gameObject);
+
+        if (_vm == null || _vm.rewardItems == null || _vm.rewardItems.Count == 0)
+        {
+            Debug.Log($"[GameResult] 无奖励物品展示（vm={_vm != null}, items={_vm?.rewardItems?.Count ?? -1}）");
+            return;
+        }
+
+        Debug.Log($"[GameResult] 开始生成 {_vm.rewardItems.Count} 个奖励 ItemCell...");
+
+        foreach (var entry in _vm.rewardItems)
+        {
+            GameObject go = Instantiate(itemCellPrefab, scrollViewRewardContent, false);
+            var cell = go.GetComponent<ItemCell>();
+            if (cell == null)
+            {
+                Debug.LogWarning($"[GameResult] ItemCell 预制体上未找到 ItemCell 脚本，已销毁。prefab={itemCellPrefab.name}");
+                Destroy(go);
+                continue;
+            }
+
+            Sprite icon = null;
+            if (!string.IsNullOrEmpty(entry.iconPath))
+                icon = Resources.Load<Sprite>(entry.iconPath);
+
+            Debug.Log($"[GameResult] ItemCell.Bind: id={entry.itemId} name={entry.itemName} count={entry.count} grade={entry.grade} icon={icon != null}");
+            cell.Bind(icon, entry.itemName, entry.count, entry.grade);
+        }
     }
 
     private void BuildSkillRows()

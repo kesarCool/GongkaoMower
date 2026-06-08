@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab6a92a6afaa5564083b2643be44cbdb, type: 3}
   m_Name: Character_PandaMan
   m_EditorClassIdentifier: 
-  characterId: character_04
+  characterId: character_03
   displayName: "\u718A\u732B\u4FA0"
   portrait: {fileID: 21300000, guid: b812d4822394c5f4f838c459c5e0a11c, type: 3}
   startingSkill: 12
@@ -22,6 +22,7 @@ MonoBehaviour:
     maxHp: 200
     defense: 50
     moveSpeed: 4
+    attackRangeMul: 0
     critRate: 0.1
     critDamageMul: 2
     pierceRate: 0
@@ -29,4 +30,7 @@ MonoBehaviour:
   bodySprite: {fileID: 21300000, guid: b812d4822394c5f4f838c459c5e0a11c, type: 3}
   defaultWeapon: {fileID: 11400000, guid: b7f37a486fb56ec43a43372a0cb9f14a, type: 2}
   boundSkills: 
-  locked: 0
+  upgradeData: {fileID: 11400000, guid: 980260b7c765b544e996037ebbc4d789, type: 2}
+  locked: 1
+  unlockLevelId: 103
+  unlockFragmentCount: 0

@@ -32,6 +32,30 @@ public enum eCrypt : int
   public ArraySegment<byte>? GetMapNameBytes() { return __p.__vector_as_arraysegment(12); }
   public string mapPath { get { int o = __p.__offset(14); return o != 0 ? __p.__string(o + __p.bb_pos) : FlatBufferConstants.DefaultString; } }
   public ArraySegment<byte>? GetMapPathBytes() { return __p.__vector_as_arraysegment(14); }
+  public string rewardItemIdsArray(int j) { int o = __p.__offset(16); return o != 0 ? __p.__string(__p.__vector(o) + j * 4) : FlatBufferConstants.DefaultString; }
+  public int rewardItemIdsLength { get { int o = __p.__offset(16); return o != 0 ? __p.__vector_len(o) : 0; } }
+ private FlatBufferArray<string> rewardItemIdsValue;
+ public FlatBufferArray<string>  rewardItemIds
+ {
+  get{
+  if (rewardItemIdsValue == null)
+  {
+    rewardItemIdsValue = new FlatBufferArray<string>(this.rewardItemIdsArray, this.rewardItemIdsLength);
+  }
+  return rewardItemIdsValue;}
+ }
+  public string rewardItemCountsArray(int j) { int o = __p.__offset(18); return o != 0 ? __p.__string(__p.__vector(o) + j * 4) : FlatBufferConstants.DefaultString; }
+  public int rewardItemCountsLength { get { int o = __p.__offset(18); return o != 0 ? __p.__vector_len(o) : 0; } }
+ private FlatBufferArray<string> rewardItemCountsValue;
+ public FlatBufferArray<string>  rewardItemCounts
+ {
+  get{
+  if (rewardItemCountsValue == null)
+  {
+    rewardItemCountsValue = new FlatBufferArray<string>(this.rewardItemCountsArray, this.rewardItemCountsLength);
+  }
+  return rewardItemCountsValue;}
+ }
 
   public static Offset<ChapterLevel> CreateChapterLevel(FlatBufferBuilder builder,
       int ID = 0,
@@ -39,8 +63,12 @@ public enum eCrypt : int
       int unlockChapterId = 0,
       int levelId = 0,
       StringOffset mapNameOffset = default(StringOffset),
-      StringOffset mapPathOffset = default(StringOffset)) {
-    builder.StartObject(6);
+      StringOffset mapPathOffset = default(StringOffset),
+      VectorOffset rewardItemIdsOffset = default(VectorOffset),
+      VectorOffset rewardItemCountsOffset = default(VectorOffset)) {
+    builder.StartObject(8);
+    ChapterLevel.AddRewardItemCounts(builder, rewardItemCountsOffset);
+    ChapterLevel.AddRewardItemIds(builder, rewardItemIdsOffset);
     ChapterLevel.AddMapPath(builder, mapPathOffset);
     ChapterLevel.AddMapName(builder, mapNameOffset);
     ChapterLevel.AddLevelId(builder, levelId);
@@ -50,13 +78,19 @@ public enum eCrypt : int
     return ChapterLevel.EndChapterLevel(builder);
   }
 
-  public static void StartChapterLevel(FlatBufferBuilder builder) { builder.StartObject(6); }
+  public static void StartChapterLevel(FlatBufferBuilder builder) { builder.StartObject(8); }
   public static void AddID(FlatBufferBuilder builder, int ID) { builder.AddInt(0, ID, 0); }
   public static void AddChapterId(FlatBufferBuilder builder, int chapterId) { builder.AddInt(1, chapterId, 0); }
   public static void AddUnlockChapterId(FlatBufferBuilder builder, int unlockChapterId) { builder.AddInt(2, unlockChapterId, 0); }
   public static void AddLevelId(FlatBufferBuilder builder, int levelId) { builder.AddInt(3, levelId, 0); }
   public static void AddMapName(FlatBufferBuilder builder, StringOffset mapNameOffset) { builder.AddOffset(4, mapNameOffset.Value, 0); }
   public static void AddMapPath(FlatBufferBuilder builder, StringOffset mapPathOffset) { builder.AddOffset(5, mapPathOffset.Value, 0); }
+  public static void AddRewardItemIds(FlatBufferBuilder builder, VectorOffset rewardItemIdsOffset) { builder.AddOffset(6, rewardItemIdsOffset.Value, 0); }
+  public static VectorOffset CreateRewardItemIdsVector(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
+  public static void StartRewardItemIdsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
+  public static void AddRewardItemCounts(FlatBufferBuilder builder, VectorOffset rewardItemCountsOffset) { builder.AddOffset(7, rewardItemCountsOffset.Value, 0); }
+  public static VectorOffset CreateRewardItemCountsVector(FlatBufferBuilder builder, StringOffset[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddOffset(data[i].Value); return builder.EndVector(); }
+  public static void StartRewardItemCountsVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static Offset<ChapterLevel> EndChapterLevel(FlatBufferBuilder builder) {
     int o = builder.EndObject();
     return new Offset<ChapterLevel>(o);

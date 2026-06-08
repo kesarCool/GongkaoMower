@@ -30,6 +30,18 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("为 true 时打开词汇预览使用 ModalDefault。")]
     [SerializeField] private bool pauseWhenLexiconPreviewOpen;
 
+    [Header("货币 HUD")]
+    [Tooltip("金币数量文本（TMP）。")]
+    [SerializeField] private TMPro.TextMeshProUGUI goldHudText;
+    [Tooltip("钻石数量文本（TMP），预留。")]
+    [SerializeField] private TMPro.TextMeshProUGUI diamondHudText;
+
+    private void Start()
+    {
+        // Start 在所有 Awake/OnEnable 之后，UIManager 已就绪，可以安全弹框
+        PlayerProfileService.Instance.ConsumeCorruptionAlert();
+    }
+
     private void OnEnable()
     {
         if (openLevelSelectButton != null)
@@ -40,6 +52,8 @@ public class HomeHubController : MonoBehaviour
             openCharacterSelectionButton.onClick.AddListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
+
+        RefreshCurrencyHud();
     }
 
     private void OnDisable()
@@ -118,5 +132,18 @@ public class HomeHubController : MonoBehaviour
 
         var opt = pauseWhenLexiconPreviewOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
         UIManager.Instance.Open<LexiconPreviewPanel>(null, opt);
+    }
+
+    /// <summary>刷新顶部货币 HUD（场景加载 / 从局内返回时调用）。</summary>
+    public void RefreshCurrencyHud()
+    {
+        PlayerProfileService.Instance.LoadOrCreate();
+        int gold = PlayerProfileService.Instance.Gold;
+        int diamond = PlayerProfileService.Instance.Diamond;
+
+        if (goldHudText != null)
+            goldHudText.text = $"金币 {PlayerProfileService.FormatGold(gold)}";
+        if (diamondHudText != null)
+            diamondHudText.text = $"钻石 {diamond}";
     }
 }

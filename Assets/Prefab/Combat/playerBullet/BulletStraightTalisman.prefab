@@ -90,7 +90,7 @@ MonoBehaviour:
   wallMask:
     serializedVersion: 2
     m_Bits: 0
-  skillSource: 8
+  skillSource: 9
   targetTag: monster
 --- !u!1 &7302521407357747995
 GameObject:

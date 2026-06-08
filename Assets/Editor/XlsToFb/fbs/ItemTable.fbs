@@ -1,0 +1,15 @@
+namespace ProtoTable.ItemTable;
+enum eCrypt :int{
+	code = 121260803,}
+
+namespace ProtoTable;
+table ItemTable{
+	ID:int32;
+	ItemName:string;
+	Type:int32;
+	Grade:int32;
+	IconPath:string;
+	Description:string;
+}
+
+root_type ItemTable;

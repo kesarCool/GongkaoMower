@@ -173,6 +173,7 @@ public class PlayerSkills : MonoBehaviour
     {
         if (skill == null || def == null) return;
         def.ApplyStatsToSkill(skill, def.ClampLevel(skill.Level));
+        (skill as SkillBase)?.OnAfterStatsApplied();
     }
 
     private ISkill CreateSkill(SkillId id)

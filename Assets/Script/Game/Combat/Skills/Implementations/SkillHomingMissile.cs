@@ -32,6 +32,37 @@ public class SkillHomingMissile : SkillBase
         this.missilePrefab = missilePrefab;
     }
 
+    private int _legendStage;
+    private int _baseSalvoCount;
+    private float _baseAoeRadius;
+    private float _baseMissileSpeed;
+
+    public override void ApplyLegendBreakthrough(int stage)
+    {
+        _legendStage = stage;
+        ApplyBreakthroughStats();
+    }
+
+    public override void OnAfterStatsApplied()
+    {
+        if (_legendStage >= 2) ApplyBreakthroughStats();
+    }
+
+    private void ApplyBreakthroughStats()
+    {
+        if (_legendStage < 2) return;
+
+        _baseSalvoCount = salvoCount;
+        _baseAoeRadius = aoeRadius;
+        _baseMissileSpeed = missileSpeed;
+
+        salvoCount = _baseSalvoCount + 3;
+        aoeRadius = _baseAoeRadius * 1.4f;
+        missileSpeed = _baseMissileSpeed * 1.25f;
+
+        Debug.Log($"[SkillHomingMissile] Legend 突破已应用：salvo={salvoCount}, aoe={aoeRadius:F1}, speed={missileSpeed:F1}");
+    }
+
     public override void Tick(float deltaTime)
     {
         if (!_equipped) return;

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab6a92a6afaa5564083b2643be44cbdb, type: 3}
   m_Name: Character_TailsMan
   m_EditorClassIdentifier: 
-  characterId: character_05
-  displayName: "\u8305\u5C71\u9053\u58EB"
+  characterId: character_04
+  displayName: "\u8305\u5C71\u5C0F\u9053\u58EB"
   portrait: {fileID: 21300000, guid: e4563b91fd556224d853486e7a721a89, type: 3}
   startingSkill: 9
   attributes:
@@ -22,6 +22,7 @@ MonoBehaviour:
     maxHp: 120
     defense: 10
     moveSpeed: 5.5
+    attackRangeMul: 0
     critRate: 0.25
     critDamageMul: 2
     pierceRate: 0.1
@@ -29,4 +30,7 @@ MonoBehaviour:
   bodySprite: {fileID: 21300000, guid: e4563b91fd556224d853486e7a721a89, type: 3}
   defaultWeapon: {fileID: 11400000, guid: 68405ae73ce337146b7cfc2f580b92a3, type: 2}
   boundSkills: 
-  locked: 0
+  upgradeData: {fileID: 11400000, guid: dd2e07d1ffa29d449aeca33945676d79, type: 2}
+  locked: 1
+  unlockLevelId: 201
+  unlockFragmentCount: 0

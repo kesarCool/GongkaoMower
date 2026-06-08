@@ -17,6 +17,10 @@ public class BossBrain : MonoBehaviour
     [Tooltip("每个技能模块按 key 从这里找预制体。例如 key=HomingBullet → HomingBullet.prefab")]
     public BossPrefabEntry[] prefabRegistry;
 
+    [Header("技能 Inspector 配置（无需 Excel）")]
+    [Tooltip("type=homingKnife/dash/bladeBurst/zone, params=参数逗号分隔")]
+    public List<InspectorSkillEntry> inspectorSkills = new List<InspectorSkillEntry>();
+
     /// <summary>Boss 正在执行技能时 EnemyAI 暂停追人。</summary>
     public bool IsBusy { get; set; }
 
@@ -71,40 +75,43 @@ public class BossBrain : MonoBehaviour
 
 #if USE_FB_TABLE
         Monster monster = FindMonsterRow(monsterId);
-        if (monster == null)
+        if (monster != null)
         {
-            Debug.LogWarning($"[BossBrain] 未在 Monster 表找到 monsterId={monsterId}");
-            return;
-        }
+            string[] skillTypes = ToArray(monster.element);
+            string[] skillParams = ToArray(monster.elementNum);
 
-        string[] skillTypes = ToArray(monster.element);
-        string[] skillParams = ToArray(monster.elementNum);
-
-        if (skillTypes.Length == 0)
-        {
-            Debug.Log($"[BossBrain] monsterId={monsterId} 未配置技能（element[] 为空），Boss 仅会追人。");
-            return;
-        }
-
-        for (int i = 0; i < skillTypes.Length; i++)
-        {
-            string type = skillTypes[i]?.Trim();
-            if (string.IsNullOrEmpty(type)) continue;
-
-            string rawParams = i < skillParams.Length ? skillParams[i] : string.Empty;
-            BossSkillModule mod = CreateModule(type);
-            if (mod != null)
+            if (skillTypes.Length > 0)
             {
-                mod.Init(rawParams, this);
-                _modules.Add(mod);
-                Debug.Log($"[BossBrain] monsterId={monsterId} 加载技能: {type} params={rawParams}");
-            }
-            else
-            {
-                Debug.LogWarning($"[BossBrain] monsterId={monsterId} 未知技能类型: {type}");
+                for (int i = 0; i < skillTypes.Length; i++)
+                {
+                    string type = skillTypes[i]?.Trim();
+                    if (string.IsNullOrEmpty(type)) continue;
+                    string rawParams = i < skillParams.Length ? skillParams[i] : string.Empty;
+                    AddModule(type, rawParams, monsterId);
+                }
+                return;
             }
         }
+        Debug.Log($"[BossBrain] monsterId={monsterId} 表配置为空，回退 Inspector 配置");
 #endif
+        // Inspector 兜底（无需 Excel 配表）
+        foreach (var entry in inspectorSkills)
+        {
+            if (string.IsNullOrEmpty(entry.type)) continue;
+            AddModule(entry.type, entry.params_, monsterId);
+        }
+    }
+
+    private void AddModule(string type, string rawParams, int mid)
+    {
+        BossSkillModule mod = CreateModule(type);
+        if (mod != null)
+        {
+            mod.Init(rawParams, this);
+            _modules.Add(mod);
+            Debug.Log($"[BossBrain] monsterId={mid} 加载技能: {type} interval={mod.interval}s cooldown={mod.cooldown}s params={rawParams}");
+        }
+        else Debug.LogWarning($"[BossBrain] monsterId={mid} 未知技能类型: {type}");
     }
 
     private static BossSkillModule CreateModule(string type)
@@ -114,6 +121,7 @@ public class BossBrain : MonoBehaviour
             case "homingKnife": return new HomingKnifeModule();
             case "dash":         return new DashModule();
             case "bladeBurst":   return new BladeBurstModule();
+            case "zone":         return new ZoneModule();
             // case "clone":        return new CloneModule();
             // case "summon":       return new SummonModule();
             // case "revive":       return new ReviveModule();
@@ -151,4 +159,11 @@ public class BossPrefabEntry
 {
     public string key;
     public GameObject prefab;
+}
+
+[System.Serializable]
+public class InspectorSkillEntry
+{
+    public string type;
+    public string params_ = string.Empty;
 }

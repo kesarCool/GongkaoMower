@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4912298068678982862}
   - component: {fileID: 5736166919115306972}
   - component: {fileID: 5830992618777739399}
+  - component: {fileID: -9144778561825251523}
   m_Layer: 0
   m_Name: BurstBulletTailman
   m_TagString: Untagged
@@ -92,6 +93,20 @@ MonoBehaviour:
     m_Bits: 0
   skillSource: 9
   targetTag: monster
+--- !u!114 &-9144778561825251523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685301462951185581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cb5595be8e8c794e8b64bb463d51a26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  turnRate: 360
+  homingRange: 12
 --- !u!1 &8841071272335303405
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,6 +297,6 @@ TrailRenderer:
     textureMode: 0
     shadowBias: 0.5
     generateLightingData: 0
-  m_MinVertexDistance: 0.14
+  m_MinVertexDistance: 0.1
   m_Autodestruct: 0
   m_Emitting: 1

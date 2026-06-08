@@ -52,7 +52,17 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
         if (bulletPrefab == null) return null;
 
         int lv = 1;
-        var s = new SkillAutoProjectile(bulletPrefab, bulletSpeed, IntervalAt(lv), targetSkillId);
+        float spd = bulletSpeed;
+        float itv = IntervalAt(lv);
+
+        SkillAutoProjectile s = targetSkillId switch
+        {
+            SkillId.AutoProjectilePistol    => new SkillAutoProjectilePistol(bulletPrefab, spd, itv, targetSkillId),
+            SkillId.AutoProjectileSword     => new SkillAutoProjectileSword(bulletPrefab, spd, itv, targetSkillId),
+            SkillId.AutoProjectileTalisman  => new SkillAutoProjectileTalisman(bulletPrefab, spd, itv, targetSkillId),
+            _                               => new SkillAutoProjectile(bulletPrefab, spd, itv, targetSkillId),
+        };
+
         s.damage = Mathf.Max(0.01f, DamageAt(lv));
         ApplyBurstStats(s);
         return s;

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fa598672904ab84daa345d8439aa630, type: 3}
+  m_Name: SwordsmanUpgradeData
+  m_EditorClassIdentifier: 
+  characterId: character_02
+  maxLevel: 20
+  baseGoldCost: 200
+  goldGrowth: 200
+  rareFragmentCost: 20
+  legendFragmentCost: 50
+  rareRequiredLevel: 10
+  legendRequiredLevel: 20
+  rareTrait: 2
+  rareTraitParams:
+  - 5
+  - 1
+  - 0.3
+  rareTraitDescription: "\u5251\u950B\u9886\u57DF\u2014\u2014\u534A\u5F845\u8303\u56F4\u5185\u654C\u4EBA\u6BCF1\u79D2\u53D730%\u653B\u51FB\u529B\u7684\u9886\u57DF\u4F24\u5BB3"
+  legendBreakthroughDescription: "\u4E07\u5203\u9F50\u53D1\u2014\u2014\u5251\u6C14\u6570+1\uFF0C\u7A7F\u900F+2\uFF0C\u7206\u53D1\u5251\u6C14\u7FFB\u500D\uFF0C\u66B4\u51FB\u65F6\u5206\u88C2\u4E3A3\u679A\u5C0F\u5251\u6C14"
+  attackMulAtMax: 3
+  maxHpMulAtMax: 3
+  defenseMulAtMax: 2
+  moveSpeedMulAtMax: 1.3
+  attackRangeMulAtMax: 1.5
+  critRateAddAtMax: 0
+  critDmgMulAtMax: 2.5
+  pierceRateAddAtMax: 0
+  pierceCountAddAtMax: 0

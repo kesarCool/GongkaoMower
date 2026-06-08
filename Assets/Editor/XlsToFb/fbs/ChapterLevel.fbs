@@ -10,6 +10,8 @@ table ChapterLevel{
 	levelId:int32;
 	mapName:string;
 	mapPath:string;
+	rewardItemIds:[string];
+	rewardItemCounts:[string];
 }
 
 root_type ChapterLevel;

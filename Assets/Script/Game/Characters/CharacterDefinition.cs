@@ -34,7 +34,15 @@ public class CharacterDefinition : ScriptableObject
     [Tooltip("角色额外携带的技能（开局即拥有，不含 startingSkill 自身）")]
     public SkillId[] boundSkills;
 
+    [Header("升级")]
+    [Tooltip("英雄升级曲线配置（等级属性倍率 + 金币消耗公式）。未拖入则无升级加成。")]
+    public HeroUpgradeData upgradeData;
+
     [Header("解锁")]
     [Tooltip("false = 默认可用；true = 需达成条件解锁")]
     public bool locked;
+    [Tooltip("通关此关卡后解锁（0 = 不通过关卡解锁）。")]
+    public int unlockLevelId;
+    [Tooltip("收集到此数量的碎片后解锁（0 = 不通过碎片解锁）。")]
+    public int unlockFragmentCount;
 }

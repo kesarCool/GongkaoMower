@@ -59,6 +59,25 @@ public class CharacterConfigApplier : MonoBehaviour
 
         // 1. 属性（通过 attributes 干净写入，不再用反射）
         var attr = def.attributes.ApplyMinimums();
+
+        // 叠加升级倍率
+        if (def.upgradeData != null)
+        {
+            PlayerProfileService.Instance.LoadOrCreate();
+            var s = PlayerProfileService.Instance;
+            int lv = s.GetHeroLevel(def.characterId);
+            attr.attack         *= s.GetUpgradeMul(def.characterId, def.upgradeData, "attack");
+            attr.maxHp          *= s.GetUpgradeMul(def.characterId, def.upgradeData, "maxHp");
+            attr.defense        *= s.GetUpgradeMul(def.characterId, def.upgradeData, "defense");
+            attr.moveSpeed      *= s.GetUpgradeMul(def.characterId, def.upgradeData, "moveSpeed");
+            attr.attackRangeMul *= s.GetUpgradeMul(def.characterId, def.upgradeData, "attackRange");
+            attr.critRate       += s.GetUpgradeMul(def.characterId, def.upgradeData, "critRate");
+            attr.critDamageMul  *= s.GetUpgradeMul(def.characterId, def.upgradeData, "critDmg");
+            attr.pierceRate     += s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceRate");
+            attr.pierceCount    += Mathf.RoundToInt(s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceCount"));
+            Debug.Log($"[CharacterConfigApplier] 升级倍率已应用：{def.characterId} Lv.{lv}");
+        }
+
         Debug.Log($"[CharacterConfigApplier] 属性讀取: raw=({def.attributes.moveSpeed:F1}) safe=({attr.moveSpeed:F1})");
         _playerHealth.SetMaxHp(attr.maxHp);
         _playerHealth.SetDefense(attr.defense);
@@ -73,10 +92,16 @@ public class CharacterConfigApplier : MonoBehaviour
         _playerSkills.pierceRate = attr.pierceRate;
         _playerSkills.attackRangeMul = attr.attackRangeMul;
 
-        // 2. 技能
+        // 2. Rare 特质
+        ApplyRareTrait(def);
+
+        // 3. 技能
         ApplySkills(def);
 
-        // 3. 外观
+        // 4. Legend 突破（必须在技能创建后调用）
+        ApplyLegendBreakthrough(def);
+
+        // 5. 外观
         ApplyAppearance(def);
     }
 
@@ -116,6 +141,70 @@ public class CharacterConfigApplier : MonoBehaviour
 
         if (def.defaultWeapon != null)
             _appearance.ApplyWeapon(def.defaultWeapon);
+    }
+
+    private void ApplyRareTrait(CharacterDefinition def)
+    {
+        if (def?.upgradeData == null) return;
+        int stage = PlayerProfileService.Instance.GetHeroStage(def.characterId);
+        if (stage < 1) return; // 未到 Rare
+
+        var traitType = def.upgradeData.rareTrait;
+        if (traitType == HeroTraitType.None) return;
+
+        // 移除旧特质（如果有）
+        var existing = GetComponents<TraitBehaviour>();
+        foreach (var t in existing) Destroy(t);
+
+        // 创建新特质
+        TraitBehaviour trait = traitType switch
+        {
+            HeroTraitType.KillStreak      => gameObject.AddComponent<TraitKillStreak>(),
+            HeroTraitType.DamageAura      => gameObject.AddComponent<TraitDamageAura>(),
+            HeroTraitType.ReactiveShield  => gameObject.AddComponent<TraitReactiveShield>(),
+            HeroTraitType.Berserk         => gameObject.AddComponent<TraitBerserk>(),
+            HeroTraitType.VampiricHeal    => gameObject.AddComponent<TraitVampiricHeal>(),
+            HeroTraitType.TalismanOrbit  => gameObject.AddComponent<TraitTalismanOrbit>(),
+            _ => null,
+        };
+
+        if (trait != null)
+        {
+            trait.Initialize(def.upgradeData.rareTraitParams);
+            Debug.Log($"[CharacterConfigApplier] Rare 特质已应用：{traitType}（stage={stage}）");
+        }
+    }
+
+    private void ApplyLegendBreakthrough(CharacterDefinition def)
+    {
+        if (def?.upgradeData == null) return;
+        int stage = PlayerProfileService.Instance.GetHeroStage(def.characterId);
+        if (stage < 2)
+        {
+            // Debug.Log($"[CharacterConfigApplier] Legend 突破跳过：stage={stage}，需 stage≥2");
+            return;
+        }
+
+        if (_playerSkills == null) { Debug.LogWarning("[CharacterConfigApplier] _playerSkills 为空，无法注入突破。"); return; }
+
+        var ids = new System.Collections.Generic.List<SkillId>(4);
+        _playerSkills.GetEquippedSkillIdsOrdered(ids);
+
+        int applied = 0;
+        foreach (var id in ids)
+        {
+            if (id == SkillId.None) continue;
+            var skill = _playerSkills.GetEquippedSkill<SkillBase>(id);
+            if (skill != null)
+            {
+                skill.ApplyLegendBreakthrough(stage);
+                applied++;
+                // Debug.Log($"[CharacterConfigApplier] Legend 突破已注入：skill={id}（{skill.GetType().Name}）");
+            }
+        }
+
+        if (applied == 0)
+            Debug.LogWarning($"[CharacterConfigApplier] Legend 突破未应用任何技能！stage={stage}, skillCount={ids.Count}");
     }
 
     private void OverrideBulletPrefab(CharacterDefinition def)

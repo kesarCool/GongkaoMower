@@ -34,6 +34,37 @@ public class SkillThrowGrenade : SkillBase
         this.cooldown = Mathf.Max(0.2f, cooldown);
     }
 
+    private int _legendStage;
+    private int _baseMaxBounces;
+    private float _baseAoeRadius;
+    private float _baseDamage;
+
+    public override void ApplyLegendBreakthrough(int stage)
+    {
+        _legendStage = stage;
+        ApplyBreakthroughStats();
+    }
+
+    public override void OnAfterStatsApplied()
+    {
+        if (_legendStage >= 2) ApplyBreakthroughStats();
+    }
+
+    private void ApplyBreakthroughStats()
+    {
+        if (_legendStage < 2) return;
+
+        _baseMaxBounces = maxBounces;
+        _baseAoeRadius = aoeRadius;
+        _baseDamage = damage;
+
+        maxBounces = _baseMaxBounces + 1;
+        aoeRadius = _baseAoeRadius * 1.3f;
+        damage = _baseDamage * 1.2f;
+
+        Debug.Log($"[SkillThrowGrenade] Legend 突破已应用：bounces={maxBounces}, aoe={aoeRadius:F1}, dmg={damage:F0}");
+    }
+
     public override void Tick(float deltaTime)
     {
         if (!_equipped) return;

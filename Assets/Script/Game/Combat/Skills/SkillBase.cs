@@ -50,6 +50,12 @@ public abstract class SkillBase : ISkill
         Level = Mathf.Max(1, Level + 1);
     }
 
+    /// <summary>Legend 升阶突破：由 CharacterConfigApplier 在技能创建后调用。</summary>
+    public virtual void ApplyLegendBreakthrough(int stage) { }
+
+    /// <summary>ApplyStatsToSkill 之后调用，供子类重写以恢复 Legend 突破等不被配表覆盖的修改。</summary>
+    public virtual void OnAfterStatsApplied() { }
+
     public abstract void Tick(float deltaTime);
 
     protected static GameObject FindNearestEnemy(Vector3 from, string enemyTag, float maxRange = 9999f)

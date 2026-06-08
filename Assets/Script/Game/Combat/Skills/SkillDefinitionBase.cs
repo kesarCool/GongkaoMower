@@ -85,7 +85,10 @@ public abstract class SkillDefinitionBase : ScriptableObject
     {
         ISkill skill = CreateRuntimeSkillInternal(bindings);
         if (skill != null)
+        {
             ApplyStatsToSkill(skill, ClampLevel(skill.Level));
+            (skill as SkillBase)?.OnAfterStatsApplied();
+        }
         return skill;
     }
 

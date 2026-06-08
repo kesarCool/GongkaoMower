@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,6 +25,10 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     [Tooltip("黑屏过渡后的目标透明度（0=全透明, 1=全黑）。")]
     [SerializeField] private float deathFadeTargetAlpha = 0.85f;
+
+    [Header("关卡奖励")]
+    [Tooltip("胜利时是否从 ChapterLevel 表读取奖励物品。")]
+    [SerializeField] private bool useChapterRewards = true;
 
     private GameLayer _gameLayer;
     private PlayerHealth _playerHealth;
@@ -156,11 +161,21 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             yield return null;
         }
 
-        // 结算
+        // 结算（先判定首次通关 → 记录进度 → 发放奖励）
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
-        TryRecordVictoryProgress(dur, kills);
-        ShowResultUi(new GameResultViewModel { victory = true, battleDurationUnscaled = dur, killCount = kills });
+        int levelId = SelectedLevelContext.LevelId;
+        bool isFirstClear = !PlayerProfileService.Instance.HasCleared(levelId);
+        var newUnlocks = TryRecordVictoryProgress(dur, kills);
+        var rewardItems = TryAwardChapterRewards(levelId, isFirstClear);
+        ShowResultUi(new GameResultViewModel
+        {
+            victory = true,
+            battleDurationUnscaled = dur,
+            killCount = kills,
+            unlockedCharacters = newUnlocks,
+            rewardItems = rewardItems,
+        });
 
         // 恢复
         camFollow?.ClearOverride();
@@ -274,19 +289,98 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         UIManager.Instance.Open<GameRevivePanel>(payload, UiOpenOptions.ModalDefault);
     }
 
-    private static void TryRecordVictoryProgress(float durationSec, int killCount)
+    private static List<string> TryRecordVictoryProgress(float durationSec, int killCount)
     {
-        if (!SelectedLevelContext.HasSelection) return;
+        if (!SelectedLevelContext.HasSelection) return new List<string>();
         PlayerProfileService.Instance.LoadOrCreate();
 
         int levelId = SelectedLevelContext.LevelId;
-        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId)) return;
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(levelId)) return new List<string>();
 
         var health = FindObjectOfType<PlayerHealth>();
         int stars = health != null
             ? LevelStarRules.ComputeStars(health.Hp, health.MaxHp)
             : 1;
         PlayerProfileService.Instance.RecordVictory(levelId, durationSec, killCount, stars);
+        return CharacterUnlockEvaluator.OnLevelCleared(levelId);
+    }
+
+    /// <summary>从 ChapterLevel 表读取奖励物品，写入存档。返回展示用奖励列表。</summary>
+    private List<RewardItemEntry> TryAwardChapterRewards(int levelId, bool isFirstClear)
+    {
+        if (!useChapterRewards) return null;
+
+        var result = new List<RewardItemEntry>();
+        if (levelId <= 0) return result;
+
+        // 查 ChapterLevel 表（注意：字典 key 是行 ID，需用 Catalog 按 levelId 查）
+        TableManager.Instance.EnsureLoaded();
+        if (!ChapterLevelCatalog.TryGetByLevelId(levelId, out var chapterRow))
+        {
+            Debug.LogWarning($"[BattleOutcome] 关卡 {levelId} 在 ChapterLevel 表中未找到，无奖励。");
+            return result;
+        }
+
+        // 解析管道分隔的奖励数据
+        // rewardItemIds[0] = "1|101" → itemId 列表
+        // rewardItemCounts[0] = "200|5" → 对应数量
+        // 如果数组有 2 个元素：[0]=首通, [1]=重复；否则仅首通有奖励
+        int rewardSetIndex = 0;
+        if (!isFirstClear && chapterRow.rewardItemIdsLength > 1)
+            rewardSetIndex = 1;
+        else if (!isFirstClear)
+            return result; // 仅配了首通奖励，重复无奖励
+
+        if (rewardSetIndex >= chapterRow.rewardItemIdsLength)
+            return result;
+
+        string idsStr = chapterRow.rewardItemIdsArray(rewardSetIndex);
+        string countsStr = rewardSetIndex < chapterRow.rewardItemCountsLength
+            ? chapterRow.rewardItemCountsArray(rewardSetIndex)
+            : "";
+
+        if (string.IsNullOrEmpty(idsStr))
+            return result;
+
+        string[] idParts = idsStr.Split('|');
+        string[] countParts = string.IsNullOrEmpty(countsStr) ? new string[0] : countsStr.Split('|');
+
+        for (int i = 0; i < idParts.Length; i++)
+        {
+            if (!int.TryParse(idParts[i].Trim(), out int itemId) || itemId <= 0)
+                continue;
+
+            int count = 0;
+            if (i < countParts.Length)
+                int.TryParse(countParts[i].Trim(), out count);
+            if (count <= 0) continue;
+
+            // 写入存档
+            PlayerProfileService.Instance.AddItem(itemId, count);
+
+            // 查物品展示信息
+            var itemRow = TableManager.Instance.GetTableItem<ProtoTable.ItemTable>(itemId) as ProtoTable.ItemTable;
+
+            result.Add(new RewardItemEntry
+            {
+                itemId = itemId,
+                itemName = itemRow?.ItemName ?? $"物品{itemId}",
+                iconPath = itemRow?.IconPath ?? "",
+                count = count,
+                grade = itemRow?.Grade ?? 0,
+            });
+        }
+
+        if (result.Count > 0)
+        {
+            string tag = isFirstClear ? "首次通关" : "重复通关";
+            var sb = new System.Text.StringBuilder();
+            foreach (var r in result)
+                sb.Append($"{r.itemName}×{r.count} ");
+            Debug.Log($"[BattleOutcome] 关卡 {levelId} 奖励（{tag}）：{sb}");
+        }
+
+        return result;
     }
 
     // ── 全屏遮罩（死亡过渡 + 波次/Boss 警告共用）──

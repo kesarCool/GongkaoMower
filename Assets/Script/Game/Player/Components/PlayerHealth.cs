@@ -28,6 +28,9 @@ public class PlayerHealth : MonoBehaviour
     public float Hp => hp;
     public float MaxHp => maxHp;
     public float Defense => defense;
+
+    /// <summary>受击前拦截（null 或返回 false = 不拦截）。用于护盾等机制。</summary>
+    public Func<float, bool> OnPreDamage;
     public bool IsAlive => !_dead && hp > 0f;
 
     public HealthChangedEvent OnHealthChanged = new HealthChangedEvent();
@@ -90,6 +93,11 @@ public class PlayerHealth : MonoBehaviour
     {
         if (_dead) return;
         if (amount <= 0f) return;
+
+        // 护盾拦截
+        if (OnPreDamage != null && OnPreDamage.Invoke(amount))
+            return;
+
         if (invulnerabilityDuration > 0f && Time.time < _invulnerableUntil)
             return;
 

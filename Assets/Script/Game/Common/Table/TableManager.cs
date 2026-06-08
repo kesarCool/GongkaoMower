@@ -21,6 +21,7 @@ public class TableManager : MonoSingleton<TableManager>
         typeof(Monster),
         typeof(ChapterLevel),
         typeof(ErrorCodeTable),
+        typeof(ItemTable),       // 物品表（Excel 导表后生成 ProtoTable.ItemTable.cs）
     };
 
     private Dictionary<Type, Dictionary<int, object>> mTypeTableDict = new Dictionary<Type, Dictionary<int, object>>();

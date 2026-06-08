@@ -33,7 +33,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private UiToastPanel toastPanelPrefab;
 
     [Tooltip("Toast 默认显示秒数（ShowToast 未指定时长时）")]
-    [SerializeField] private float defaultToastDuration = 2.5f;
+    [SerializeField] private float defaultToastDuration = 1f;
 
     [Header("排序（子物体带 Canvas 且 Override Sorting 时有效）")]
     [SerializeField] private int stackSortingBase = 200;

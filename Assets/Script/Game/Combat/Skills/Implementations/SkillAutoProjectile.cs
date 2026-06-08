@@ -1,7 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// 自动索敌投射物：周期性向最近敌人方向发射子弹（逻辑等价于原先 PlayerController.AutoShoot）
+/// 自动索敌投射物基类：周期性向最近敌人方向发射子弹。
+/// 变体子类重写 ApplyBreakthroughStats 实现差异化 Legend 突破。
 /// </summary>
 public class SkillAutoProjectile : SkillBase
 {
@@ -25,13 +26,12 @@ public class SkillAutoProjectile : SkillBase
     public float burstTargetSingleRange = 10f;
 
     private float _timer;
-    private float _burstTimer;
-    private int _burstMaxLevel = 5; // 由 SkillDef.ApplyStatsToSkill 写入
+    protected float _burstTimer;
+    private int _burstMaxLevel = 5;
 
-    /// <summary>由 AutoProjectileSkillDefinition.ApplyBurstStats 调用。</summary>
     public void SetBurstMaxLevel(int maxLv) { _burstMaxLevel = maxLv; }
 
-    private bool IsBurstReady => burstEnabled && Level >= _burstMaxLevel;
+    protected bool IsBurstReady => burstEnabled && Level >= _burstMaxLevel;
 
     public SkillAutoProjectile(GameObject bulletPrefab, float bulletSpeed, float interval, SkillId skillId = SkillId.AutoProjectile)
     {
@@ -41,13 +41,44 @@ public class SkillAutoProjectile : SkillBase
         this.interval = Mathf.Max(0.05f, interval);
     }
 
+    // ── Legend 突破（基类：projectileCount +2）──
+
+    protected int _legendStage;
+    private int _baseProjectileCount;
+    protected bool _needsCritSplit;
+    protected bool _needsHoming;
+
+    public override void ApplyLegendBreakthrough(int stage)
+    {
+        _legendStage = stage;
+        ApplyBreakthroughStats();
+    }
+
+    public override void OnAfterStatsApplied()
+    {
+        if (_legendStage >= 2) ApplyBreakthroughStats();
+    }
+
+    /// <summary>Legend 突破普攻弹数增量（子类可重写）。</summary>
+    protected virtual int LegendProjectileBonus => 2;
+
+    protected virtual void ApplyBreakthroughStats()
+    {
+        if (_legendStage < 2) return;
+
+        _baseProjectileCount = projectileCount;
+        projectileCount = _baseProjectileCount + LegendProjectileBonus;
+        // Debug.Log($"[SkillAutoProjectile] Legend 突破（基础）：projectileCount={projectileCount}, bonus=+{LegendProjectileBonus}");
+    }
+
+    // ── Tick ──
+
     public override void Tick(float deltaTime)
     {
         if (!_equipped) return;
         if (_ctx.player == null) return;
         if (string.IsNullOrEmpty(_ctx.enemyTag)) return;
 
-        // Burst CD 独立于普攻，没敌人也走
         TryFireBurst(deltaTime);
 
         if (bulletPrefab == null) return;
@@ -55,12 +86,11 @@ public class SkillAutoProjectile : SkillBase
         _timer += deltaTime;
         if (_timer < interval) return;
 
-        // 检查上限与节流
         if (SpawnLimiter.Instance != null)
         {
             if (!SpawnLimiter.Instance.CanSpawn("Bullet", out _))
             {
-                _timer = interval * 0.5f; // 被限流时提前一点再试
+                _timer = interval * 0.5f;
                 return;
             }
         }
@@ -83,7 +113,6 @@ public class SkillAutoProjectile : SkillBase
         int spawned = 0;
         for (int i = 0; i < count; i++)
         {
-            // 检查上限与节流
             if (SpawnLimiter.Instance != null)
             {
                 if (!SpawnLimiter.Instance.CanSpawn("Bullet", out _))
@@ -96,8 +125,22 @@ public class SkillAutoProjectile : SkillBase
             GameObject prefab = (maxLevelPrefab != null && Level >= _burstMaxLevel) ? maxLevelPrefab : bulletPrefab;
             GameObject bullet = GameObjectPool.Get(prefab, from, Quaternion.identity);
             if (bullet == null)
+                bullet = Object.Instantiate(prefab, from, Quaternion.identity);
+
+            // 对象池旧实例可能缺组件，运行时补上
+            if (_needsCritSplit && prefab == maxLevelPrefab && bullet.GetComponent<CritSplitOnHit>() == null)
             {
-                bullet = Object.Instantiate(bulletPrefab, from, Quaternion.identity);
+                var cs = bullet.AddComponent<CritSplitOnHit>();
+                cs.splitCount = 3;
+                cs.splitDmgMul = 0.4f;
+                cs.splitLifetime = 1.2f;
+                cs.splitBulletPrefab = bulletPrefab;
+            }
+            if (_needsHoming && bullet.GetComponent<HomingOverride>() == null)
+            {
+                var h = bullet.AddComponent<HomingOverride>();
+                h.turnRate = 80f;
+                h.homingRange = 6f;
             }
 
             PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
@@ -110,7 +153,6 @@ public class SkillAutoProjectile : SkillBase
                     isCrit,
                     ps != null ? ps.pierceRate : 0f);
                 pb.Launch(d, p);
-                // 散射弹需要玩家引用以避开向玩家方向散射
                 if (pb is ScatterBullet sc)
                     sc.SetPlayerRef(_ctx.player);
             }
@@ -125,15 +167,20 @@ public class SkillAutoProjectile : SkillBase
         }
 
         if (spawned > 0)
+        {
+            // Debug.Log($"[SkillAutoProjectile] 普攻射击：spawned={spawned}, projectileCount={projectileCount}, level={Level}, legendStage={_legendStage}");
             PublishSkillCast(from);
+        }
     }
 
-    private void TryFireBurst(float deltaTime)
+    // ── 爆发 ──
+
+    protected virtual void TryFireBurst(float deltaTime)
     {
         if (!IsBurstReady) return;
 
-        if (burstBulletPrefab == null) { Debug.LogWarning($"[SkillAutoProjectile {Id}] burstBulletPrefab is null!"); return; }
-        if (_ctx.player == null) { Debug.LogWarning($"[SkillAutoProjectile {Id}] _ctx.player is null!"); return; }
+        if (burstBulletPrefab == null) return;
+        if (_ctx.player == null) return;
 
         _burstTimer += deltaTime;
         if (_burstTimer < burstCooldown) return;
@@ -141,7 +188,6 @@ public class SkillAutoProjectile : SkillBase
 
         Vector3 playerPos = _ctx.player.position;
 
-        // 单敌集火：感知范围内仅 1 个敌人时，全部弹丸瞄准该敌
         Vector2? aimTarget = null;
         if (burstTargetSingleEnemy)
         {
@@ -156,16 +202,14 @@ public class SkillAutoProjectile : SkillBase
         for (int i = 0; i < burstCount; i++)
         {
             float startAngle = 360f / burstCount * i;
-            // 环绕位置始终用径向（绕玩家一圈均匀分布）
             Vector2 orbitSpawnDir = Quaternion.Euler(0f, 0f, startAngle) * Vector2.right;
             Vector3 pos = playerPos + (Vector3)(orbitSpawnDir * burstOrbitRadius);
 
             Vector2 flyDir;
             if (aimTarget.HasValue)
             {
-                // 集火：朝向目标，广阔扇形散射
                 Vector2 toTarget = (aimTarget.Value - (Vector2)playerPos).normalized;
-                float burstSpread = 45f; // 集火散射总角度
+                float burstSpread = 45f;
                 float t = burstCount > 1 ? (float)i / (burstCount - 1) : 0.5f;
                 float angleOffset = Mathf.Lerp(-burstSpread * 0.5f, burstSpread * 0.5f, t);
                 flyDir = Quaternion.Euler(0f, 0f, angleOffset) * toTarget;
@@ -178,6 +222,10 @@ public class SkillAutoProjectile : SkillBase
             GameObject bullet = GameObjectPool.Get(burstBulletPrefab, pos, Quaternion.identity);
             if (bullet == null)
                 bullet = Object.Instantiate(burstBulletPrefab, pos, Quaternion.identity);
+
+            // 对象池旧实例可能缺 HomingOverride，运行时补上
+            if (_needsHoming && bullet.GetComponent<HomingOverride>() == null)
+                bullet.AddComponent<HomingOverride>();
 
             var bb = bullet.GetComponent<AutoProjectileBurstBullet>();
             if (bb != null)
@@ -193,12 +241,13 @@ public class SkillAutoProjectile : SkillBase
             }
             else
             {
-                Debug.LogWarning($"[SkillAutoProjectile {Id}] burstBulletPrefab 上未挂 AutoProjectileBurstBullet! prefab={burstBulletPrefab.name}");
+                // Debug.LogWarning($"[SkillAutoProjectile {Id}] burstBulletPrefab 上未挂 AutoProjectileBurstBullet! prefab={burstBulletPrefab.name}");
             }
 
             SpawnLimiter.Instance?.RegisterSpawned("Bullet", bullet);
         }
 
+        // Debug.Log($"[SkillAutoProjectile] 爆发射击：burstCount={burstCount}, burstEnabled={burstEnabled}, IsBurstReady={IsBurstReady}, level={Level}, cd={burstCooldown}");
         PublishSkillCast(playerPos);
     }
 }
