@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Pistol
   m_EditorClassIdentifier: 
   weaponId: weapon_pistol
-  displayName: "\u624B\u67AA"
+  displayName: "\u9730\u5F39\u67AA"
   sprite: {fileID: 0}
   localPosition: {x: 0.3, y: 0, z: 0}
   localRotation: {x: 0, y: 0, z: 0}

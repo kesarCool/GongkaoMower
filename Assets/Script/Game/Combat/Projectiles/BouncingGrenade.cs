@@ -14,6 +14,10 @@ public class BouncingGrenade : GrenadeProjectile
     public float bounceArcHeight = 2f;
     [Tooltip("弹射飞行时间（秒），0=按距离自动计算")]
     public float bounceFlightTime = 0f;
+    [Tooltip("Legend 突破：爆炸后延迟生成余爆")]
+    public bool chainExplosion;
+    [Tooltip("余爆 VFX Prefab（留空则复用主爆 VFX）")]
+    public GameObject chainExplosionFxPrefab;
 
     private int _bouncesRemaining;
     private Vector2 _lastExplosionPos;
@@ -74,6 +78,16 @@ public class BouncingGrenade : GrenadeProjectile
         ApplyAoeDamage(center);
         var fxPos = new Vector3(center.x, center.y, -0.1f);
         CombatVfxSpawner.TryPlayPooled(_explosionFxPrefab, fxPos, Quaternion.identity);
+
+        // Legend 余爆：0.3s 后在同位置生成二次小范围爆炸
+        if (chainExplosion)
+        {
+            var chain = new GameObject("ChainExplosionSpawner");
+            chain.transform.position = center;
+            var chainFx = chainExplosionFxPrefab != null ? chainExplosionFxPrefab : _explosionFxPrefab;
+            chain.AddComponent<ChainExplosionSpawner>().Init(
+                _lastDamage * 0.5f, _lastAoeRadius * 0.6f, _enemyTag, chainFx, _skillId);
+        }
 
         _lastExplosionPos = center;
 
@@ -161,5 +175,50 @@ public class BouncingGrenade : GrenadeProjectile
     {
         base.OnPoolRelease();
         _hitTargets.Clear();
+    }
+}
+
+/// <summary>Legend 余爆：延迟 0.3s 后在小范围造成 50% 伤害。</summary>
+internal sealed class ChainExplosionSpawner : MonoBehaviour
+{
+    private float _damage, _radius;
+    private string _enemyTag;
+    private GameObject _fxPrefab;
+    private SkillId _skillId;
+
+    public void Init(float damage, float radius, string enemyTag, GameObject fxPrefab, SkillId skillId)
+    {
+        _damage = damage; _radius = radius; _enemyTag = enemyTag; _fxPrefab = fxPrefab; _skillId = skillId;
+        StartCoroutine(DelayedExplode());
+    }
+
+    private System.Collections.IEnumerator DelayedExplode()
+    {
+        yield return new WaitForSeconds(0.35f);
+        Vector2 center = transform.position;
+
+        // 位置偏移（±1.5 单位，肉眼可见）
+        var fxPos = new Vector3(center.x + Random.Range(-0.8f, 0.8f), center.y + Random.Range(-0.6f, 0.6f), -0.1f);
+
+        // 二次 VFX：池化播放 + 偏移位置区别于主爆
+        CombatVfxSpawner.TryPlayPooled(_fxPrefab, fxPos, Quaternion.identity);
+
+        // AOE 伤害
+        if (!string.IsNullOrEmpty(_enemyTag))
+        {
+            bool prev = Physics2D.queriesHitTriggers;
+            Physics2D.queriesHitTriggers = true;
+            var hits = Physics2D.OverlapCircleAll(fxPos, _radius);
+            foreach (var h in hits)
+            {
+                var eb = h.GetComponent<EnemyBase>() ?? h.GetComponentInParent<EnemyBase>();
+                if (eb == null || !eb.gameObject.CompareTag(_enemyTag)) continue;
+                eb.TakeDamage(_damage, _skillId);
+            }
+            Physics2D.queriesHitTriggers = prev;
+        }
+
+        Debug.Log($"[余爆] dmg={_damage:F0} radius={_radius:F1} pos=({fxPos.x:F1},{fxPos.y:F1})");
+        Destroy(gameObject);
     }
 }

@@ -165,6 +165,7 @@ public class CharacterConfigApplier : MonoBehaviour
             HeroTraitType.Berserk         => gameObject.AddComponent<TraitBerserk>(),
             HeroTraitType.VampiricHeal    => gameObject.AddComponent<TraitVampiricHeal>(),
             HeroTraitType.TalismanOrbit  => gameObject.AddComponent<TraitTalismanOrbit>(),
+            HeroTraitType.NanoRepair    => gameObject.AddComponent<TraitNanoRepair>(),
             _ => null,
         };
 

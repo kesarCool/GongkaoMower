@@ -20,14 +20,12 @@ MonoBehaviour:
   legendFragmentCost: 50
   rareRequiredLevel: 10
   legendRequiredLevel: 20
-  rareTrait: 3
+  rareTrait: 7
   rareTraitParams:
-  - 2
-  - 20
-  - 3
-  - 5
-  rareTraitDescription: "合金装甲——每20秒获得1层护盾(吸收1次伤害)，最多2层，破碎时震退周围敌人"
-  legendBreakthroughDescription: "导弹风暴——齐射+3枚，爆炸半径\xD71.4，导弹速度\xD71.25"
+  - 0.02
+  - 0.25
+  rareTraitDescription: "纳米修复（HP<50%触发）——每秒回复2%最大血量，持续回血至50%以上后延迟3秒关闭"
+  legendBreakthroughDescription: "全弹发射（满级触发）——导弹齐射翻倍（6→12发），一次性全部射出，火力拉满"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2

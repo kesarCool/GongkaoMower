@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Rare 符箓环绕：击杀→符咒飞向玩家→环绕旋转→碰敌造成伤害 + 抵消弹幕。
+/// 符箓环绕 + 半血开启。HP<50% 激活，≥50% 延迟 3s 关闭。
 /// </summary>
 public sealed class TraitTalismanOrbit : TraitBehaviour
 {
@@ -11,25 +11,25 @@ public sealed class TraitTalismanOrbit : TraitBehaviour
     public float orbitRadius = 1.5f;
     public float orbitSpeed = 240f;
     public float flySpeed = 8f;
-    [Tooltip("碰敌伤害系数（× PlayerSkills.attackMultiplier）")]
     public float contactDamageMul = 0.3f;
+    public float hpThreshold = 0.5f;
+    public float minActiveSec = 3f;
 
-    private const string PrefabPath = "Traits/TalismanOrbit"; // Resources 加载路径
+    private const string PrefabPath = "Traits/TalismanOrbit";
 
     private GameObject _talismanPrefab;
     private readonly List<TalismanOrbiter> _orbiters = new List<TalismanOrbiter>();
     private PlayerHealth _health;
     private float _angleOffset;
+    private bool _active;
+    private float _deactivateTimer = -1f;
 
     private void Start()
     {
         _talismanPrefab = Resources.Load<GameObject>(PrefabPath);
-        if (_talismanPrefab == null) Debug.LogWarning($"[TraitTalismanOrbit] 未找到预制体：Resources/{PrefabPath}");
-
         _health = GetComponent<PlayerHealth>();
         if (_health != null) _health.OnPreDamage += OnPreDamage;
         EventBus.Subscribe<EnemyDiedEvent>(OnEnemyDied, owner: this);
-        Debug.Log($"[TraitTalismanOrbit] 已启动，prefab={_talismanPrefab?.name}, maxTalismans={maxTalismans}");
     }
 
     private void OnDestroy()
@@ -42,45 +42,65 @@ public sealed class TraitTalismanOrbit : TraitBehaviour
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
+        if (!_active) return;
         if (_orbiters.Count >= maxTalismans) return;
         if (_talismanPrefab == null) return;
 
         var go = Instantiate(_talismanPrefab, e.position, Quaternion.identity);
         go.layer = gameObject.layer;
-
         var orb = go.AddComponent<TalismanOrbiter>();
         orb.Init(this, flySpeed, orbitRadius);
         _orbiters.Add(orb);
-     //   Debug.Log($"[TraitTalismanOrbit] 符咒生成：count={_orbiters.Count}/{maxTalismans}, pos={e.position}");
     }
 
     private void Update()
     {
+        if (_health == null) return;
+
+        bool lowHp = (float)_health.Hp / Mathf.Max(1, _health.MaxHp) < hpThreshold;
+        bool shouldActivate = lowHp || (_active && _deactivateTimer > 0f);
+
+        if (shouldActivate && !_active)
+        {
+            _active = true;
+            _deactivateTimer = minActiveSec;
+        }
+        else if (!shouldActivate && _active)
+        {
+            _deactivateTimer -= Time.deltaTime;
+            if (_deactivateTimer <= 0f)
+            {
+                _active = false;
+                _deactivateTimer = -1f;
+                foreach (var o in _orbiters) if (o != null) Destroy(o.gameObject);
+                _orbiters.Clear();
+                return;
+            }
+        }
+        else if (_active && _deactivateTimer > 0f)
+        {
+            _deactivateTimer -= Time.deltaTime;
+        }
+
+        if (!_active) return;
+
         float dt = Time.deltaTime;
         Vector3 center = transform.position;
 
-        // 逆序遍历方便移除
         for (int i = _orbiters.Count - 1; i >= 0; i--)
         {
             var o = _orbiters[i];
             if (o == null) { _orbiters.RemoveAt(i); continue; }
 
             if (o.State == TalismanOrbiter.OrbitState.Flying)
-            {
                 o.FlyToward(center, dt);
-            }
             else
             {
                 float angle = _angleOffset + 360f / _orbiters.Count * i;
                 o.OrbitAround(center, orbitRadius, angle);
             }
 
-            // 碰敌检测
-            if (o.CheckEnemyContact())
-            {
-                _orbiters.RemoveAt(i);
-                continue;
-            }
+            if (o.CheckEnemyContact()) { _orbiters.RemoveAt(i); continue; }
         }
 
         _angleOffset += orbitSpeed * dt;
@@ -89,23 +109,19 @@ public sealed class TraitTalismanOrbit : TraitBehaviour
 
     private bool OnPreDamage(float damage)
     {
-        // 消耗最老的一张符抵消伤害
         for (int i = _orbiters.Count - 1; i >= 0; i--)
         {
             if (_orbiters[i] != null && _orbiters[i].State == TalismanOrbiter.OrbitState.Orbiting)
             {
                 Destroy(_orbiters[i].gameObject);
                 _orbiters.RemoveAt(i);
-                return true; // 抵消
+                return true;
             }
         }
         return false;
     }
 
-    public void RemoveOrbiter(TalismanOrbiter orb)
-    {
-        _orbiters.Remove(orb);
-    }
+    public void RemoveOrbiter(TalismanOrbiter orb) { _orbiters.Remove(orb); }
 }
 
 /// <summary>单个符咒：飞行→环绕→碰敌销毁。</summary>
@@ -127,15 +143,12 @@ public sealed class TalismanOrbiter : MonoBehaviour
 
     public void FlyToward(Vector3 target, float dt)
     {
-        Vector3 dir = (target - transform.position);
+        Vector3 dir = target - transform.position;
         float dist = dir.magnitude;
+        if (dist <= _orbitRadius) { State = OrbitState.Orbiting; return; }
         dir /= dist;
-
         transform.position += dir * _speed * dt;
-        FaceDirection(dir); // 飞行时朝向玩家
-
-        if (dist <= _orbitRadius)
-            State = OrbitState.Orbiting;
+        FaceDirection(dir);
     }
 
     private void FaceDirection(Vector3 dir)

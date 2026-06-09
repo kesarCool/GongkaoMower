@@ -22,8 +22,8 @@ MonoBehaviour:
   legendRequiredLevel: 20
   rareTrait: 6
   rareTraitParams: []
-  rareTraitDescription: "符箓环绕——击杀敌人掉落符咒飞向角色，环绕旋转碰敌造成伤害，最多5张，可抵消弹幕"
-  legendBreakthroughDescription: "符箓风暴——子弹数+2，暴击率+15%，2轮追踪导弹（每轮16发），全屏追敌"
+  rareTraitDescription: "符箓环绕（HP<50%触发）——击杀掉落符咒飞向角色，环绕旋转碰敌伤害+抵消弹幕，最多5张，回血后延迟3秒关闭"
+  legendBreakthroughDescription: "符箓风暴——子弹数+2，暴击率+15%，环绕爆发改为2轮追踪导弹风暴（每轮16发，720°追踪），全屏追敌"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2

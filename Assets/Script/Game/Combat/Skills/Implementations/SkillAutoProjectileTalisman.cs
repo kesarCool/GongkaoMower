@@ -44,11 +44,9 @@ public sealed class SkillAutoProjectileTalisman : SkillAutoProjectile
     protected override void TryFireBurst(float deltaTime)
     {
         if (_legendStage < 2) { base.TryFireBurst(deltaTime); return; }
-        if (!IsBurstReady) { Debug.Log($"[Talisman] 爆发未就绪：burstEnabled={burstEnabled}, Level={Level}"); return; }
-        if (burstBulletPrefab == null) { Debug.LogWarning("[Talisman] burstBulletPrefab 为空"); return; }
-        if (_ctx.player == null) { Debug.LogWarning("[Talisman] _ctx.player 为空"); return; }
-
-        Debug.Log($"[Talisman] TryFireBurst 触发！legendStage={_legendStage}, burstCount={burstCount}, cd={burstCooldown}");
+        if (!IsBurstReady) return;
+        if (burstBulletPrefab == null) return;
+        if (_ctx.player == null) return;
 
         _burstTimer += deltaTime;
         if (_burstTimer < burstCooldown) return;
@@ -58,7 +56,7 @@ public sealed class SkillAutoProjectileTalisman : SkillAutoProjectile
         if (burstBulletPrefab.GetComponent<HomingOverride>() == null)
         {
             var h = burstBulletPrefab.AddComponent<HomingOverride>();
-            Debug.Log($"[Talisman] HomingOverride 已注入 burstBulletPrefab={burstBulletPrefab.name}, turnRate={h.turnRate}");
+            // Debug.Log($"[Talisman] HomingOverride 已注入 burstBulletPrefab={burstBulletPrefab.name}");
         }
 
         // 启动 3 波风暴

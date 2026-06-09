@@ -103,3 +103,5 @@ MonoBehaviour:
   bounceSearchRadius: 8
   bounceArcHeight: 2
   bounceFlightTime: 0
+  chainExplosion: 1
+  chainExplosionFxPrefab: {fileID: 8378288021900666343, guid: f710559712e48fd4f98b9b0feef06dc6, type: 3}

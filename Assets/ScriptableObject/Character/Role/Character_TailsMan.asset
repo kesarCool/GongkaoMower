@@ -19,7 +19,7 @@ MonoBehaviour:
   attributes:
     attack: 90
     attackSpeedMul: 1
-    maxHp: 120
+    maxHp: 110
     defense: 10
     moveSpeed: 5.5
     attackRangeMul: 0

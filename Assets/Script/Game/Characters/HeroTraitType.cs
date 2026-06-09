@@ -14,4 +14,6 @@ public enum HeroTraitType
     VampiricHeal = 5,
     /// <summary>符箓环绕：maxTalismans / orbitRadius / orbitSpeed / flySpeed / arrivalDist / collisionRadius / contactDamage</summary>
     TalismanOrbit = 6,
+    /// <summary>纳米修复：healPercentPerSec / tickIntervalSec。HP<50% 持续回血，≥50% 延迟3s关闭</summary>
+    NanoRepair = 7,
 }

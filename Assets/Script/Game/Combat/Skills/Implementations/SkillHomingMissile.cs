@@ -34,8 +34,6 @@ public class SkillHomingMissile : SkillBase
 
     private int _legendStage;
     private int _baseSalvoCount;
-    private float _baseAoeRadius;
-    private float _baseMissileSpeed;
 
     public override void ApplyLegendBreakthrough(int stage)
     {
@@ -52,15 +50,14 @@ public class SkillHomingMissile : SkillBase
     {
         if (_legendStage < 2) return;
 
-        _baseSalvoCount = salvoCount;
-        _baseAoeRadius = aoeRadius;
-        _baseMissileSpeed = missileSpeed;
+        // 全弹发射：仅满级时触发
+        if (Level < skillMaxLevel) return;
 
-        salvoCount = _baseSalvoCount + 3;
-        aoeRadius = _baseAoeRadius * 1.4f;
-        missileSpeed = _baseMissileSpeed * 1.25f;
+        if (_baseSalvoCount == 0) _baseSalvoCount = salvoCount;
+        salvoCount = _baseSalvoCount * 2;
+        salvoInterval = 0f;
 
-        Debug.Log($"[SkillHomingMissile] Legend 突破已应用：salvo={salvoCount}, aoe={aoeRadius:F1}, speed={missileSpeed:F1}");
+        Debug.Log($"[SkillHomingMissile] Legend 全弹发射：salvo={salvoCount}, interval={salvoInterval}");
     }
 
     public override void Tick(float deltaTime)

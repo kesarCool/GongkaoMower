@@ -25,8 +25,8 @@ MonoBehaviour:
   - 0.5
   - 0.3
   - 0.15
-  rareTraitDescription: "熊猫之怒——血量低于50%时攻击+30%，移速+15%"
-  legendBreakthroughDescription: "连环爆破——弹射次数+1，爆炸后0.3秒生成余爆(50%伤害)"
+  rareTraitDescription: "熊猫之怒（HP<50%触发）——攻击+30%，移速+15%，回血后最低持续3秒再关闭"
+  legendBreakthroughDescription: "连环爆破——弹射次数+1，爆炸后0.35秒生成余爆（50%伤害，60%半径），二次打击"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2

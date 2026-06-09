@@ -103,6 +103,22 @@ public static class WeChatBuild
         PlayerSettings.stripEngineCode = true;
         PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Medium);
 
+        // 异常处理：允许 try-catch 正常工作，体积增量可接受
+        // 注：某些 Unity 版本中枚举名称为 ExplicitlyThrownOnly，较老版本为 ExplicitlyThrown
+        var exceptionSupportType = typeof(WebGLExceptionSupport);
+        if (System.Enum.IsDefined(exceptionSupportType, "ExplicitlyThrown"))
+        {
+            PlayerSettings.WebGL.exceptionSupport = (WebGLExceptionSupport)System.Enum.Parse(exceptionSupportType, "ExplicitlyThrown");
+        }
+        else if (System.Enum.IsDefined(exceptionSupportType, "ExplicitlyThrownOnly"))
+        {
+            PlayerSettings.WebGL.exceptionSupport = (WebGLExceptionSupport)System.Enum.Parse(exceptionSupportType, "ExplicitlyThrownOnly");
+        }
+        else
+        {
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+        }
+
         // WebAssembly linker target
         PlayerSettings.WebGL.linkerTarget = WebGLLinkerTarget.Wasm;
 

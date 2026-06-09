@@ -116,6 +116,7 @@ public class SkillThrowGrenade : SkillBase
             bg.bounceSearchRadius = bounceSearchRadius;
             bg.bounceArcHeight = bounceArcHeight;
             bg.bounceFlightTime = bounceFlightTime;
+            bg.chainExplosion = _legendStage >= 2;
             bg.SetBounceDamage(finalDmg, aoeRadius, Id);
         }
 

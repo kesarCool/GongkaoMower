@@ -21,14 +21,12 @@ public sealed class HomingOverride : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
     }
 
-    private bool _logged;
     private void FixedUpdate()
     {
         if (_speed <= 0f) _speed = _rb.velocity.magnitude;
         if (_speed <= 0f) return;
         var target = CombatTargetRegistry.FindNearest("monster", transform.position, homingRange);
         if (target == null) return;
-        if (!_logged) { Debug.Log($"[HomingOverride] 追踪启动：speed={_speed}, turnRate={turnRate}, range={homingRange}"); _logged = true; }
 
         Vector2 toTarget = ((Vector2)target.transform.position - (Vector2)transform.position).normalized;
         Vector2 currentDir = _rb.velocity.normalized;

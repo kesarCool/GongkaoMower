@@ -85,8 +85,10 @@ public sealed class EncryptedPlayerPrefsStorage : ISaveStorage
     private static bool TryDecrypt(string encoded, out string plain)
     {
         plain = null;
-        byte[] data;
+        if (string.IsNullOrEmpty(encoded) || encoded.Length < 8 || !IsLikelyBase64(encoded))
+            return false;
 
+        byte[] data;
         try { data = Convert.FromBase64String(encoded); }
         catch { return false; }
 
@@ -121,4 +123,21 @@ public sealed class EncryptedPlayerPrefsStorage : ISaveStorage
     }
 
     private static uint ComputeChecksum(byte[] data) => ComputeChecksum(data, data.Length);
+
+    /// <summary>快速筛查：避免在 IL2CPP WebGL (exceptionSupport=None) 中触发 Convert.FromBase64String 的异常导致 Native 级崩溃。</summary>
+    private static bool IsLikelyBase64(string s)
+    {
+        if (s.Length % 4 != 0) return false;
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (c >= 'A' && c <= 'Z') continue;
+            if (c >= 'a' && c <= 'z') continue;
+            if (c >= '0' && c <= '9') continue;
+            if (c == '+' || c == '/') continue;
+            if (c == '=' && (i >= s.Length - 2)) continue;
+            return false;
+        }
+        return true;
+    }
 }

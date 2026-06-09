@@ -1,22 +1,23 @@
 using UnityEngine;
 
 /// <summary>
-/// 低血增伤：血量低于 hpThreshold 时 +attack% +moveSpeed%。
-/// 参数：[hpThreshold, attackBonus, moveSpeedBonus]
+/// 低血增伤 + 粒子 VFX。参数：[hpThreshold, attackBonus, moveSpeedBonus]
 /// </summary>
 public sealed class TraitBerserk : TraitBehaviour
 {
     private float _hpThreshold = 0.5f;
     private float _attackBonus = 0.3f;
     private float _moveSpeedBonus = 0.15f;
+    private float _minActiveSec = 3f;
 
     private PlayerHealth _health;
     private PlayerSkills _skills;
     private PlayerController _controller;
-    private SpriteRenderer _sr;
     private float _baseAttackMul;
     private float _baseMoveSpeed;
     private bool _active;
+    private float _deactivateTimer = -1f;
+    private GameObject _vfxGo;
 
     public override void Initialize(float[] p)
     {
@@ -28,21 +29,40 @@ public sealed class TraitBerserk : TraitBehaviour
         _health = GetComponent<PlayerHealth>();
         _skills = GetComponent<PlayerSkills>();
         _controller = GetComponent<PlayerController>();
-        _sr = GetComponentInChildren<SpriteRenderer>();
         if (_skills != null) _baseAttackMul = _skills.attackMultiplier;
         if (_controller != null) _baseMoveSpeed = _controller.moveSpeed;
+
+        var prefab = Resources.Load<GameObject>("VFX/TraitBerserk");
+        if (prefab != null) { _vfxGo = Instantiate(prefab, transform); _vfxGo.transform.localPosition = Vector3.zero; _vfxGo.transform.localScale = Vector3.one * 0.3f; _vfxGo.SetActive(false); }
     }
 
     private void Update()
     {
         if (_health == null) return;
-        bool low = (float)_health.Hp / Mathf.Max(1, _health.MaxHp) < _hpThreshold;
+        bool lowHp = (float)_health.Hp / Mathf.Max(1, _health.MaxHp) < _hpThreshold;
+        bool shouldActivate = lowHp || (_active && _deactivateTimer > 0f);
 
-        if (low == _active) return;
-        _active = low;
+        if (shouldActivate && !_active)
+        {
+            _active = true;
+            _deactivateTimer = _minActiveSec;
+            ApplyBerserk(true);
+        }
+        else if (!shouldActivate && _active)
+        {
+            _deactivateTimer -= Time.deltaTime;
+            if (_deactivateTimer <= 0f) { _active = false; _deactivateTimer = -1f; ApplyBerserk(false); }
+        }
+        else if (_active && _deactivateTimer > 0f)
+        {
+            _deactivateTimer -= Time.deltaTime;
+        }
+    }
 
-        if (_skills != null) _skills.attackMultiplier = _baseAttackMul * (1f + (_active ? _attackBonus : 0f));
-        if (_controller != null) _controller.moveSpeed = _baseMoveSpeed * (1f + (_active ? _moveSpeedBonus : 0f));
-        if (_sr != null) _sr.color = _active ? new Color(1f, 0.4f, 0.3f) : Color.white;
+    private void ApplyBerserk(bool on)
+    {
+        if (_skills != null) _skills.attackMultiplier = _baseAttackMul * (1f + (on ? _attackBonus : 0f));
+        if (_controller != null) _controller.moveSpeed = _baseMoveSpeed * (1f + (on ? _moveSpeedBonus : 0f));
+        if (_vfxGo != null) _vfxGo.SetActive(on);
     }
 }

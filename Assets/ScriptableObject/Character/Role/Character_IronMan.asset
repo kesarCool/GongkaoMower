@@ -19,8 +19,8 @@ MonoBehaviour:
   attributes:
     attack: 100
     attackSpeedMul: 1
-    maxHp: 200
-    defense: 50
+    maxHp: 140
+    defense: 30
     moveSpeed: 4
     attackRangeMul: 0
     critRate: 0.1
