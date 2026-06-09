@@ -805,6 +805,7 @@ MonoBehaviour:
   confirmDialogPrefab: {fileID: 7028428122260665049, guid: 582e1c8e316586047b2a6185d0094b7d, type: 3}
   toastPanelPrefab: {fileID: 7971915058314420757, guid: 8d28d6898686d1544bf92e8b491bbb18, type: 3}
   defaultToastDuration: 2.5
+  itemTooltipPrefab: {fileID: 1344416518824838447, guid: c201921f0bff04f41a5420f88cbc47a3, type: 3}
   stackSortingBase: 200
   overlaySortingBase: 800
   respondToEscape: 1

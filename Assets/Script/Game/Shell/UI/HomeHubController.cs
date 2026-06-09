@@ -30,6 +30,9 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("为 true 时打开词汇预览使用 ModalDefault。")]
     [SerializeField] private bool pauseWhenLexiconPreviewOpen;
 
+    [Header("背包")]
+    [SerializeField] private Button openBackpackButton;
+
     [Header("货币 HUD")]
     [Tooltip("金币数量文本（TMP）。")]
     [SerializeField] private TMPro.TextMeshProUGUI goldHudText;
@@ -52,6 +55,8 @@ public class HomeHubController : MonoBehaviour
             openCharacterSelectionButton.onClick.AddListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
+        if (openBackpackButton != null)
+            openBackpackButton.onClick.AddListener(OpenBackpack);
 
         RefreshCurrencyHud();
     }
@@ -66,6 +71,8 @@ public class HomeHubController : MonoBehaviour
             openCharacterSelectionButton.onClick.RemoveListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
+        if (openBackpackButton != null)
+            openBackpackButton.onClick.RemoveListener(OpenBackpack);
     }
 
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
@@ -115,6 +122,14 @@ public class HomeHubController : MonoBehaviour
         }
 
         UIManager.Instance.Open<CharacterSelectionPanel>(null, UiOpenOptions.NonPausingModal);
+    }
+
+    /// <summary>打开背包面板。</summary>
+    public void OpenBackpack()
+    {
+        UiClickSound.Play();
+        if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
+        UIManager.Instance.Open<BackPackPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
     /// <summary>打开词汇预览：先 <see cref="TableManager.Init"/> 再弹窗。</summary>

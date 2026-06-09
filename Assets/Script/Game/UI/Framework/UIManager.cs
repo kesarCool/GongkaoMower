@@ -35,6 +35,10 @@ public class UIManager : MonoBehaviour
     [Tooltip("Toast 默认显示秒数（ShowToast 未指定时长时）")]
     [SerializeField] private float defaultToastDuration = 1f;
 
+    [Header("Tooltip")]
+    [Tooltip("物品 Tooltip Prefab（挂 ItemTooltip），无需 Canvas")]
+    [SerializeField] private ItemTooltip itemTooltipPrefab;
+
     [Header("排序（子物体带 Canvas 且 Override Sorting 时有效）")]
     [SerializeField] private int stackSortingBase = 200;
 
@@ -52,6 +56,7 @@ public class UIManager : MonoBehaviour
 
     private UiConfirmDialog _confirmInstance;
     private UiToastPanel _toastInstance;
+    private ItemTooltip _itemTooltipInstance;
 
     private int _pauseLocks;
     private float _storedTimeScale = 1f;
@@ -239,6 +244,25 @@ public class UIManager : MonoBehaviour
         BattleChineseFontRuntime.EnsureLoaded();
         BattleChineseFontRuntime.ApplyToHierarchy(_toastInstance.transform);
         RefreshOverlaySorting();
+    }
+
+    /// <summary>获取或创建 ItemTooltip 实例（挂 overlayRoot 下，共享 Canvas）。</summary>
+    public ItemTooltip GetOrCreateItemTooltip()
+    {
+        if (_itemTooltipInstance != null)
+            return _itemTooltipInstance;
+
+        if (itemTooltipPrefab == null)
+        {
+            Debug.LogWarning("[UIManager] itemTooltipPrefab 未配置");
+            return null;
+        }
+
+        _itemTooltipInstance = Instantiate(itemTooltipPrefab, overlayRoot, false);
+        _itemTooltipInstance.gameObject.SetActive(false);
+        BattleChineseFontRuntime.EnsureLoaded();
+        BattleChineseFontRuntime.ApplyToHierarchy(_itemTooltipInstance.transform);
+        return _itemTooltipInstance;
     }
 
     /// <summary>弱 B：在主栈之上显示确认框</summary>

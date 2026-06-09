@@ -1,9 +1,11 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 统一物品展示 Cell：图标 + 名称 + 数量 + 品级边框。
+/// 统一物品展示 Cell：图标 + 名称 + 数量 + 品级边框 + 点击。
+/// 使用 SetClickCallback 挂自定义回调；不挂则点击无响应。
 /// </summary>
 public class ItemCell : MonoBehaviour
 {
@@ -11,18 +13,22 @@ public class ItemCell : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI countText;
     [SerializeField] private Image gradeBorder;
+    [SerializeField] private Button clickButton;
 
-    private static readonly Color[] GradeColors =
+    public static readonly Color[] GradeColors =
     {
-        new Color(0.75f, 0.75f, 0.75f), // 0=白
-        new Color(0.35f, 0.85f, 0.35f), // 1=绿
-        new Color(0.3f,  0.6f,  1f),    // 2=蓝
-        new Color(0.75f, 0.35f, 0.95f), // 3=紫
-        new Color(1f,    0.6f,  0.15f), // 4=橙
-        new Color(1f,    0.15f, 0.15f), // 5=红
+        new Color(0.75f, 0.75f, 0.75f),
+        new Color(0.35f, 0.85f, 0.35f),
+        new Color(0.3f,  0.6f,  1f),
+        new Color(0.75f, 0.35f, 0.95f),
+        new Color(1f,    0.6f,  0.15f),
+        new Color(1f,    0.15f, 0.15f),
     };
 
-    public void Bind(Sprite icon, string itemName, int count, int grade)
+    private Action _onClick;
+    private string _itemName, _description;
+
+    public void Bind(Sprite icon, string itemName, int count, int grade, string description = "")
     {
         if (iconImage != null) { iconImage.sprite = icon; iconImage.enabled = icon != null; }
         if (nameText != null) nameText.text = itemName ?? "";
@@ -30,5 +36,26 @@ public class ItemCell : MonoBehaviour
 
         int g = Mathf.Clamp(grade, 0, GradeColors.Length - 1);
         if (gradeBorder != null) gradeBorder.color = GradeColors[g];
+
+        _itemName = itemName;
+        _description = description;
+
+        if (clickButton != null)
+        {
+            clickButton.onClick.RemoveAllListeners();
+            clickButton.onClick.AddListener(() =>
+            {
+                _onClick?.Invoke();
+                if (!string.IsNullOrEmpty(_itemName)) ItemTooltip.Show(_itemName, _description, (RectTransform)transform);
+            });
+        }
+    }
+
+    public void SetClickCallback(Action callback) { _onClick = callback; }
+
+    public static Color GradeColor(int grade)
+    {
+        int g = Mathf.Clamp(grade, 0, GradeColors.Length - 1);
+        return GradeColors[g];
     }
 }
