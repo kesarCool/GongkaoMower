@@ -23,11 +23,21 @@ public class GameResultSkillDamageCell : MonoBehaviour
     {
         if (icon != null)
         {
+            icon.color = Color.white;
             icon.sprite = sprite;
             icon.enabled = sprite != null;
         }
 
         if (nameText != null) nameText.text = displayName ?? string.Empty;
         if (damageText != null) damageText.text = Mathf.RoundToInt(damage).ToString();
+    }
+
+    /// <summary>设置突破满级态：icon 变红。</summary>
+    public void SetBreakthrough(bool on)
+    {
+        if (icon != null)
+        {
+            icon.color = on ? new Color(1f, 0.2f, 0.15f, 1f) : Color.white;
+        }
     }
 }

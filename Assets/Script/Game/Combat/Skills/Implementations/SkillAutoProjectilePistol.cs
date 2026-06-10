@@ -13,6 +13,7 @@ public sealed class SkillAutoProjectilePistol : SkillAutoProjectile
 
     protected override void ApplyBreakthroughStats()
     {
+        if (_legendStage < 2) return;
         base.ApplyBreakthroughStats();
 
         var scatter = maxLevelPrefab?.GetComponentInChildren<ScatterBullet>();

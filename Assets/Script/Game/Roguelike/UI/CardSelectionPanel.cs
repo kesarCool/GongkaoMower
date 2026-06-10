@@ -158,11 +158,15 @@ public class CardSelectionPanel : UIPanelBase
             {
                 var def = catalog != null ? catalog.Get(activeIds[i]) : null;
                 int lv = _playerSkills.GetSkillLevel(activeIds[i]);
+                int maxLv = def != null ? def.maxLevel : 5;
+                bool isBreakthrough = lv >= maxLv;
                 _skillCells[i].Bind(def != null ? def.icon : null, lv);
+                _skillCells[i].SetBreakthrough(isBreakthrough);
             }
             else
             {
                 _skillCells[i].Bind(null, 0);
+                _skillCells[i].SetBreakthrough(false);
             }
         }
 

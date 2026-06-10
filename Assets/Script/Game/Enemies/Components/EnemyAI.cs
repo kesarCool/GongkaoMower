@@ -46,9 +46,27 @@ public class EnemyAI : MonoBehaviour
         if (_brain != null && _brain.IsBusy)
             return;
 
+        // 帧级卡墙推出：若因碰撞挤压等原因嵌入墙壁，逐步推出
+        WallStuckResolver.ResolveTransform(transform);
+
         Vector2 current = rb.position;
         Vector2 target = player.position;
         Vector2 next = Vector2.MoveTowards(current, target, moveSpeed * Time.fixedDeltaTime);
+
+        // 墙壁回避：目标位置卡墙则拆轴滑动
+        if (WallStuckResolver.HasWallOverlap(next))
+        {
+            Vector2 slideX = new Vector2(next.x, current.y);
+            if (!WallStuckResolver.HasWallOverlap(slideX))
+                next = slideX;
+            else
+            {
+                Vector2 slideY = new Vector2(current.x, next.y);
+                if (!WallStuckResolver.HasWallOverlap(slideY))
+                    next = slideY;
+            }
+        }
+
         rb.MovePosition(next);
     }
 

@@ -50,6 +50,15 @@ public class SkillSlotCell : MonoBehaviour
             emptyState.SetActive(!hasSkill);
     }
 
+    /// <summary>设置突破满级态：icon 变红。</summary>
+    public void SetBreakthrough(bool on)
+    {
+        if (iconImage != null)
+        {
+            iconImage.color = on ? new Color(1f, 0.2f, 0.15f, 1f) : Color.white;
+        }
+    }
+
     /// <summary>闪烁高亮：提示该技能可被羁绊突破（金色脉冲 + 缩放弹跳）。</summary>
     public void SetHighlight(bool on)
     {

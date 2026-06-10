@@ -3,7 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// 角色解锁判定。
-/// 优先级：通关解锁 > 碎片解锁 > SO 默认 unlocked（未被任何逻辑覆盖时回退）。
+/// 优先级：SO 默认 unlocked > 已通关解锁 > 碎片手动解锁。
+/// 碎片集齐后不会自动解锁，需玩家点击确认消耗碎片。
 /// </summary>
 public static class CharacterUnlockEvaluator
 {
@@ -19,11 +20,15 @@ public static class CharacterUnlockEvaluator
             return $"通关关卡 {chapter}-{stage} 解锁";
         }
         if (def.unlockFragmentCount > 0)
-            return $"集齐 {def.unlockFragmentCount} 片碎片解锁";
+        {
+            int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId);
+            int need = def.unlockFragmentCount;
+            return $"集齐 {need} 片「{def.displayName}」碎片可解锁（{have}/{need}）";
+        }
         return "暂未开放";
     }
 
-    /// <summary>角色是否已解锁（读存档 + SO 默认）。</summary>
+    /// <summary>角色是否已解锁（SO 默认未锁 + 已通关解锁 + 碎片已手动解锁）。</summary>
     public static bool IsUnlocked(CharacterDefinition def)
     {
         if (def == null) return false;
@@ -32,7 +37,7 @@ public static class CharacterUnlockEvaluator
         var data = PlayerProfileService.Instance.Data;
         if (data == null) return false;
 
-        // 已通关解锁
+        // 已通关解锁 / 碎片手动解锁（均在 unlockedCharacters 列表中）
         if (data.unlockedCharacters != null)
         {
             for (int i = 0; i < data.unlockedCharacters.Length; i++)
@@ -40,12 +45,44 @@ public static class CharacterUnlockEvaluator
                     return true;
         }
 
-        // 碎片解锁（暂不启用，默认片段数阈值 = 999）
-        int frags = GetFragmentCount(data, def.characterId);
-        if (frags >= def.unlockFragmentCount && def.unlockFragmentCount > 0)
-            return true;
-
         return false;
+    }
+
+    /// <summary>碎片数量是否足够触发手动解锁流程。</summary>
+    public static bool CanFragmentUnlock(CharacterDefinition def)
+    {
+        if (def == null) return false;
+        if (IsUnlocked(def)) return false;
+        if (def.unlockFragmentCount <= 0) return false;
+
+        int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId);
+        return have >= def.unlockFragmentCount;
+    }
+
+    /// <summary>消耗碎片并解锁角色。返回 (成功, 消耗数量)。</summary>
+    public static (bool success, int cost) TryConsumeFragmentUnlock(CharacterDefinition def)
+    {
+        if (def == null) return (false, 0);
+        if (!CanFragmentUnlock(def)) return (false, 0);
+
+        int cost = def.unlockFragmentCount;
+        var data = PlayerProfileService.Instance.Data;
+        if (data == null) return (false, 0);
+
+        // 扣除碎片
+        int idx = data.characterFragmentKeys != null
+            ? System.Array.IndexOf(data.characterFragmentKeys, def.characterId) : -1;
+        if (idx < 0 || idx >= (data.characterFragmentValues?.Length ?? 0))
+            return (false, 0);
+
+        data.characterFragmentValues[idx] -= cost;
+
+        // 记录解锁
+        AddUnlockedCharacter(data, def.characterId);
+        PlayerProfileService.Instance.MarkDirtyAndSave();
+
+        Debug.Log($"[CharUnlock] 碎片解锁：{def.displayName}，消耗 {cost} 碎片");
+        return (true, cost);
     }
 
     /// <summary>通关关卡时记录解锁（胜利结算调用）。返回新解锁角色名列表。</summary>

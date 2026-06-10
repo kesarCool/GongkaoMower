@@ -337,7 +337,7 @@ MonoBehaviour:
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 120, y: 120}
-  m_Spacing: {x: 10, y: 10}
+  m_Spacing: {x: 20, y: 20}
   m_Constraint: 1
   m_ConstraintCount: 6
 --- !u!1 &3849179019741767385
@@ -628,6 +628,8 @@ MonoBehaviour:
   loopScroll: {fileID: 3849179019741767388}
   itemCellPrefab: {fileID: 248414060290504574, guid: 18bf988d28e5fff4caca5933b2a1e89b, type: 3}
   emptyHint: {fileID: 403580816338744028}
+  minRows: 6
+  columnsPerRow: 5
   closeButton: {fileID: 3849179020023626841}
 --- !u!1 &8082903962200356350
 GameObject:

@@ -93,6 +93,9 @@ public class Spawner : MonoBehaviour
         GameObject enemy = GameObjectPool.Get(enemyPrefab, pos, Quaternion.identity);
         SpawnLimiter.Instance?.RegisterSpawned("Enemy", enemy);
 
+        // 生成后立即检测卡墙并推出
+        WallStuckResolver.ResolveTransform(enemy.transform);
+
         if (applyMoveSpeed)
         {
             float spd = Random.Range(enemySpeedRange.x, enemySpeedRange.y);

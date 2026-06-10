@@ -12,6 +12,7 @@ public sealed class RewardItemEntry
     public string iconPath;
     public int count;
     public int grade;
+    public string description;
 }
 
 /// <summary>
@@ -339,8 +340,8 @@ public class GameResultPanel : UIPanelBase
             if (!string.IsNullOrEmpty(entry.iconPath))
                 icon = Resources.Load<Sprite>(entry.iconPath);
 
-            Debug.Log($"[GameResult] ItemCell.Bind: id={entry.itemId} name={entry.itemName} count={entry.count} grade={entry.grade} icon={icon != null}");
-            cell.Bind(icon, entry.itemName, entry.count, entry.grade);
+            Debug.Log($"[GameResult] ItemCell.Bind: id={entry.itemId} name={entry.itemName} count={entry.count} grade={entry.grade} icon={icon != null} desc={entry.description}");
+            cell.Bind(icon, entry.itemName, entry.count, entry.grade, entry.description ?? "");
         }
     }
 
@@ -372,12 +373,15 @@ public class GameResultPanel : UIPanelBase
 
             SkillDefinitionBase def = ps.skillCatalog != null ? ps.skillCatalog.Get(id) : null;
             int lv = ps.GetSkillLevel(id);
+            int maxLv = def != null ? def.maxLevel : 5;
+            bool isBreakthrough = lv >= maxLv;
             string nm = def != null && !string.IsNullOrEmpty(def.displayName)
                 ? $"Lv.{lv} {def.displayName}"
                 : id.ToString();
             Sprite ic = def != null ? def.icon : null;
             float dmg = BattleRunMetrics.GetSkillDamage(id);
             cell.Bind(ic, nm, dmg);
+            cell.SetBreakthrough(isBreakthrough);
         }
     }
 

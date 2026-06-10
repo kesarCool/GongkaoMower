@@ -106,6 +106,10 @@ public class BossArenaLock : MonoBehaviour
         if (rb == null) rb = wall.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Static;
 
+        // 标记（反卡墙检测）
+        if (wall.GetComponent<WallMarker>() == null)
+            wall.AddComponent<WallMarker>();
+
         // ── 视觉：Tiled 模式让一张小图沿墙重复铺满 ──
         var sr = wall.GetComponent<SpriteRenderer>();
         if (sr != null && sr.sprite != null)

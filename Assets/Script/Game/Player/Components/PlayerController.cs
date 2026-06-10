@@ -99,7 +99,37 @@ public class PlayerController : MonoBehaviour
 
         Vector3 cur = transform.position;
         Vector3 next = Vector3.MoveTowards(cur, targetPos, moveSpeed * Time.deltaTime);
+        Vector2 next2D = new Vector2(next.x, next.y);
+
+        // 墙壁回避：目标位置卡墙则尝试拆轴滑动，均失败则停在本帧
+        if (WallStuckResolver.HasWallOverlap(next2D))
+        {
+            // 仅 X 轴移动
+            Vector2 slideX = new Vector2(next2D.x, cur.y);
+            if (!WallStuckResolver.HasWallOverlap(slideX))
+            {
+                next = new Vector3(slideX.x, slideX.y, cur.z);
+            }
+            else
+            {
+                // 仅 Y 轴移动
+                Vector2 slideY = new Vector2(cur.x, next2D.y);
+                if (!WallStuckResolver.HasWallOverlap(slideY))
+                {
+                    next = new Vector3(slideY.x, slideY.y, cur.z);
+                }
+                else
+                {
+                    // 全部堵死，停止本帧移动
+                    next = cur;
+                }
+            }
+        }
+
         transform.position = next;
+
+        // 兜底：若因物理推动等原因已卡入墙壁，强制推出
+        WallStuckResolver.ResolveTransform(transform);
 
         if ((targetPos - transform.position).sqrMagnitude < 0.01f)
             hasTarget = false;

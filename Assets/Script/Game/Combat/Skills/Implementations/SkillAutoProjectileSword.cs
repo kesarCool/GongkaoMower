@@ -17,6 +17,7 @@ public sealed class SkillAutoProjectileSword : SkillAutoProjectile
 
     protected override void ApplyBreakthroughStats()
     {
+        if (_legendStage < 2) return;
         base.ApplyBreakthroughStats();
 
         // burstCount 翻倍

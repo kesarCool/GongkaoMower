@@ -21,6 +21,7 @@ public sealed class SkillAutoProjectileTalisman : SkillAutoProjectile
 
     protected override void ApplyBreakthroughStats()
     {
+        if (_legendStage < 2) return;
         base.ApplyBreakthroughStats();
 
         if (!_burstStatsSaved) { _baseBurstCount = burstCount; _burstStatsSaved = true; }

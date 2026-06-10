@@ -42,6 +42,7 @@ public class ItemCell : MonoBehaviour
 
         if (clickButton != null)
         {
+            clickButton.interactable = true;
             clickButton.onClick.RemoveAllListeners();
             clickButton.onClick.AddListener(() =>
             {
@@ -52,6 +53,24 @@ public class ItemCell : MonoBehaviour
     }
 
     public void SetClickCallback(Action callback) { _onClick = callback; }
+
+    /// <summary>绑定空占位格子：无内容、灰底、不可点击。</summary>
+    public void BindEmpty()
+    {
+        if (iconImage != null) { iconImage.sprite = null; iconImage.enabled = false; }
+        if (nameText != null) nameText.text = "";
+        if (countText != null) { countText.text = ""; countText.gameObject.SetActive(false); }
+        if (gradeBorder != null) gradeBorder.color = new Color(0.3f, 0.3f, 0.3f, 0.4f);
+
+        _itemName = null;
+        _description = null;
+
+        if (clickButton != null)
+        {
+            clickButton.onClick.RemoveAllListeners();
+            clickButton.interactable = false;
+        }
+    }
 
     public static Color GradeColor(int grade)
     {

@@ -32,5 +32,5 @@ MonoBehaviour:
   boundSkills: 
   upgradeData: {fileID: 11400000, guid: dd2e07d1ffa29d449aeca33945676d79, type: 2}
   locked: 1
-  unlockLevelId: 201
-  unlockFragmentCount: 0
+  unlockLevelId: 0
+  unlockFragmentCount: 30

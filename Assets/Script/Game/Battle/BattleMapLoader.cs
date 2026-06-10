@@ -154,6 +154,7 @@ public sealed class BattleMapLoader : MonoBehaviour
         var rb = go.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Static;
         rb.gravityScale = 0f;
+        go.AddComponent<WallMarker>();
     }
 
     private static GameObject LoadMapPrefab(string resourcesPath, out string loadedPath)

@@ -18,6 +18,11 @@ public class CharacterSelectionElement : MonoBehaviour
     [SerializeField] private GameObject selectedCheckmark;
     [SerializeField] private Button clickButton;
 
+    [Header("未解锁碎片展示（可选，未拖入则仅遮罩）")]
+    [SerializeField] private Image fragmentIcon;
+    [SerializeField] private TextMeshProUGUI fragmentCountText;
+    [SerializeField] private GameObject fragmentGroup;
+
     public CharacterDefinition CharacterDef { get; private set; }
     public int Index { get; private set; }
 
@@ -81,8 +86,33 @@ public class CharacterSelectionElement : MonoBehaviour
 
         // 锁定状态
         bool unlocked = CharacterUnlockEvaluator.IsUnlocked(def);
+
         if (lockedOverlay != null)
             lockedOverlay.SetActive(!unlocked);
+
+        // 未解锁碎片信息
+        if (!unlocked && def.unlockFragmentCount > 0)
+        {
+            int have = CharacterUnlockEvaluator.GetFragmentCount(
+                PlayerProfileService.Instance.Data, def.characterId);
+            int need = def.unlockFragmentCount;
+
+            if (fragmentIcon != null)
+            {
+                fragmentIcon.sprite = def.portrait;
+                fragmentIcon.enabled = def.portrait != null;
+            }
+            if (fragmentCountText != null)
+                fragmentCountText.text = $"{have}/{need}";
+            if (fragmentGroup != null)
+                fragmentGroup.SetActive(true);
+        }
+        else
+        {
+            if (fragmentGroup != null)
+                fragmentGroup.SetActive(false);
+        }
+
         // 按钮保持可点击，未解锁时点击弹出提示
         if (clickButton != null)
             clickButton.interactable = true;
@@ -105,6 +135,10 @@ public class CharacterSelectionElement : MonoBehaviour
     private void OnClicked()
     {
         UiClickSound.Play();
+        // 无论解锁与否都传给 panel，由 panel 统一处理：
+        // - 已解锁 → 选中换将
+        // - 碎片集齐 → 二次确认消耗解锁
+        // - 碎片不足 → Toast 提示
         _onClick?.Invoke(this);
     }
 }

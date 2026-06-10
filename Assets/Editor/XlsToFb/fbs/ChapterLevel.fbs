@@ -10,8 +10,11 @@ table ChapterLevel{
 	levelId:int32;
 	mapName:string;
 	mapPath:string;
-	rewardItemIds:[string];
-	rewardItemCounts:[string];
+	firstClearPoolId:int32;
+	threeStarPoolId:int32;
+	twoStarPoolId:int32;
+	oneStarPoolId:int32;
+	defeatGoldPerWave:int32;
 }
 
 root_type ChapterLevel;

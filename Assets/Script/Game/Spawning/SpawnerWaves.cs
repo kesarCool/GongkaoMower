@@ -117,15 +117,15 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     public bool HasReleasedWaveCompletionSignal { get; private set; }
 
-    /// <summary>当前关卡配置的爆兵总波数（表驱动或 waves 数组）。</summary>
+    /// <summary>当前关卡配置的爆兵总波数（按 wave 字段去重计数）。</summary>
     public int GetConfiguredWaveCount()
     {
         if (useLevelWaveTable)
         {
             int levelId = ResolveLevelWaveLevelId();
-            int n = LevelWaveCatalog.CountWavesForLevel(levelId);
-            if (n > 0)
-                return n;
+            var all = BuildTableWavesForLevel(levelId);
+            if (all.Count > 0)
+                return GroupByWave(all).Count;
         }
 
         return waves != null ? waves.Length : 0;
@@ -299,19 +299,25 @@ public class SpawnerWaves : MonoBehaviour
 
         if (useTable)
         {
-            int total = tableWaves.Count;
-            for (int w = 0; w < total; w++)
+            // 按 wave 字段分组：同一 wave 的多个条目 → 并发刷怪
+            var waveGroups = GroupByWave(tableWaves);
+            int totalWaves = waveGroups.Count;
+
+            for (int w = 0; w < totalWaves; w++)
             {
-                TableWaveRuntime tw = tableWaves[w];
+                var group = waveGroups[w];
                 if (debugLogs)
-                    Debug.Log($"[SpawnerWaves] LevelWave 波次 {w + 1}/{total} wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster}");
+                {
+                    foreach (var tw in group)
+                        Debug.Log($"[SpawnerWaves] wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster} (共{group.Count}条并发)");
+                }
 
-                PublishWaveChanged(this, w + 1, total);
-                WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, tw.wave);
-                bool isLastWave = w == total - 1;
-                yield return TableWaveSpawnRoutine(tw, w + 1, tableWaves.Count, isLastWave);
+                PublishWaveChanged(this, w + 1, totalWaves);
+                WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, group[0].wave);
+                bool isLastWave = w == totalWaves - 1;
+                yield return TableWaveGroupRoutine(group, w + 1, totalWaves, isLastWave);
 
-                if (w < tableWaves.Count - 1)
+                if (w < totalWaves - 1)
                 {
                     float wi = Mathf.Max(0f, waveInterval);
                     if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(wi);
@@ -539,6 +545,117 @@ public class SpawnerWaves : MonoBehaviour
     }
 
     /// <summary>
+    /// 同波次多条目并发刷怪：每组内所有条目同时生成，各自按 interval 独立控制节奏。
+    /// </summary>
+    private IEnumerator TableWaveGroupRoutine(List<TableWaveRuntime> group, int displayIndex, int displayTotal, bool isLastWave)
+    {
+        int entryCount = group.Count;
+        int[] remaining = new int[entryCount];
+        float[] nextSpawnTime = new float[entryCount];  // 基于 Time.time 或 realtime 的时间戳
+        float[] windowEnd = new float[entryCount];
+        int[] stepMs = new int[entryCount];  // 间隔毫秒（int 避免浮点累积误差）
+
+        float t0 = useRealtimeForWaves ? Time.realtimeSinceStartup : Time.time;
+
+        for (int i = 0; i < entryCount; i++)
+        {
+            var tw = group[i];
+            remaining[i] = Mathf.Max(0, tw.totalMonster);
+            stepMs[i] = Mathf.RoundToInt(Mathf.Max(0f, tw.intervalSpawn) * 1000f);
+            nextSpawnTime[i] = t0 + Mathf.Max(0, tw.timeStart);
+            windowEnd[i] = tw.waveTimeContinue > 0 ? t0 + Mathf.Max(0, tw.timeStart) + tw.waveTimeContinue : float.MaxValue;
+        }
+
+        // Boss 标记预算（最后波且条目标记了 isBoss）
+        int bossMarkBudget = 0;
+        if (isLastWave)
+        {
+            foreach (var tw in group)
+            {
+                if (tw.isBoss && tw.quantityBoss > 0)
+                    bossMarkBudget += tw.quantityBoss;
+            }
+            // 如果没明确配 quantityBoss，至少给 1 个 Boss 标记
+            if (bossMarkBudget == 0 && group.Exists(tw => tw.isBoss))
+                bossMarkBudget = 1;
+        }
+
+        // 波次警告
+        foreach (var tw in group)
+            TryFlashWaveWarning(tw, displayIndex);
+
+        int totalSpawned = 0;
+        int totalCap = 0;
+        for (int i = 0; i < entryCount; i++) totalCap += remaining[i];
+
+        while (true)
+        {
+            float now = useRealtimeForWaves ? Time.realtimeSinceStartup : Time.time;
+            bool anyActive = false;
+
+            for (int i = 0; i < entryCount; i++)
+            {
+                if (remaining[i] <= 0) continue;
+                if (now > windowEnd[i]) { remaining[i] = 0; continue; }
+                anyActive = true;
+
+                if (now < nextSpawnTime[i]) continue;
+
+                // 限流检查
+                if (SpawnLimiter.Instance != null && !SpawnLimiter.Instance.CanSpawn("Enemy", out _))
+                {
+                    nextSpawnTime[i] = now + 0.05f; // 稍后再试
+                    continue;
+                }
+
+                var tw = group[i];
+                bool markBoss = bossMarkBudget > 0;
+                if (markBoss) bossMarkBudget--;
+
+                GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed);
+                if (markBoss && spawnedGo != null)
+                    TryMarkLastWaveBoss(spawnedGo);
+
+                remaining[i]--;
+                totalSpawned++;
+
+                // 下一只的生成时间
+                if (stepMs[i] > 0)
+                    nextSpawnTime[i] = now + stepMs[i] * 0.001f;
+                else
+                    nextSpawnTime[i] = now; // 无间隔：下一帧继续刷
+
+                if (remaining[i] <= 0) continue;
+            }
+
+            if (!anyActive) break;
+
+            yield return null; // 每帧调度一次
+        }
+
+        if (debugLogs)
+            Debug.Log($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（{entryCount}条并发）结束：已刷 {totalSpawned}/{totalCap}");
+    }
+
+    /// <summary>按 wave 字段分组，组内保持原排序。</summary>
+    private static List<List<TableWaveRuntime>> GroupByWave(List<TableWaveRuntime> rows)
+    {
+        var groups = new List<List<TableWaveRuntime>>();
+        var dict = new Dictionary<int, List<TableWaveRuntime>>();
+        foreach (var r in rows)
+        {
+            if (!dict.TryGetValue(r.wave, out var list))
+            {
+                list = new List<TableWaveRuntime>();
+                dict[r.wave] = list;
+                groups.Add(list);
+            }
+            list.Add(r);
+        }
+        return groups;
+    }
+
+    /// <summary>
     /// 核心生成方法：所有攻血速从 Excel（LevelWave 表）来，不再读 EnemyDefinition 或 Inspector。
     /// </summary>
     private GameObject SpawnEnemy(int enemyId, int lineSpawn, int attack, int maxHp, float moveSpeed)
@@ -570,6 +687,9 @@ public class SpawnerWaves : MonoBehaviour
 
         GameObject enemy = GameObjectPool.Get(prefabToSpawn, pos, Quaternion.identity);
         SpawnLimiter.Instance?.RegisterSpawned("Enemy", enemy);
+
+        // 生成后立即检测卡墙并推出（避免出生就卡在边界墙壁里）
+        WallStuckResolver.ResolveTransform(enemy.transform);
 
         EnemyBase eb = enemy.GetComponent<EnemyBase>();
         if (eb != null)

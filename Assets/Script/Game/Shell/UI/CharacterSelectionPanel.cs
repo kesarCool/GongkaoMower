@@ -218,6 +218,35 @@ public class CharacterSelectionPanel : UIPanelBase
 
         if (!CharacterUnlockEvaluator.IsUnlocked(cell.CharacterDef))
         {
+            var def = cell.CharacterDef;
+
+            // 碎片集齐 → 弹出二次确认消耗碎片解锁
+            if (CharacterUnlockEvaluator.CanFragmentUnlock(def))
+            {
+                int cost = def.unlockFragmentCount;
+                string msg = $"是否确认花费 <color=#FFD700>{cost}</color> 片碎片解锁「<color=#FFD700>{def.displayName}</color>」？";
+                UIManager.Instance.ShowConfirm("碎片解锁", msg, confirmed =>
+                {
+                    if (confirmed)
+                    {
+                        var result = CharacterUnlockEvaluator.TryConsumeFragmentUnlock(def);
+                        if (result.success)
+                        {
+                            UIManager.Instance.ShowToast($"「{def.displayName}」已解锁！", 2f);
+                            PopulateList();
+                            // 自动选中刚解锁的角色
+                            AutoSelectUnlocked(def.characterId);
+                        }
+                        else
+                        {
+                            UIManager.Instance.ShowToast("解锁失败，请重试", 1f);
+                        }
+                    }
+                });
+                return;
+            }
+
+            // 碎片不足或其他条件 → 弹出提示
             string hint = CharacterUnlockEvaluator.GetUnlockHint(cell.CharacterDef);
             if (!string.IsNullOrEmpty(hint))
                 UIManager.Instance.ShowToast(hint, 1f);
@@ -226,6 +255,19 @@ public class CharacterSelectionPanel : UIPanelBase
 
         bool isEquipped = cell.CharacterDef.characterId == _equippedCharId;
         SelectCell(cell.Index, isEquipped);
+    }
+
+    /// <summary>碎片解锁后自动选中刚解锁的角色。</summary>
+    private void AutoSelectUnlocked(string charId)
+    {
+        for (int i = 0; i < _cells.Count; i++)
+        {
+            if (_cells[i].CharacterDef != null && _cells[i].CharacterDef.characterId == charId)
+            {
+                SelectCell(i, isEquipped: false);
+                return;
+            }
+        }
     }
 
     private void SelectCell(int index, bool isEquipped)
@@ -324,8 +366,10 @@ public class CharacterSelectionPanel : UIPanelBase
             if (showUpgrade)
             {
                 int cost = data.GetCostForLevel(nextLv);
-                bool canAfford = svc.CanAffordGold(cost);
-                upgradeCostText.text = $"金币 <color={(canAfford ? "#FFFFFF" : "#FF4444")}>{PlayerProfileService.FormatGold(cost)}</color>";
+                int have = svc.Gold;
+                bool canAfford = have >= cost;
+                string needColor = canAfford ? "#FFFFFF" : "#FF4444";
+                upgradeCostText.text = $"金币 <color={needColor}>{PlayerProfileService.FormatGold(cost)}</color>/{PlayerProfileService.FormatGold(have)}";
             }
         }
         if (upgradeButton != null)
@@ -362,8 +406,9 @@ public class CharacterSelectionPanel : UIPanelBase
         {
             int needFrags = stage == 0 ? data.rareFragmentCost : data.legendFragmentCost;
             int haveFrags = svc.GetFragmentCount(def.characterId);
-            string color = haveFrags >= needFrags ? "#FFFFFF" : "#FF4444";
-            promoteFragmentCostText.text = $"碎片 <color={color}>{haveFrags}/{needFrags}</color>";
+            bool enough = haveFrags >= needFrags;
+            string needColor = enough ? "#FFFFFF" : "#FF4444";
+            promoteFragmentCostText.text = $"碎片 <color={needColor}>{needFrags}</color>/{haveFrags}";
         }
         if (promoteButton != null)
         {

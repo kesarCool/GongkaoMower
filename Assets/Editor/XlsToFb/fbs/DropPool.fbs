@@ -1,0 +1,15 @@
+namespace ProtoTable.DropPool;
+enum eCrypt :int{
+	code = 487576105,}
+
+namespace ProtoTable;
+table DropPool{
+	ID:int32;
+	PoolId:int32;
+	ItemIds:[string];
+	MinCounts:[string];
+	MaxCounts:[string];
+	Weights:[string];
+}
+
+root_type DropPool;

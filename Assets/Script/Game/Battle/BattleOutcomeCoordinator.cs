@@ -26,10 +26,6 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     [Tooltip("黑屏过渡后的目标透明度（0=全透明, 1=全黑）。")]
     [SerializeField] private float deathFadeTargetAlpha = 0.85f;
 
-    [Header("关卡奖励")]
-    [Tooltip("胜利时是否从 ChapterLevel 表读取奖励物品。")]
-    [SerializeField] private bool useChapterRewards = true;
-
     private GameLayer _gameLayer;
     private PlayerHealth _playerHealth;
     private bool _battleEnded;
@@ -167,7 +163,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         int levelId = SelectedLevelContext.LevelId;
         bool isFirstClear = !PlayerProfileService.Instance.HasCleared(levelId);
         var newUnlocks = TryRecordVictoryProgress(dur, kills);
-        var rewardItems = TryAwardChapterRewards(levelId, isFirstClear);
+        var rewardItems = AwardDropPoolRewards(levelId, isFirstClear);
         ShowResultUi(new GameResultViewModel
         {
             victory = true,
@@ -227,7 +223,14 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
-        ShowResultUi(new GameResultViewModel { victory = false, battleDurationUnscaled = dur, killCount = kills });
+        var defeatRewards = AwardDefeatGold();
+        ShowResultUi(new GameResultViewModel
+        {
+            victory = false,
+            battleDurationUnscaled = dur,
+            killCount = kills,
+            rewardItems = defeatRewards,
+        });
 
         // 面板弹出后清除遮罩
         _screenOverlay.color = new Color(0f, 0f, 0f, 0f);
@@ -305,82 +308,126 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         return CharacterUnlockEvaluator.OnLevelCleared(levelId);
     }
 
-    /// <summary>从 ChapterLevel 表读取奖励物品，写入存档。返回展示用奖励列表。</summary>
-    private List<RewardItemEntry> TryAwardChapterRewards(int levelId, bool isFirstClear)
+    /// <summary>使用掉落池系统发放胜利奖励：星级池 + 首通池叠加 + 保底。</summary>
+    private List<RewardItemEntry> AwardDropPoolRewards(int levelId, bool isFirstClear)
     {
-        if (!useChapterRewards) return null;
-
         var result = new List<RewardItemEntry>();
         if (levelId <= 0) return result;
 
-        // 查 ChapterLevel 表（注意：字典 key 是行 ID，需用 Catalog 按 levelId 查）
         TableManager.Instance.EnsureLoaded();
+
         if (!ChapterLevelCatalog.TryGetByLevelId(levelId, out var chapterRow))
         {
-            Debug.LogWarning($"[BattleOutcome] 关卡 {levelId} 在 ChapterLevel 表中未找到，无奖励。");
+            Debug.LogWarning($"[DropManager] 关卡 {levelId} 在 ChapterLevel 表中未找到。");
             return result;
         }
 
-        // 解析管道分隔的奖励数据
-        // rewardItemIds[0] = "1|101" → itemId 列表
-        // rewardItemCounts[0] = "200|5" → 对应数量
-        // 如果数组有 2 个元素：[0]=首通, [1]=重复；否则仅首通有奖励
-        int rewardSetIndex = 0;
-        if (!isFirstClear && chapterRow.rewardItemIdsLength > 1)
-            rewardSetIndex = 1;
-        else if (!isFirstClear)
-            return result; // 仅配了首通奖励，重复无奖励
-
-        if (rewardSetIndex >= chapterRow.rewardItemIdsLength)
-            return result;
-
-        string idsStr = chapterRow.rewardItemIdsArray(rewardSetIndex);
-        string countsStr = rewardSetIndex < chapterRow.rewardItemCountsLength
-            ? chapterRow.rewardItemCountsArray(rewardSetIndex)
-            : "";
-
-        if (string.IsNullOrEmpty(idsStr))
-            return result;
-
-        string[] idParts = idsStr.Split('|');
-        string[] countParts = string.IsNullOrEmpty(countsStr) ? new string[0] : countsStr.Split('|');
-
-        for (int i = 0; i < idParts.Length; i++)
+        int stars = ComputeStarsFromLastVictory();
+        int starPoolId = stars switch
         {
-            if (!int.TryParse(idParts[i].Trim(), out int itemId) || itemId <= 0)
-                continue;
+            3 => chapterRow.threeStarPoolId,
+            2 => chapterRow.twoStarPoolId,
+            _ => chapterRow.oneStarPoolId,
+        };
+        int firstClearPoolId = isFirstClear ? chapterRow.firstClearPoolId : 0;
 
-            int count = 0;
-            if (i < countParts.Length)
-                int.TryParse(countParts[i].Trim(), out count);
-            if (count <= 0) continue;
+        if (starPoolId <= 0 && firstClearPoolId <= 0)
+            return result; // 无配池，不发放奖励
 
-            // 写入存档
-            PlayerProfileService.Instance.AddItem(itemId, count);
+        // Roll 掉落池
+        var drops = DropManager.RollMultiple(starPoolId, firstClearPoolId);
 
-            // 查物品展示信息
-            var itemRow = TableManager.Instance.GetTableItem<ProtoTable.ItemTable>(itemId) as ProtoTable.ItemTable;
+        // 保底
+        var fragmentIds = DropManager.CollectFragmentIds(starPoolId, firstClearPoolId);
+        int pityItemId = DropPityTracker.ReportAndCheck(levelId, drops, fragmentIds);
+        if (pityItemId > 0)
+        {
+            int existingIdx = drops.FindIndex(d => d.itemId == pityItemId);
+            if (existingIdx >= 0)
+                drops[existingIdx] = new DropResult(pityItemId, drops[existingIdx].count + 1);
+            else
+                drops.Add(new DropResult(pityItemId, 1));
+            Debug.Log($"[DropPity] 保底触发！关卡 {levelId}，强制掉落物品 {pityItemId}");
+        }
 
+        // 写入存档 + 构建展示列表
+        foreach (var drop in drops)
+        {
+            if (drop.itemId == 1)
+                PlayerProfileService.Instance.AddGold(drop.count);
+            else
+                PlayerProfileService.Instance.AddItem(drop.itemId, drop.count);
+
+            var itemRow = TableManager.Instance.GetTableItem<ProtoTable.ItemTable>(drop.itemId) as ProtoTable.ItemTable;
             result.Add(new RewardItemEntry
             {
-                itemId = itemId,
-                itemName = itemRow?.ItemName ?? $"物品{itemId}",
+                itemId = drop.itemId,
+                itemName = itemRow?.ItemName ?? (drop.itemId == 1 ? "金币" : $"物品{drop.itemId}"),
                 iconPath = itemRow?.IconPath ?? "",
-                count = count,
+                count = drop.count,
                 grade = itemRow?.Grade ?? 0,
+                description = itemRow?.Description ?? "",
             });
         }
 
         if (result.Count > 0)
         {
-            string tag = isFirstClear ? "首次通关" : "重复通关";
+            string tag = isFirstClear ? "首通" : "重复";
+            if (firstClearPoolId > 0 && isFirstClear) tag += " + 首通奖励池";
             var sb = new System.Text.StringBuilder();
-            foreach (var r in result)
-                sb.Append($"{r.itemName}×{r.count} ");
-            Debug.Log($"[BattleOutcome] 关卡 {levelId} 奖励（{tag}）：{sb}");
+            foreach (var r in result) sb.Append($"{r.itemName}×{r.count} ");
+            Debug.Log($"[DropManager] 关卡 {levelId} 奖励（{tag}, starPool={starPoolId}, firstPool={firstClearPoolId}, stars={stars}）：{sb}");
         }
 
         return result;
+    }
+
+    /// <summary>失败结算：按已完成波次发放金币。</summary>
+    private List<RewardItemEntry> AwardDefeatGold()
+    {
+        var result = new List<RewardItemEntry>();
+        int levelId = SelectedLevelContext.LevelId;
+        if (levelId <= 0) return result;
+
+        TableManager.Instance.EnsureLoaded();
+        if (!ChapterLevelCatalog.TryGetByLevelId(levelId, out var chapterRow))
+            return result;
+
+        int goldPerWave = chapterRow.defeatGoldPerWave;
+        if (goldPerWave <= 0) return result;
+
+        var gameLayer = FindObjectOfType<GameLayer>(true);
+        int completedWaves = 0;
+        if (gameLayer != null)
+            completedWaves = Mathf.Max(0, gameLayer.CurrentWave - 1);
+
+        if (completedWaves <= 0) return result;
+
+        int gold = goldPerWave * completedWaves;
+        PlayerProfileService.Instance.AddGold(gold);
+
+        // 查 ItemTable 获取金币图标 & 品级，保证与胜利结算展示一致
+        var itemRow = TableManager.Instance.GetTableItem<ProtoTable.ItemTable>(1) as ProtoTable.ItemTable;
+        result.Add(new RewardItemEntry
+        {
+            itemId = 1,
+            itemName = itemRow?.ItemName ?? "金币",
+            iconPath = itemRow?.IconPath ?? "",
+            count = gold,
+            grade = itemRow?.Grade ?? 0,
+            description = itemRow?.Description ?? "",
+        });
+
+        Debug.Log($"[DropManager] 失败结算：完成 {completedWaves} 波，奖励 {gold} 金币（perWave={goldPerWave}）");
+        return result;
+    }
+
+    private static int ComputeStarsFromLastVictory()
+    {
+        var health = FindObjectOfType<PlayerHealth>();
+        if (health != null)
+            return LevelStarRules.ComputeStars(health.Hp, health.MaxHp);
+        return 1;
     }
 
     // ── 全屏遮罩（死亡过渡 + 波次/Boss 警告共用）──

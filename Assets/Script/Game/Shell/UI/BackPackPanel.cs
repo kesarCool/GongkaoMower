@@ -23,6 +23,12 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
     [Header("空状态")]
     [SerializeField] private GameObject emptyHint;
 
+    [Header("占位")]
+    [Tooltip("最少显示行数（物品不足时补空格子）")]
+    [SerializeField] private int minRows = 6;
+    [Tooltip("每行列数（与 content 的 GridLayoutGroup 一致，单列填 1）")]
+    [SerializeField] private int columnsPerRow = 1;
+
     [Header("按钮")]
     [SerializeField] private Button closeButton;
 
@@ -58,30 +64,36 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
         TableManager.Instance?.EnsureLoaded();
 
         var data = PlayerProfileService.Instance.Data;
-        if (data?.itemIds == null || data.itemIds.Length == 0) { RefreshUI(); return; }
-
         var itemTable = TableManager.Instance?.GetTable<ItemTable>();
 
-        for (int i = 0; i < data.itemIds.Length; i++)
+        if (data?.itemIds != null)
         {
-            int id = data.itemIds[i];
-            int count = i < data.itemCounts.Length ? data.itemCounts[i] : 0;
-            if (count <= 0) continue;
-
-            ItemTable itemRow = null;
-            if (itemTable != null && itemTable.TryGetValue(id, out var obj))
-                itemRow = obj as ItemTable;
-
-            _items.Add(new BackPackItemInfo
+            for (int i = 0; i < data.itemIds.Length; i++)
             {
-                itemId = id,
-                itemName = itemRow?.ItemName ?? $"物品{id}",
-                iconPath = itemRow?.IconPath ?? "",
-                count = count,
-                grade = itemRow?.Grade ?? 0,
-                description = itemRow?.Description ?? "",
-            });
+                int id = data.itemIds[i];
+                int count = i < data.itemCounts.Length ? data.itemCounts[i] : 0;
+                if (count <= 0) continue;
+
+                ItemTable itemRow = null;
+                if (itemTable != null && itemTable.TryGetValue(id, out var obj))
+                    itemRow = obj as ItemTable;
+
+                _items.Add(new BackPackItemInfo
+                {
+                    itemId = id,
+                    itemName = itemRow?.ItemName ?? $"物品{id}",
+                    iconPath = itemRow?.IconPath ?? "",
+                    count = count,
+                    grade = itemRow?.Grade ?? 0,
+                    description = itemRow?.Description ?? "",
+                });
+            }
         }
+
+        // 补空格子：至少 minRows 行
+        int minSlots = minRows * columnsPerRow;
+        while (_items.Count < minSlots)
+            _items.Add(new BackPackItemInfo { itemId = 0 });
 
         RefreshUI();
     }
@@ -100,7 +112,9 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
         loopScroll.RefillCells();
         loopScroll.verticalNormalizedPosition = 1f;
 
-        if (emptyHint != null) emptyHint.SetActive(_items.Count == 0);
+        bool hasRealItem = false;
+        for (int i = 0; i < _items.Count; i++) { if (_items[i].itemId != 0) { hasRealItem = true; break; } }
+        if (emptyHint != null) emptyHint.SetActive(!hasRealItem);
     }
 
     // ── LoopScrollPrefabSource ──
@@ -145,9 +159,17 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
         var cell = transform.GetComponent<ItemCell>();
         if (cell == null) return;
 
-        Sprite icon = null;
-        if (!string.IsNullOrEmpty(info.iconPath))
-            icon = Resources.Load<Sprite>(info.iconPath);
-        cell.Bind(icon, info.itemName, info.count, info.grade, info.description);
+        if (info.itemId == 0)
+        {
+            // 空占位：灰底、无图标、无名、无数量、无点击
+            cell.BindEmpty();
+        }
+        else
+        {
+            Sprite icon = null;
+            if (!string.IsNullOrEmpty(info.iconPath))
+                icon = Resources.Load<Sprite>(info.iconPath);
+            cell.Bind(icon, info.itemName, info.count, info.grade, info.description);
+        }
     }
 }

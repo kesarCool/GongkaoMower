@@ -60,6 +60,8 @@ public class GamePausePanel : UIPanelBase
         {
             var def = catalog != null ? catalog.Get(id) : null;
             int level = _playerSkills.GetSkillLevel(id);
+            int maxLv = def != null ? def.maxLevel : 5;
+            bool isBreakthrough = level >= maxLv;
             float dmg = BattleRunMetrics.GetSkillDamage(id);
 
             GameObject row = Instantiate(skillRowPrefab, skillListParent, false);
@@ -70,6 +72,7 @@ public class GamePausePanel : UIPanelBase
                 string name = def != null ? $"Lv.{level} {def.displayName}" : id.ToString();
                 Sprite icon = def != null ? def.icon : null;
                 cell.Bind(icon, name, dmg);
+                cell.SetBreakthrough(isBreakthrough);
             }
         }
     }
