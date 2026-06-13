@@ -10,9 +10,10 @@ public struct BulletLaunchParams
     public int PierceCount;
     public bool IsCrit;
     public float PierceRate;
+    public bool IsPenetration;
 
     public BulletLaunchParams(float speed, float damage, float lifetime, SkillId source,
-        int pierceCount = 0, bool isCrit = false, float pierceRate = 0f)
+        int pierceCount = 0, bool isCrit = false, float pierceRate = 0f, bool isPenetration = false)
     {
         Speed = speed;
         Damage = damage;
@@ -21,5 +22,6 @@ public struct BulletLaunchParams
         PierceCount = pierceCount;
         IsCrit = isCrit;
         PierceRate = pierceRate;
+        IsPenetration = isPenetration;
     }
 }

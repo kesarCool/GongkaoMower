@@ -32,11 +32,11 @@ public class AutoProjectileBurstBullet : PlayerBullet
     /// 之后沿切线方向飞出。orbitDuration=0 时直接飞出。
     /// </summary>
     public void LaunchBurst(Vector2 baseDir, float speed, float damage, float lifetime,
-        SkillId source, int pierce, bool isCrit, float pierceRate,
+        SkillId source, int pierce, bool isCrit, float pierceRate, bool isPenetration,
         float orbitDuration, float orbitRadius, float startAngleDeg, Transform player,
         bool overrideFlyDir = false, Vector2 overrideTarget = default)
     {
-        Launch(baseDir, speed, damage, lifetime, source, pierce, isCrit, pierceRate);
+        Launch(baseDir, speed, damage, lifetime, source, pierce, isCrit, pierceRate, isPenetration);
 
         _orbitDuration = orbitDuration;
         _orbitRadius = orbitRadius;

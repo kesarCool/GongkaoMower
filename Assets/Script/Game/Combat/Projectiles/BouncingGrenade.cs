@@ -64,7 +64,7 @@ public class BouncingGrenade : GrenadeProjectile
             if (eb == null) eb = hits[i].GetComponentInParent<EnemyBase>();
             if (eb == null || !eb.gameObject.CompareTag(_enemyTag)) continue;
             _hitTargets.Add(eb.GetInstanceID());
-            eb.TakeDamage(_lastDamage, _skillId, _isCrit);
+            eb.TakeDamage(_lastDamage, _skillId, _isCrit, _isPenetration);
         }
         Physics2D.queriesHitTriggers = prev;
     }
@@ -129,7 +129,7 @@ public class BouncingGrenade : GrenadeProjectile
         float arc = bounceArcHeight * Mathf.Max(1f, dist * 0.3f);
 
         // 使用 ArcMotor2D 飞向下一个目标的抛物线轨迹
-        Launch(start, end, flight, arc, _lastDamage, _lastAoeRadius, _skillId, _enemyTag, _explosionFxPrefab, _isCrit);
+        Launch(start, end, flight, arc, _lastDamage, _lastAoeRadius, _skillId, _enemyTag, _explosionFxPrefab, _isCrit, _isPenetration);
     }
 
     private Transform FindNextTarget()

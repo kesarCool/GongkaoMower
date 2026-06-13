@@ -146,12 +146,13 @@ public class SkillAutoProjectile : SkillBase
             PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
             if (pb != null)
             {
-                float finalDmg = GetFinalDamage(damage, out bool isCrit);
+                float finalDmg = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
                 var ps = GetPlayerSkills();
                 var p = new BulletLaunchParams(bulletSpeed, finalDmg, 5f, Id,
                     ps != null ? ps.pierceCount : 0,
                     isCrit,
-                    ps != null ? ps.pierceRate : 0f);
+                    ps != null ? ps.pierceRate : 0f,
+                    isPenetration);
                 pb.Launch(d, p);
                 if (pb is ScatterBullet sc)
                     sc.SetPlayerRef(_ctx.player);
@@ -230,12 +231,12 @@ public class SkillAutoProjectile : SkillBase
             var bb = bullet.GetComponent<AutoProjectileBurstBullet>();
             if (bb != null)
             {
-                float finalDmg = GetFinalDamage(damage, out bool isCrit);
+                float finalDmg = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
                 var ps = GetPlayerSkills();
                 int pierce = ps != null ? ps.pierceCount : 0;
                 float pRate = ps != null ? ps.pierceRate : 0f;
                 bb.LaunchBurst(flyDir, burstLaunchSpeed, finalDmg, 5f, Id,
-                    pierce, isCrit, pRate,
+                    pierce, isCrit, pRate, isPenetration,
                     burstOrbitDuration, burstOrbitRadius, startAngle, _ctx.player,
                     aimTarget.HasValue, aimTarget.GetValueOrDefault());
             }

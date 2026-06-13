@@ -97,7 +97,7 @@ public class SkillLineBeam2D : SkillBase
         bool allAimAtMonster = livingEnemies == 1 && nearest != null;
 
         // 一次释放的暴击判定共享
-        float finalDamage = GetFinalDamage(damage, out bool isCrit);
+        float finalDamage = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
 
         var ps = GetPlayerSkills();
         float effectiveLength = beamLength * (ps != null ? ps.attackRangeMul : 1f);
@@ -120,7 +120,7 @@ public class SkillLineBeam2D : SkillBase
                 if (eb == null) eb = col.GetComponentInParent<EnemyBase>();
                 if (eb == null) continue;
 
-                eb.TakeDamage(finalDamage, SkillId.LineBeam, isCrit);
+                eb.TakeDamage(finalDamage, SkillId.LineBeam, isCrit, isPenetration);
             }
         }
 

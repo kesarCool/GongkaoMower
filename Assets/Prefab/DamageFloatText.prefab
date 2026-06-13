@@ -50,9 +50,13 @@ MonoBehaviour:
   riseSpeed: 2
   driftSpeed: 2
   spawnScalePunch: 1.2
-  textColor: {r: 0, g: 1, b: 0.4434402, a: 1}
-  critColor: {r: 0.9622642, g: 0.14716983, b: 0, a: 1}
+  textColor: {r: 1, g: 1, b: 0, a: 1}
+  critColor: {r: 0.9811321, g: 0, b: 0.35058498, a: 1}
   critScaleMul: 1.5
+  penColor: {r: 0.9607843, g: 0.14901961, b: 0, a: 1}
+  penScaleMul: 1.3
+  resistColor: {r: 0, g: 1, b: 0.9723275, a: 1}
+  resistScaleMul: 1
   sortingOrder: 200
   faceMainCamera: 0
 --- !u!1 &8340708866548831996

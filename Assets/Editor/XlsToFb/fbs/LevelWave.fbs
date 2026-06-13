@@ -10,6 +10,7 @@ table LevelWave{
 	waveTimeContinue:int32;
 	monsterId:int32;
 	attack:int32;
+	defense:int32;
 	maxHp:int32;
 	speed:float;
 	exp:int32;

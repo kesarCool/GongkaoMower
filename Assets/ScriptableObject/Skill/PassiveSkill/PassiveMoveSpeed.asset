@@ -14,19 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 103
   maxLevel: 5
-  displayName: "健步如飞"
-  description: "移速提升，走位更灵活。"
+  bondedPassiveId: 0
+  maxLevelPrefab: {fileID: 0}
+  displayName: "\u5065\u6B65\u5982\u98DE"
+  description: "\u79FB\u901F\u63D0\u5347\uFF0C\u8D70\u4F4D\u66F4\u7075\u6D3B\u3002"
   icon: {fileID: 21300000, guid: 15b5ad3ac7257f546af6db2d69d80992, type: 3}
   levelDescriptions:
-  - "移速 +20%"
-  - "移速 +24%"
-  - "移速 +28%"
-  - "移速 +33%"
-  - "移速 +40%"
+  - "\u79FB\u901F +5%"
+  - "\u79FB\u901F +7%"
+  - "\u79FB\u901F +10%"
+  - "\u79FB\u901F +12%"
+  - "\u79FB\u901F +15%"
   modType: 1
   bonusByLevel:
-  - 0.2
-  - 0.24
-  - 0.28
-  - 0.33
-  - 0.4
+  - 0.05
+  - 0.07
+  - 0.1
+  - 0.12
+  - 0.15

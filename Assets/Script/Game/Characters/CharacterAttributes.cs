@@ -43,9 +43,18 @@ public struct CharacterAttributes
     [Tooltip("穿透数。0 = 不穿透。")]
     public int pierceCount;
 
+    [Header("破防")]
+    [Tooltip("破防率 (0~1，如 0.1 = 10%)。触发时无视敌人防御。")]
+    [Range(0f, 1f)]
+    public float penRate;
+
+    [Tooltip("破防比例 (0~1，1=完全无视防御)。")]
+    [Range(0f, 1f)]
+    public float penPercent;
+
     /// <summary>
     /// 不可为零字段的保底值，确保角色基础可玩。
-    /// defense/critRate/pierceRate/pierceCount 天生可为 0，不在此列。
+    /// defense/critRate/pierceRate/pierceCount/penRate/penPercent 天生可为 0，不在此列。
     /// </summary>
     public static CharacterAttributes Minimums => new CharacterAttributes
     {
@@ -59,6 +68,8 @@ public struct CharacterAttributes
         pierceRate = 0f,
         pierceCount = 0,
         attackRangeMul = 1f,
+        penRate = 0f,
+        penPercent = 1f,
     };
 
     /// <summary>将不可为零的字段补到保底值。defense/暴击/穿透原值保留。</summary>

@@ -146,7 +146,7 @@ public class SkillFieldGenerator : SkillBase
         if (damageAmount <= 0f || _ctx.player == null) return;
         if (string.IsNullOrEmpty(_ctx.enemyTag)) return;
 
-        float finalDmg = GetFinalDamage(damageAmount, out bool isCrit);
+        float finalDmg = GetFinalDamage(damageAmount, out bool isCrit, out bool isPenetration);
         var ps = GetPlayerSkills();
         float effectiveRadius = radius * (ps != null ? ps.attackRangeMul : 1f);
         Vector2 center = _ctx.player.position;
@@ -168,7 +168,7 @@ public class SkillFieldGenerator : SkillBase
             if (((Vector2)eb.transform.position - center).sqrMagnitude > radiusSq)
                 continue;
 
-            eb.TakeDamage(finalDmg, SkillId.FieldGenerator, isCrit);
+            eb.TakeDamage(finalDmg, SkillId.FieldGenerator, isCrit, isPenetration);
         }
 
         Physics2D.queriesHitTriggers = prevQueries;

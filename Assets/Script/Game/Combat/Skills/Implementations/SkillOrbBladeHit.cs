@@ -48,12 +48,14 @@ public class SkillOrbBladeHit : MonoBehaviour, IPoolReceiver
 
         float dmg = Mathf.Max(0.01f, damagePerTick);
         bool isCrit = false;
+        bool isPenetration = false;
         if (_playerSkills != null)
         {
             dmg *= _playerSkills.attackMultiplier;
             dmg *= _playerSkills.EvaluateCrit(out isCrit);
+            isPenetration = _playerSkills.EvaluatePenetration();
         }
-        eb.TakeDamage(dmg, damageSourceSkillId, isCrit);
+        eb.TakeDamage(dmg, damageSourceSkillId, isCrit, isPenetration);
         _onDamageDealt?.Invoke();
     }
 

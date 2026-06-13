@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 /// <summary>
 /// 被动技能注册表：将 SkillId 映射到具体的 PlayerHealth/PlayerSkills/PlayerController 字段读写。
@@ -42,6 +43,11 @@ public static class PassiveSkillRegistry
                 return new SkillPassiveStat(id, type, bonus,
                     () => GetPlayerSkills() != null ? GetPlayerSkills().attackRangeMul : 0f,
                     v => { if (GetPlayerSkills() != null) GetPlayerSkills().attackRangeMul = v; });
+
+            case SkillId.PassiveArmorPen:
+                return new SkillPassiveStat(id, type, bonus,
+                    () => GetPlayerSkills() != null ? GetPlayerSkills().penRate : 0f,
+                    v => { if (GetPlayerSkills() != null) GetPlayerSkills().penRate = Mathf.Min(v, 1f); });
 
             default:
                 return null;

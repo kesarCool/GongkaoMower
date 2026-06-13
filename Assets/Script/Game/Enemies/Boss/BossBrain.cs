@@ -41,6 +41,16 @@ public class BossBrain : MonoBehaviour
         BuildModules();
     }
 
+    private void OnDestroy()
+    {
+        // 通知 ReviveModule 清理 OnDied 监听
+        foreach (var mod in _modules)
+        {
+            if (mod is ReviveModule rv)
+                rv.OnBossDestroyed();
+        }
+    }
+
     private void Update()
     {
         if (_modules.Count == 0) return;
@@ -48,6 +58,7 @@ public class BossBrain : MonoBehaviour
         float dt = Time.deltaTime;
         foreach (BossSkillModule mod in _modules)
         {
+            if (mod.IsPassive) continue;
             mod.Tick(dt);
             if (mod.CanTrigger() && !IsBusy)
             {
@@ -107,11 +118,22 @@ public class BossBrain : MonoBehaviour
         BossSkillModule mod = CreateModule(type);
         if (mod != null)
         {
+            mod.moduleType = type;
             mod.Init(rawParams, this);
             _modules.Add(mod);
             Debug.Log($"[BossBrain] monsterId={mid} 加载技能: {type} interval={mod.interval}s cooldown={mod.cooldown}s params={rawParams}");
         }
         else Debug.LogWarning($"[BossBrain] monsterId={mid} 未知技能类型: {type}");
+    }
+
+    /// <summary>移除所有不在 keepTypes 中的技能模块。供 CloneModule 筛选克隆体技能。</summary>
+    public void RemoveAllModulesExcept(HashSet<string> keepTypes)
+    {
+        for (int i = _modules.Count - 1; i >= 0; i--)
+        {
+            if (!keepTypes.Contains(_modules[i].moduleType))
+                _modules.RemoveAt(i);
+        }
     }
 
     private static BossSkillModule CreateModule(string type)
@@ -122,9 +144,10 @@ public class BossBrain : MonoBehaviour
             case "dash":         return new DashModule();
             case "bladeBurst":   return new BladeBurstModule();
             case "zone":         return new ZoneModule();
-            // case "clone":        return new CloneModule();
-            // case "summon":       return new SummonModule();
-            // case "revive":       return new ReviveModule();
+            case "resist":       return new ResistModule();
+            case "clone":        return new CloneModule();
+            case "summon":       return new SummonModule();
+            case "revive":       return new ReviveModule();
             default: return null;
         }
     }

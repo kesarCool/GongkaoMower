@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fa598672904ab84daa345d8439aa630, type: 3}
   m_Name: TailsManUpgradeData
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   characterId: character_04
   maxLevel: 20
   baseGoldCost: 200
@@ -22,8 +22,8 @@ MonoBehaviour:
   legendRequiredLevel: 20
   rareTrait: 6
   rareTraitParams: []
-  rareTraitDescription: "符箓环绕（HP<50%触发）——击杀掉落符咒飞向角色，环绕旋转碰敌伤害+抵消弹幕，最多5张，回血后延迟3秒关闭"
-  legendBreakthroughDescription: "符箓风暴——子弹数+2，暴击率+15%，环绕爆发改为2轮追踪导弹风暴（每轮16发，720°追踪），全屏追敌"
+  rareTraitDescription: "\u7B26\u7B93\u73AF\u7ED5\uFF08HP<50%\u89E6\u53D1\uFF09\u2014\u2014\u51FB\u6740\u6389\u843D\u7B26\u5492\u98DE\u5411\u89D2\u8272\uFF0C\u73AF\u7ED5\u65CB\u8F6C\u78B0\u654C\u4F24\u5BB3+\u62B5\u6D88\u5F39\u5E55\uFF0C\u6700\u591A5\u5F20\uFF0C\u56DE\u8840\u540E\u5EF6\u8FDF3\u79D2\u5173\u95ED"
+  legendBreakthroughDescription: "\u7B26\u7B93\u98CE\u66B4\u2014\u2014\u5B50\u5F39\u6570+2\uFF0C\u66B4\u51FB\u7387+15%\uFF0C\u73AF\u7ED5\u7206\u53D1\u6539\u4E3A2\u8F6E\u8FFD\u8E2A\u5BFC\u5F39\u98CE\u66B4\uFF08\u6BCF\u8F6E16\u53D1\uFF0C720\xB0\u8FFD\u8E2A\uFF09\uFF0C\u5168\u5C4F\u8FFD\u654C"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2
@@ -33,3 +33,4 @@ MonoBehaviour:
   critDmgMulAtMax: 2.5
   pierceRateAddAtMax: 0
   pierceCountAddAtMax: 0
+  penRateAddAtMax: 0.2

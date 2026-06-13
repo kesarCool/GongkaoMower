@@ -109,11 +109,11 @@ public sealed class SkillAutoProjectileTalisman : SkillAutoProjectile
         var bb = bullet.GetComponent<AutoProjectileBurstBullet>();
         if (bb != null)
         {
-            float finalDmg = GetFinalDamage(damage, out bool isCrit);
+            float finalDmg = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
             var ps = GetPlayerSkills();
             bb.LaunchBurst(dir, burstLaunchSpeed, finalDmg, 5f, Id,
                 ps != null ? ps.pierceCount : 0, isCrit,
-                ps != null ? ps.pierceRate : 0f,
+                ps != null ? ps.pierceRate : 0f, isPenetration,
                 0f, 0f, angle, _ctx.player, false, Vector2.zero);
         }
 

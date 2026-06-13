@@ -136,10 +136,10 @@ public class SkillHomingMissile : SkillBase
         var hm = missile.GetComponent<HomingMissileBullet>();
         if (hm != null)
         {
-            float finalDmg = GetFinalDamage(damage, out bool isCrit);
+            float finalDmg = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
             hm.turnRate = turnRate;
             hm.Launch(dir, missileSpeed, finalDmg, missileLifetime, Id,
-                target, aoeRadius, explosionFxPrefab, _ctx.enemyTag);
+                target, aoeRadius, explosionFxPrefab, _ctx.enemyTag, isCrit, isPenetration);
         }
         else
         {

@@ -19,6 +19,18 @@ public struct EnemyDamagedEvent
     public float damage;
     public Vector3 worldPosition;
     public bool isCrit;
+    public bool isPenetration;
+}
+
+/// <summary>怪物受到伤害被抵抗（用于灰色飘字）。在 EnemyDamagedEvent 之后发布。</summary>
+public struct DamageResistedEvent
+{
+    public EnemyBase enemy;
+    /// <summary>被抵抗掉的伤害量。</summary>
+    public float resistedAmount;
+    public Vector3 worldPosition;
+    /// <summary>伤害是否被完全抵消（扣血=0 → "免伤"；扣血>0 → "抵抗"）。</summary>
+    public bool fullyNegated;
 }
 
 public struct CardSelectionTriggeredEvent

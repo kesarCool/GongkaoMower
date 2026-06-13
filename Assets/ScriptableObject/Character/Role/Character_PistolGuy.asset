@@ -23,10 +23,12 @@ MonoBehaviour:
     defense: 12
     moveSpeed: 5
     attackRangeMul: 1
-    critRate: 0.3
+    critRate: 0.08
     critDamageMul: 2
     pierceRate: 0.2
     pierceCount: 1
+    penRate: 0.1
+    penPercent: 0.6
   bodySprite: {fileID: 21300000, guid: c0ab33f0108f82f4ebd2ed7f5e099dd6, type: 3}
   defaultWeapon: {fileID: 11400000, guid: 19de4e443f681bb4dac664e24ef01abb, type: 2}
   boundSkills: 

@@ -43,6 +43,7 @@ public abstract class PlayerBullet : MonoBehaviour
     /// 统一发射入口：技能升级后数值通过此方法写入每一发子弹。
     /// </summary>
     public bool IsCrit { get; private set; }
+    public bool IsPenetration { get; private set; }
 
     public virtual void Launch(Vector2 direction, in BulletLaunchParams p)
     {
@@ -54,6 +55,7 @@ public abstract class PlayerBullet : MonoBehaviour
         _pierceRemaining = p.PierceCount;
         _pierceRate = p.PierceRate;
         IsCrit = p.IsCrit;
+        IsPenetration = p.IsPenetration;
 
         float rot = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         _rb.MoveRotation(rot);
@@ -61,9 +63,9 @@ public abstract class PlayerBullet : MonoBehaviour
 
     // 兼容旧调用
     public void Launch(Vector2 direction, float speed, float damage, float lifetime,
-        SkillId source, int pierceCount = 0, bool isCrit = false, float pierceRate = 0f)
+        SkillId source, int pierceCount = 0, bool isCrit = false, float pierceRate = 0f, bool isPenetration = false)
     {
-        Launch(direction, new BulletLaunchParams(speed, damage, lifetime, source, pierceCount, isCrit, pierceRate));
+        Launch(direction, new BulletLaunchParams(speed, damage, lifetime, source, pierceCount, isCrit, pierceRate, isPenetration));
     }
 
     protected virtual void FixedUpdate()
@@ -93,7 +95,7 @@ public abstract class PlayerBullet : MonoBehaviour
 
             if (eb != null)
             {
-                eb.TakeDamage(damage, skillSource, IsCrit);
+                eb.TakeDamage(damage, skillSource, IsCrit, IsPenetration);
                 BattleRunMetrics.AddSkillDamage(skillSource, damage);
             }
 

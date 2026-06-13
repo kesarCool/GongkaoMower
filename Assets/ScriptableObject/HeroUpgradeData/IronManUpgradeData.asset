@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fa598672904ab84daa345d8439aa630, type: 3}
   m_Name: IronManUpgradeData
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   characterId: character_05
   maxLevel: 20
   baseGoldCost: 200
@@ -24,8 +24,8 @@ MonoBehaviour:
   rareTraitParams:
   - 0.02
   - 0.25
-  rareTraitDescription: "纳米修复（HP<50%触发）——每秒回复2%最大血量，持续回血至50%以上后延迟3秒关闭"
-  legendBreakthroughDescription: "全弹发射（满级触发）——导弹齐射翻倍（6→12发），一次性全部射出，火力拉满"
+  rareTraitDescription: "\u7EB3\u7C73\u4FEE\u590D\uFF08HP<50%\u89E6\u53D1\uFF09\u2014\u2014\u6BCF\u79D2\u56DE\u590D2%\u6700\u5927\u8840\u91CF\uFF0C\u6301\u7EED\u56DE\u8840\u81F350%\u4EE5\u4E0A\u540E\u5EF6\u8FDF3\u79D2\u5173\u95ED"
+  legendBreakthroughDescription: "\u5168\u5F39\u53D1\u5C04\uFF08\u6EE1\u7EA7\u89E6\u53D1\uFF09\u2014\u2014\u5BFC\u5F39\u9F50\u5C04\u7FFB\u500D\uFF086\u219212\u53D1\uFF09\uFF0C\u4E00\u6B21\u6027\u5168\u90E8\u5C04\u51FA\uFF0C\u706B\u529B\u62C9\u6EE1"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2
@@ -35,3 +35,4 @@ MonoBehaviour:
   critDmgMulAtMax: 2.5
   pierceRateAddAtMax: 0
   pierceCountAddAtMax: 0
+  penRateAddAtMax: 0.2

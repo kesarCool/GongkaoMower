@@ -111,6 +111,7 @@ public class SpawnerWaves : MonoBehaviour
     private Coroutine _normalRoutine;
     private Coroutine _waveRoutine;
     private Coroutine _autoRoutine;
+    private readonly Dictionary<int, List<TableWaveRuntime>> _reserveWaves = new Dictionary<int, List<TableWaveRuntime>>();
 
     /// <summary>
     /// 本实例是否已走完一次爆兵协程并发出 <see cref="BattleWavesCompletedEvent"/>（供 <see cref="BattleOutcomeCoordinator"/> 轮询兜底）。
@@ -167,6 +168,7 @@ public class SpawnerWaves : MonoBehaviour
         public float moveSpeed; // LevelWave.speed，直接使用
         public bool isBoss;
         public int quantityBoss;
+        public int defense; // TODO: LevelWave 表加 defense 列并重新生成后，在 From() 中改为 lw.defense
 
         public static TableWaveRuntime From(LevelWave lw)
         {
@@ -184,6 +186,7 @@ public class SpawnerWaves : MonoBehaviour
                 moveSpeed = lw.speed,
                 isBoss = lw.isBoss,
                 quantityBoss = lw.quantityBoss,
+                defense = lw.defense, // TODO: 改为 lw.defense（需 LevelWave 表重新生成）
             };
         }
     }
@@ -259,6 +262,29 @@ public class SpawnerWaves : MonoBehaviour
         _waveRoutine = StartCoroutine(WaveRoutine());
     }
 
+    /// <summary>
+    /// 供 SummonModule 调用：按 LevelWave 表的 wave 字段触发一组待召唤怪（wave=0 等预先配置的保留波次）。
+    /// 不发布 BattleWaveChangedEvent，不影响波次计数。
+    /// </summary>
+    public void TriggerReserveWave(int wave)
+    {
+        if (!_reserveWaves.TryGetValue(wave, out var group) || group.Count == 0)
+        {
+            Debug.LogWarning($"[SpawnerWaves] TriggerReserveWave({wave}) 失败：无对应配置");
+            return;
+        }
+        if (debugLogs)
+            Debug.Log($"[SpawnerWaves] 召唤 wave={wave}：{group.Count} 条配置，共 {SumCap(group)} 只怪");
+        StartCoroutine(TableWaveGroupRoutine(group, 0, 0, false));
+    }
+
+    private static int SumCap(List<TableWaveRuntime> group)
+    {
+        int n = 0;
+        foreach (var tw in group) n += tw.totalMonster;
+        return n;
+    }
+
     private IEnumerator WaveRoutine()
     {
         HasReleasedWaveCompletionSignal = false;
@@ -273,6 +299,7 @@ public class SpawnerWaves : MonoBehaviour
         }
 
         bool useTable = tableWaves != null && tableWaves.Count > 0;
+        int totalWaves = 0;
 
         if (!useTable && (waves == null || waves.Length == 0))
         {
@@ -299,9 +326,31 @@ public class SpawnerWaves : MonoBehaviour
 
         if (useTable)
         {
+            // 分离常驻波次 (wave>0) 和待召唤波次 (wave<=0)
+            _reserveWaves.Clear();
+            var activeWaves = new List<TableWaveRuntime>();
+            foreach (var tw in tableWaves)
+            {
+                if (tw.wave <= 0)
+                {
+                    if (!_reserveWaves.TryGetValue(tw.wave, out var rl))
+                    {
+                        rl = new List<TableWaveRuntime>();
+                        _reserveWaves[tw.wave] = rl;
+                    }
+                    rl.Add(tw);
+                }
+                else
+                {
+                    activeWaves.Add(tw);
+                }
+            }
+            if (debugLogs && _reserveWaves.Count > 0)
+                Debug.Log($"[SpawnerWaves] 待召唤波次: {_reserveWaves.Count} 组（wave<=0），等待 SummonModule 触发");
+
             // 按 wave 字段分组：同一 wave 的多个条目 → 并发刷怪
-            var waveGroups = GroupByWave(tableWaves);
-            int totalWaves = waveGroups.Count;
+            var waveGroups = GroupByWave(activeWaves);
+            totalWaves = waveGroups.Count;
 
             for (int w = 0; w < totalWaves; w++)
             {
@@ -379,8 +428,12 @@ public class SpawnerWaves : MonoBehaviour
         if (pauseNormalDuringWaves) enableNormalSpawn = prevNormal;
         WordMonsterWaveStyle.ClearWaveTint();
 
-        HasReleasedWaveCompletionSignal = true;
-        EventBus.Publish(new BattleWavesCompletedEvent { spawner = this });
+        // 有常驻波次才发布完成事件（仅有待召唤波次时，由 Boss 击杀判定通关）
+        if (totalWaves > 0)
+        {
+            HasReleasedWaveCompletionSignal = true;
+            EventBus.Publish(new BattleWavesCompletedEvent { spawner = this });
+        }
 
         _waveRoutine = null;
     }
@@ -439,7 +492,7 @@ public class SpawnerWaves : MonoBehaviour
             if (markBoss)
                 bossMarkBudget--;
 
-            GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed);
+            GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed, tw.defense);
             if (markBoss && spawnedGo != null)
                 TryMarkLastWaveBoss(spawnedGo);
             spawned++;
@@ -612,7 +665,7 @@ public class SpawnerWaves : MonoBehaviour
                 bool markBoss = bossMarkBudget > 0;
                 if (markBoss) bossMarkBudget--;
 
-                GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed);
+                GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed, tw.defense);
                 if (markBoss && spawnedGo != null)
                     TryMarkLastWaveBoss(spawnedGo);
 
@@ -658,7 +711,7 @@ public class SpawnerWaves : MonoBehaviour
     /// <summary>
     /// 核心生成方法：所有攻血速从 Excel（LevelWave 表）来，不再读 EnemyDefinition 或 Inspector。
     /// </summary>
-    private GameObject SpawnEnemy(int enemyId, int lineSpawn, int attack, int maxHp, float moveSpeed)
+    private GameObject SpawnEnemy(int enemyId, int lineSpawn, int attack, int maxHp, float moveSpeed, int defense = 0)
     {
         if (SpawnLimiter.Instance != null)
         {
@@ -688,7 +741,15 @@ public class SpawnerWaves : MonoBehaviour
         GameObject enemy = GameObjectPool.Get(prefabToSpawn, pos, Quaternion.identity);
         SpawnLimiter.Instance?.RegisterSpawned("Enemy", enemy);
 
-        // 生成后立即检测卡墙并推出（避免出生就卡在边界墙壁里）
+        // Boss 竞技场锁定中 → 先 clamp 到围墙内再推出（防止召唤怪刷在墙外）
+        var arena = BossArenaLock.FindInScene();
+        if (arena != null && arena.IsLocked)
+        {
+            Vector3 p = arena.ClampInside(enemy.transform.position);
+            enemy.transform.position = new Vector3(p.x, p.y, enemy.transform.position.z);
+        }
+
+        // 卡墙推出（竞技场 clamp 后可能仍嵌在墙体边上）
         WallStuckResolver.ResolveTransform(enemy.transform);
 
         EnemyBase eb = enemy.GetComponent<EnemyBase>();
@@ -696,7 +757,7 @@ public class SpawnerWaves : MonoBehaviour
         {
             if (def != null)
                 eb.InitFromDefinition(def);
-            eb.ApplyTableStats(attack, maxHp, moveSpeed);
+            eb.ApplyTableStats(attack, maxHp, moveSpeed, defense);
         }
 
         MonsterWordSpawnBinding.TryApply(enemy, enemyId);

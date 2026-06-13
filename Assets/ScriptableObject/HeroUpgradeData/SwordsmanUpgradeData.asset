@@ -36,3 +36,4 @@ MonoBehaviour:
   critDmgMulAtMax: 2.5
   pierceRateAddAtMax: 0
   pierceCountAddAtMax: 0
+  penRateAddAtMax: 0.2

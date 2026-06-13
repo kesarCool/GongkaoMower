@@ -21,16 +21,18 @@ public abstract class SkillBase : ISkill
     }
 
     /// <summary>
-    /// 根据 PlayerSkills 的 attackMultiplier + critRate 计算最终伤害。
-    /// rawDamage = 技能表 per-level 伤害值。
+    /// 根据 PlayerSkills 的 attackMultiplier + critRate + penRate 计算最终伤害。
+    /// rawDamage = 技能表 per-level 伤害值。isPenetration 用于 EnemyBase.TakeDamage 跳过防御。
     /// </summary>
-    protected float GetFinalDamage(float rawDamage, out bool isCrit)
+    protected float GetFinalDamage(float rawDamage, out bool isCrit, out bool isPenetration)
     {
         isCrit = false;
+        isPenetration = false;
         var ps = GetPlayerSkills();
         if (ps == null) return rawDamage;
         float dmg = rawDamage * ps.attackMultiplier;
         dmg *= ps.EvaluateCrit(out isCrit);
+        isPenetration = ps.EvaluatePenetration();
         return dmg;
     }
 

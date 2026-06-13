@@ -27,6 +27,14 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     [SerializeField] private Color critColor = new Color(1f, 0.84f, 0f, 1f); // #FFD700 金色
     [SerializeField] private float critScaleMul = 1.5f;
 
+    [Header("破防")]
+    [SerializeField] private Color penColor = new Color(1f, 0.45f, 0f, 1f); // 橙红
+    [SerializeField] private float penScaleMul = 1.3f;
+
+    [Header("免伤")]
+    [SerializeField] private Color resistColor = new Color(0.6f, 0.6f, 0.6f, 1f); // 灰色
+    [SerializeField] private float resistScaleMul = 1.0f;
+
     [Tooltip("2D 下可抬高 sortingOrder，避免被地形挡住")]
     [SerializeField] private int sortingOrder = 200;
 
@@ -38,6 +46,8 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     private Coroutine _co;
     private Transform _cam;
     private bool _isCrit;
+    private bool _isPenetration;
+    private bool _isResisted;
 
     private void Awake()
     {
@@ -78,7 +88,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
     }
 
     /// <summary>在调用方从对象池取出后调用，设置数值与起点。</summary>
-    public void Play(float damage, Vector3 worldPosition, bool isCrit = false)
+    public void Play(float damage, Vector3 worldPosition, bool isCrit = false, bool isPenetration = false)
     {
         if (label == null)
         {
@@ -86,12 +96,19 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             return;
         }
 
-        bool crit = isCrit;
         _isCrit = isCrit;
-        label.text = crit ? FormatCritDamage(damage) : FormatDamage(damage);
-        label.color = crit ? critColor : textColor;
+        _isPenetration = isPenetration;
+        _isResisted = false;
+
+        bool crit = isCrit;
+        bool pen = isPenetration && !isCrit; // 暴击优先展示，破防只在非暴击时单独变色
+
+        label.text = FormatDamageText(damage, isCrit, isPenetration, false);
+        label.color = crit ? critColor : (pen ? penColor : textColor);
         label.alpha = 1f;
-        label.transform.localScale = Vector3.one * (crit ? spawnScalePunch * critScaleMul : spawnScalePunch);
+
+        float scaleBonus = crit ? critScaleMul : (pen ? penScaleMul : 1f);
+        label.transform.localScale = Vector3.one * spawnScalePunch * scaleBonus;
 
         transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
         label.ForceMeshUpdate(true);
@@ -121,18 +138,66 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
         _co = StartCoroutine(FloatRoutine());
     }
 
-    private static string FormatDamage(float damage)
+    /// <summary>抵抗飘字：被完全抵消 → "免伤"，部分抵消 → "抵抗"。</summary>
+    public void PlayResist(float resistedAmount, Vector3 worldPosition, bool fullyNegated)
     {
-        if (damage <= 0f) return "0";
-        if (damage < 1f) return damage.ToString("0.##");
-        if (Mathf.Abs(damage - Mathf.Round(damage)) < 0.05f)
-            return "-" + Mathf.RoundToInt(damage).ToString();
-        return "-" + damage.ToString("0.#");
+        if (label == null)
+        {
+            GameObjectPool.Release(gameObject);
+            return;
+        }
+
+        _isCrit = false;
+        _isPenetration = false;
+        _isResisted = true;
+
+        string suffix = fullyNegated ? "免伤" : "抵抗";
+        label.text = "-" + Mathf.RoundToInt(Mathf.Max(1f, resistedAmount)).ToString() + suffix;
+        label.color = resistColor;
+        label.alpha = 1f;
+        label.transform.localScale = Vector3.one * spawnScalePunch * resistScaleMul;
+
+        transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
+        label.ForceMeshUpdate(true);
+
+        var rend = label.GetComponent<Renderer>();
+        if (rend != null)
+        {
+            Vector3 bc = rend.bounds.center;
+            transform.position += worldPosition - bc;
+        }
+        else
+        {
+            Vector3 pivotDelta = label.transform.position - transform.position;
+            if (pivotDelta.sqrMagnitude > 1e-10f)
+                transform.position = worldPosition - pivotDelta;
+        }
+
+        float mainAngle = Random.Range(0f, Mathf.PI * 2f);
+        _floatDirection = new Vector3(Mathf.Cos(mainAngle), Mathf.Sin(mainAngle), 0f);
+
+        float driftAngle = Random.Range(0f, Mathf.PI * 2f);
+        _driftVelocity = new Vector3(Mathf.Cos(driftAngle), Mathf.Sin(driftAngle), 0f) * driftSpeed;
+
+        if (_co != null)
+            StopCoroutine(_co);
+        _co = StartCoroutine(FloatRoutine());
     }
 
-    private static string FormatCritDamage(float damage)
+    private static string FormatDamageText(float damage, bool isCrit, bool isPenetration, bool isResisted)
     {
-        return  FormatDamage(damage) + "暴击!";
+        string baseText;
+        if (damage <= 0f) baseText = "0";
+        else if (damage < 1f) baseText = damage.ToString("0.##");
+        else if (Mathf.Abs(damage - Mathf.Round(damage)) < 0.05f)
+            baseText = "-" + Mathf.RoundToInt(damage).ToString();
+        else
+            baseText = "-" + damage.ToString("0.#");
+
+        if (isCrit && isPenetration) return baseText + "暴击!破防!";
+        if (isCrit) return baseText + "暴击!";
+        if (isPenetration) return baseText + "破防!";
+        return baseText;
     }
 
     private IEnumerator FloatRoutine()
@@ -154,9 +219,11 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             float scaleMul = Mathf.Lerp(spawnScalePunch, 1f, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.12f)));
             textTr.localScale = baseScale * scaleMul;
 
-            Color c = _isCrit ? critColor : textColor;
-            c.a = (_isCrit ? critColor.a : textColor.a) * (1f - Mathf.SmoothStep(0f, 1f, u));
-            label.color = c;
+            Color col = _isResisted ? resistColor :
+                       (_isCrit ? critColor :
+                       (_isPenetration && !_isCrit ? penColor : textColor));
+            col.a = col.a * (1f - Mathf.SmoothStep(0f, 1f, u));
+            label.color = col;
 
             yield return null;
         }

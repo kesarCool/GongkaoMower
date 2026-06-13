@@ -14,19 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 102
   maxLevel: 5
-  displayName: "锋芒毕露"
-  description: "攻击力提升，所有技能伤害增加。"
+  bondedPassiveId: 0
+  maxLevelPrefab: {fileID: 0}
+  displayName: "\u950B\u8292\u6BD5\u9732"
+  description: "\u653B\u51FB\u529B\u63D0\u5347\uFF0C\u6240\u6709\u6280\u80FD\u4F24\u5BB3\u589E\u52A0\u3002"
   icon: {fileID: 21300000, guid: f53ccbd2121a9f44fb177f260f071ccd, type: 3}
   levelDescriptions:
-  - "攻击 +20%"
-  - "攻击 +24%"
-  - "攻击 +28%"
-  - "攻击 +33%"
-  - "攻击 +40%"
+  - "\u653B\u51FB +10%"
+  - "\u653B\u51FB +15%"
+  - "\u653B\u51FB +20%"
+  - "\u653B\u51FB +25%"
+  - "\u653B\u51FB +30%"
   modType: 1
   bonusByLevel:
+  - 0.1
+  - 0.15
   - 0.2
-  - 0.24
-  - 0.28
-  - 0.33
-  - 0.4
+  - 0.25
+  - 0.3

@@ -44,6 +44,8 @@ public enum SkillId
     PassiveRegen = 106,
     /// <summary>攻击范围 +X%</summary>
     PassiveAttackRange = 107,
+    /// <summary>破防率 +X%</summary>
+    PassiveArmorPen = 108,
 }
 
 public static class SkillIdExtensions

@@ -20,9 +20,9 @@ public class HomingMissileBullet : PlayerBullet
 
     public void Launch(Vector2 direction, float speed, float damage, float lifetime,
         SkillId source, Transform target, float aoeRadius, GameObject fxPrefab,
-        string enemyTag)
+        string enemyTag, bool isCrit = false, bool isPenetration = false)
     {
-        var p = new BulletLaunchParams(speed, damage, lifetime, source);
+        var p = new BulletLaunchParams(speed, damage, lifetime, source, isCrit: isCrit, isPenetration: isPenetration);
         Launch(direction, in p);
 
         _launched = true;
@@ -128,7 +128,7 @@ public class HomingMissileBullet : PlayerBullet
                 if (((Vector2)eb.transform.position - center).sqrMagnitude > radiusSq) continue;
 
                 // AOE 伤害不适用穿透/暴击的 isCrit（导弹爆炸统一判定）
-                eb.TakeDamage(damage, skillSource, IsCrit);
+                eb.TakeDamage(damage, skillSource, IsCrit, IsPenetration);
             }
             Physics2D.queriesHitTriggers = prev;
         }

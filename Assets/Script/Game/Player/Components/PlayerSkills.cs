@@ -54,6 +54,14 @@ public class PlayerSkills : MonoBehaviour
     public float pierceRate;
     public float attackRangeMul = 1f;
 
+    [Header("破防")]
+    [Tooltip("破防率 (0~1)。触发时无视敌人防御。")]
+    [Range(0f, 1f)]
+    public float penRate;
+    [Tooltip("破防比例 (0~1，1=完全无视防御)。")]
+    [Range(0f, 1f)]
+    public float penPercent = 1f;
+
     /// <summary>结算暴击：返回伤害倍率（未暴击=1，暴击=critDamageMul）。</summary>
     public float EvaluateCrit()
     {
@@ -71,6 +79,21 @@ public class PlayerSkills : MonoBehaviour
         }
         isCrit = false;
         return 1f;
+    }
+
+    /// <summary>结算破防：返回是否触发破防（无视敌人防御）。</summary>
+    public bool EvaluatePenetration()
+    {
+        if (penRate <= 0f) return false;
+        return Random.value < penRate;
+    }
+
+    /// <summary>破防时返回敌人有效防御值（0 = 完全无视）。</summary>
+    public float ApplyPenetration(float enemyDefense, bool isPenetration)
+    {
+        if (isPenetration)
+            return enemyDefense * (1f - Mathf.Clamp01(penPercent));
+        return enemyDefense;
     }
 
     private readonly List<ISkill> _skills = new List<ISkill>(8);

@@ -23,6 +23,8 @@ public sealed class GameResultViewModel
     public bool victory;
     public float battleDurationUnscaled;
     public int killCount;
+    /// <summary>通关星级（1~3），仅胜利时有效。</summary>
+    public int stars;
     public List<string> unlockedCharacters;
     /// <summary>本次获得的奖励物品列表（含金币）。</summary>
     public List<RewardItemEntry> rewardItems;
@@ -48,6 +50,9 @@ public class GameResultPanel : UIPanelBase
     [SerializeField] private GameObject itemCellPrefab;
     [Tooltip("ScrollViewReward 的 Content 节点。")]
     [SerializeField] private Transform scrollViewRewardContent;
+
+    [Header("星级展示")]
+    [SerializeField] private TextMeshProUGUI starText;
 
     [Header("金币展示（可选：汇总行，与 ScrollViewReward 互斥时留空其一）")]
     [SerializeField] private TextMeshProUGUI goldEarnedText;
@@ -229,6 +234,22 @@ public class GameResultPanel : UIPanelBase
             int mm = total / 60;
             int ss = total % 60;
             _textTime.text = $"时长：{mm:00}:{ss:00}";
+        }
+
+        if (starText != null)
+        {
+            if (win && _vm.stars > 0)
+            {
+                int s = Mathf.Clamp(_vm.stars, 1, 3);
+                BattleChineseFontRuntime.EnsureLoaded();
+                BattleChineseFontRuntime.ApplyToTMP(starText);
+                starText.text = new string('★', s) + new string('☆', 3 - s);
+                starText.gameObject.SetActive(true);
+            }
+            else
+            {
+                starText.gameObject.SetActive(false);
+            }
         }
 
         if (_textKillNum != null)

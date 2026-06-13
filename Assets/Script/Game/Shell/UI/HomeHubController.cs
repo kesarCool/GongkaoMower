@@ -8,6 +8,14 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class HomeHubController : MonoBehaviour
 {
+    [Header("页签栏")]
+    [Tooltip("HomeTabBar：管理底部按钮与 viewContainer 内视图切换。")]
+    [SerializeField] private HomeTabBar homeTabBar;
+
+    [Header("路线图（兼容旧引用）")]
+    [Tooltip("Home 场景中的路线图视图（挂 HomeRoadmapView）。TabBar 会将其移入 viewContainer。")]
+    [SerializeField] private HomeRoadmapView roadmapView;
+
     [Header("选关")]
     [Tooltip("打开选关弹窗的按钮（如「选关」「关卡」）。")]
     [SerializeField] private Button openLevelSelectButton;
@@ -15,22 +23,14 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("为 true 时打开选关使用 ModalDefault（会参与暂停栈）；大厅一般有动画则建议 false 使用 NonPausingModal）。")]
     [SerializeField] private bool pauseWhenLevelSelectOpen;
 
-    [Header("开始游戏")]
-    [Tooltip("直接进入当前关卡（默认 = 最大已解锁关卡）。")]
-    [SerializeField] private Button startGameButton;
-
-    [Header("选角")]
-    [Tooltip("打开角色选择弹窗。")]
-    [SerializeField] private Button openCharacterSelectionButton;
-
-    [Header("词汇预览")]
+    [Header("词汇预览（可选）")]
     [Tooltip("打开词汇表预览弹窗（ThemePackId / CategoryTag 页签）。")]
     [SerializeField] private Button openLexiconPreviewButton;
 
     [Tooltip("为 true 时打开词汇预览使用 ModalDefault。")]
     [SerializeField] private bool pauseWhenLexiconPreviewOpen;
 
-    [Header("背包")]
+    [Header("背包（可选）")]
     [SerializeField] private Button openBackpackButton;
 
     [Header("货币 HUD")]
@@ -49,14 +49,12 @@ public class HomeHubController : MonoBehaviour
     {
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.AddListener(OpenLevelSelect);
-        if (startGameButton != null)
-            startGameButton.onClick.AddListener(StartCurrentLevel);
-        if (openCharacterSelectionButton != null)
-            openCharacterSelectionButton.onClick.AddListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
         if (openBackpackButton != null)
             openBackpackButton.onClick.AddListener(OpenBackpack);
+
+        // 战斗/角色切换按钮由 HomeTabBar 管理（Inspector 中拖入 HomeTabBar.tabs[i].button）
 
         RefreshCurrencyHud();
     }
@@ -65,10 +63,6 @@ public class HomeHubController : MonoBehaviour
     {
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
-        if (startGameButton != null)
-            startGameButton.onClick.RemoveListener(StartCurrentLevel);
-        if (openCharacterSelectionButton != null)
-            openCharacterSelectionButton.onClick.RemoveListener(OpenCharacterSelection);
         if (openLexiconPreviewButton != null)
             openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
         if (openBackpackButton != null)
@@ -92,39 +86,7 @@ public class HomeHubController : MonoBehaviour
         UIManager.Instance.Open<LevelSelectPanel>(null, opt);
     }
 
-    /// <summary>
-    /// 开始游戏：将 <see cref="SelectedLevelContext"/> 设为最大已解锁关卡并进入 BattleLoading。
-    /// </summary>
-    public void StartCurrentLevel()
-    {
-        UiClickSound.Play();
-        if (TableManager.Instance != null)
-            TableManager.Instance.Init();
-
-        if (!ChapterLevelNavigation.TryGetMaxUnlockedLevel(out int chapterId, out int levelId))
-        {
-            GameErrorPresenter.Show(GameErrorCodes.TableManagerMissing);
-            return;
-        }
-
-        SelectedLevelContext.Set(chapterId, levelId);
-        BattleFlowLauncher.TryStartBattleLoading();
-    }
-
-    /// <summary>打开角色选择弹窗。</summary>
-    public void OpenCharacterSelection()
-    {
-        UiClickSound.Play();
-        if (UIManager.Instance == null)
-        {
-            GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing);
-            return;
-        }
-
-        UIManager.Instance.Open<CharacterSelectionPanel>(null, UiOpenOptions.NonPausingModal);
-    }
-
-    /// <summary>打开背包面板。</summary>
+    /// <summary>打开背包面板（模态弹窗）。</summary>
     public void OpenBackpack()
     {
         UiClickSound.Play();
@@ -132,7 +94,7 @@ public class HomeHubController : MonoBehaviour
         UIManager.Instance.Open<BackPackPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
-    /// <summary>打开词汇预览：先 <see cref="TableManager.Init"/> 再弹窗。</summary>
+    /// <summary>打开词汇预览（模态弹窗）：先 <see cref="TableManager.Init"/> 再弹窗。</summary>
     public void OpenLexiconPreview()
     {
         UiClickSound.Play();
@@ -149,7 +111,7 @@ public class HomeHubController : MonoBehaviour
         UIManager.Instance.Open<LexiconPreviewPanel>(null, opt);
     }
 
-    /// <summary>刷新顶部货币 HUD（场景加载 / 从局内返回时调用）。</summary>
+    /// <summary>刷新顶部货币 HUD + 路线图 + 当前活跃页签。</summary>
     public void RefreshCurrencyHud()
     {
         PlayerProfileService.Instance.LoadOrCreate();
@@ -160,5 +122,11 @@ public class HomeHubController : MonoBehaviour
             goldHudText.text = $"金币 {PlayerProfileService.FormatGold(gold)}";
         if (diamondHudText != null)
             diamondHudText.text = $"钻石 {diamond}";
+
+        if (roadmapView != null)
+            roadmapView.RefreshAll();
+
+        if (homeTabBar != null)
+            homeTabBar.RefreshActive();
     }
 }

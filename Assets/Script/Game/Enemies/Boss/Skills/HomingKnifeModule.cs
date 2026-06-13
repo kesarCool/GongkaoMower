@@ -7,7 +7,6 @@ using UnityEngine;
 public class HomingKnifeModule : BossSkillModule
 {
     private GameObject _knifePrefab;
-    private float _turnRate = 120f;
     private float _lifetime = 5f;
     private float _damage = 20f;
     private float _knifeSpeed = 4f;
@@ -15,11 +14,9 @@ public class HomingKnifeModule : BossSkillModule
     public override void Init(string rawParams, BossBrain owner)
     {
         base.Init(rawParams, owner);
-        requiresTarget = true;
-
         float[] p = ParseFloats(rawParams, 5);
         interval   = p[0] > 0f ? p[0] : 3f;
-        _turnRate  = p[1] > 0f ? p[1] : 120f;
+        // p[1] = turnRate（预留，当前由 HomingBullet 组件自行配置）
         _lifetime  = p[2] > 0f ? p[2] : 5f;
         _damage    = p[3] > 0f ? p[3] : 20f;
         _knifeSpeed = p[4] > 0f ? p[4] : 4f;

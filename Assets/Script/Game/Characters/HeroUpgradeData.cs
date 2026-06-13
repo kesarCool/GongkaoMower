@@ -66,6 +66,8 @@ public class HeroUpgradeData : ScriptableObject
     public float pierceRateAddAtMax;
     [Tooltip("穿透数终值增量（取整）。")]
     public int pierceCountAddAtMax;
+    [Tooltip("破防率终值增量（绝对加值，如 0.1 = +10%）。")]
+    public float penRateAddAtMax;
 
     /// <summary>倍率类属性：Lerp(1, atMax, level/max)。</summary>
     public float EvaluateMul(float atMax, int level)

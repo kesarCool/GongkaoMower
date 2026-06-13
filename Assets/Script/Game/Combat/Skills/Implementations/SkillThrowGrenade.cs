@@ -105,8 +105,8 @@ public class SkillThrowGrenade : SkillBase
         if (grenade == null)
             grenade = go.AddComponent<GrenadeProjectile>();
 
-        float finalDmg = GetFinalDamage(damage, out bool isCrit);
-        grenade.Launch(start, end, flight, arcHeight, finalDmg, aoeRadius, Id, _ctx.enemyTag, explosionFxPrefab, isCrit);
+        float finalDmg = GetFinalDamage(damage, out bool isCrit, out bool isPenetration);
+        grenade.Launch(start, end, flight, arcHeight, finalDmg, aoeRadius, Id, _ctx.enemyTag, explosionFxPrefab, isCrit, isPenetration);
 
         // 弹射雷：配置弹跳参数
         var bg = grenade as BouncingGrenade;

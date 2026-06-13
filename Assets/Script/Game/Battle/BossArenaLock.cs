@@ -23,6 +23,28 @@ public class BossArenaLock : MonoBehaviour
     private bool _locked;
     private Vector2 _arenaCenter;
 
+    /// <summary>竞技场是否已锁定（围墙存在）。</summary>
+    public bool IsLocked => _locked;
+
+    /// <summary>场景中查找活跃的 BossArenaLock（避免每帧 FindObjectOfType）。</summary>
+    public static BossArenaLock FindInScene()
+    {
+        return FindObjectOfType<BossArenaLock>();
+    }
+
+    /// <summary>将世界坐标 clamp 到竞技场内（留 0.5 单位边距）。</summary>
+    public Vector2 ClampInside(Vector2 worldPos)
+    {
+        float pad = 0.8f;
+        float l = _arenaCenter.x - arenaHalfWidth + pad;
+        float r = _arenaCenter.x + arenaHalfWidth - pad;
+        float b = _arenaCenter.y - arenaHalfHeight + pad;
+        float t = _arenaCenter.y + arenaHalfHeight - pad;
+        return new Vector2(
+            Mathf.Clamp(worldPos.x, l, r),
+            Mathf.Clamp(worldPos.y, b, t));
+    }
+
     private void OnEnable()
     {
         EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged, owner: this);
@@ -63,6 +85,9 @@ public class BossArenaLock : MonoBehaviour
         if (_locked) return;
         _locked = true;
 
+        // 把竞技场中心 clamp 到地图边界内，避免内墙超出外墙
+        ClampArenaCenterToMapBounds();
+
         _wallParent = new GameObject("BossArenaWalls");
 
         float t = _arenaCenter.y + arenaHalfHeight;
@@ -78,7 +103,64 @@ public class BossArenaLock : MonoBehaviour
         BuildWall("WallLeft",   new Vector2(l, _arenaCenter.y), new Vector2(thick, h));
         BuildWall("WallRight",  new Vector2(r, _arenaCenter.y), new Vector2(thick, h));
 
+        // Boss 出生在围墙外时，拉入场内（避免 Boss 被自己的竞技场挡在外面）
+        PullBossesIntoArena(l, r, b, t);
+
         Debug.Log($"[BossArenaLock] 围墙生成 center={_arenaCenter} size={w}x{h}");
+    }
+
+    /// <summary>把围墙范围外的 Boss 拽入竞技场，边缘 clamp（保留相对方位）。</summary>
+    private static void PullBossesIntoArena(float left, float right, float bottom, float top)
+    {
+        const float pad = 0.8f;
+        float il = left + pad;
+        float ir = right - pad;
+        float ib = bottom + pad;
+        float it = top - pad;
+
+        var markers = FindObjectsOfType<LastWaveBossMarker>();
+        foreach (var m in markers)
+        {
+            Vector2 pos = m.transform.position;
+            bool outside = pos.x < left || pos.x > right || pos.y < bottom || pos.y > top;
+            if (!outside) continue;
+
+            float x = Mathf.Clamp(pos.x, il, ir);
+            float y = Mathf.Clamp(pos.y, ib, it);
+            m.transform.position = new Vector3(x, y, m.transform.position.z);
+
+            WallStuckResolver.ResolveTransform(m.transform);
+
+            Debug.Log($"[BossArenaLock] Boss '{m.name}' ({pos.x:F1},{pos.y:F1}) → 拉入竞技场 ({x:F1},{y:F1})");
+        }
+    }
+
+    /// <summary>确保竞技场不超出地图 Tilemap 的外墙范围。</summary>
+    private void ClampArenaCenterToMapBounds()
+    {
+        var loader = BattleMapLoader.Instance;
+        if (loader == null || loader.GroundTilemap == null) return;
+
+        var tm = loader.GroundTilemap;
+        tm.CompressBounds();
+        BoundsInt cb = tm.cellBounds;
+        Vector3 mapMin = tm.CellToWorld(cb.min);
+        Vector3 mapMax = tm.CellToWorld(cb.max);
+
+        // 留出外墙 + 缓冲距离
+        const float pad = 0.8f;
+        float clampedX = Mathf.Clamp(_arenaCenter.x,
+            mapMin.x + arenaHalfWidth + pad,
+            mapMax.x - arenaHalfWidth - pad);
+        float clampedY = Mathf.Clamp(_arenaCenter.y,
+            mapMin.y + arenaHalfHeight + pad,
+            mapMax.y - arenaHalfHeight - pad);
+
+        if (!Mathf.Approximately(clampedX, _arenaCenter.x) || !Mathf.Approximately(clampedY, _arenaCenter.y))
+        {
+            Debug.Log($"[BossArenaLock] 竞技场中心从 ({_arenaCenter.x:F1},{_arenaCenter.y:F1}) clamp 到 ({clampedX:F1},{clampedY:F1})，防止超出地图");
+            _arenaCenter = new Vector2(clampedX, clampedY);
+        }
     }
 
     private void BuildWall(string name, Vector2 pos, Vector2 size)

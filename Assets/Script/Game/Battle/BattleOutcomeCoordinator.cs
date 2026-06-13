@@ -162,6 +162,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
         int levelId = SelectedLevelContext.LevelId;
         bool isFirstClear = !PlayerProfileService.Instance.HasCleared(levelId);
+        int stars = ComputeStarsFromLastVictory();
         var newUnlocks = TryRecordVictoryProgress(dur, kills);
         var rewardItems = AwardDropPoolRewards(levelId, isFirstClear);
         ShowResultUi(new GameResultViewModel
@@ -169,6 +170,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             victory = true,
             battleDurationUnscaled = dur,
             killCount = kills,
+            stars = stars,
             unlockedCharacters = newUnlocks,
             rewardItems = rewardItems,
         });

@@ -75,6 +75,7 @@ public class CharacterConfigApplier : MonoBehaviour
             attr.critDamageMul  *= s.GetUpgradeMul(def.characterId, def.upgradeData, "critDmg");
             attr.pierceRate     += s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceRate");
             attr.pierceCount    += Mathf.RoundToInt(s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceCount"));
+            attr.penRate        += s.GetUpgradeMul(def.characterId, def.upgradeData, "penRate");
             Debug.Log($"[CharacterConfigApplier] 升级倍率已应用：{def.characterId} Lv.{lv}");
         }
 
@@ -91,6 +92,8 @@ public class CharacterConfigApplier : MonoBehaviour
         _playerSkills.pierceCount = attr.pierceCount;
         _playerSkills.pierceRate = attr.pierceRate;
         _playerSkills.attackRangeMul = attr.attackRangeMul;
+        _playerSkills.penRate = attr.penRate;
+        _playerSkills.penPercent = attr.penPercent;
 
         // 2. Rare 特质
         ApplyRareTrait(def);

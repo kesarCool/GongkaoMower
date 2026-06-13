@@ -27,6 +27,8 @@ MonoBehaviour:
     critDamageMul: 2
     pierceRate: 0
     pierceCount: 0
+    penRate: 0.15
+    penPercent: 0.8
   bodySprite: {fileID: 21300000, guid: b812d4822394c5f4f838c459c5e0a11c, type: 3}
   defaultWeapon: {fileID: 11400000, guid: b7f37a486fb56ec43a43372a0cb9f14a, type: 2}
   boundSkills: 

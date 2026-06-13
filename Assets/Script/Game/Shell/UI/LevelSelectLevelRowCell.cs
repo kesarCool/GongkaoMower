@@ -60,9 +60,10 @@ public class LevelSelectLevelRowCell : MonoBehaviour
                 name += "（未解锁）";
             else if (PlayerProfileService.Instance.TryGetProgress(row.levelId, out var prog) && prog.cleared)
             {
-                string starStr = prog.stars > 0 ? new string('★', prog.stars) : string.Empty;
-                if (!string.IsNullOrEmpty(starStr))
-                    name += " " + starStr;
+                int earned = Mathf.Clamp(prog.stars, 0, 3);
+                int unearned = 3 - earned;
+                if (earned > 0 || unearned > 0)
+                    name += " " + new string('★', earned) + new string('☆', unearned);
             }
 
             titleText.text = name;

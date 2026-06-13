@@ -12,7 +12,7 @@ public class DashModule : BossSkillModule
     private float _damage = 30f;
     private float _chargeTime = 0.3f;
     private float _recoveryTime = 0.2f;
-    private LayerMask _wallMask;
+    public LayerMask wallMask = -1; // -1 = Everything，Cast 天然排除自身碰撞体
 
     private TrailRenderer _trail;
     private Rigidbody2D _rb;
@@ -20,8 +20,6 @@ public class DashModule : BossSkillModule
     public override void Init(string rawParams, BossBrain owner)
     {
         base.Init(rawParams, owner);
-        requiresTarget = true;
-
         float[] p = ParseFloats(rawParams, 4);
         interval     = p[0] > 0f ? p[0] : 6f;
         _dashSpeed   = p[1] > 0f ? p[1] : 15f;
@@ -55,16 +53,28 @@ public class DashModule : BossSkillModule
         Vector2 dir = target != null ? ((Vector2)target.position - _rb.position).normalized : Vector2.right;
         SetSpritesFlash(false);
         float remaining = _dashDistance;
+        Vector2 startPos = _rb.position;
+        bool wallBlocked = false;
 
         while (remaining > 0f && brain != null)
         {
             float step = Mathf.Min(_dashSpeed * Time.fixedDeltaTime, remaining);
             Vector2 nextPos = _rb.position + dir * step;
 
-            if (_wallMask.value != 0)
+            if (wallMask.value != 0)
             {
-                var hit = Physics2D.Raycast(_rb.position, dir, step, _wallMask);
-                if (hit.collider != null) { _rb.MovePosition(hit.point - dir * 0.2f); break; }
+                // Rigidbody2D.Cast 天然排除自身碰撞体，且用完整碰撞形状扫描
+                var filter = new ContactFilter2D();
+                filter.SetLayerMask(wallMask);
+                filter.useTriggers = false;
+                var contacts = new RaycastHit2D[4];
+                int count = _rb.Cast(dir, filter, contacts, step);
+                if (count > 0)
+                {
+                    _rb.MovePosition(_rb.position + dir * contacts[0].distance);
+                    wallBlocked = true;
+                    break;
+                }
             }
 
             _rb.MovePosition(nextPos);
@@ -74,6 +84,12 @@ public class DashModule : BossSkillModule
         }
 
         if (_trail != null) _trail.emitting = false;
+
+        Vector2 endPos = _rb.position;
+        float actualDist = Vector2.Distance(startPos, endPos);
+        string stopReason = wallBlocked ? "撞墙" : (remaining <= 0f ? "满距" : "中断");
+        Debug.Log($"[Dash] {stopReason} | 起点=({startPos.x:F1},{startPos.y:F1}) 终点=({endPos.x:F1},{endPos.y:F1}) 实际={actualDist:F1} 配置={_dashDistance:F1} dir=({dir.x:F2},{dir.y:F2}) CastHits={wallBlocked}");
+
         yield return new WaitForSeconds(_recoveryTime);
 
         SetSpritesFlash(false);

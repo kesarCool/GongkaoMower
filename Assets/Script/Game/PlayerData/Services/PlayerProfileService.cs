@@ -339,6 +339,7 @@ public sealed class PlayerProfileService
             case "critDmg":      return data.EvaluateMul(data.critDmgMulAtMax, level);
             case "pierceRate":   return data.EvaluateAdd(data.pierceRateAddAtMax, level);
             case "pierceCount":  return data.EvaluateAdd(data.pierceCountAddAtMax, level);
+            case "penRate":      return data.EvaluateAdd(data.penRateAddAtMax, level);
             default:             return 1f;
         }
     }

@@ -26,6 +26,7 @@ public class EnemyBase : MonoBehaviour
     [SerializeField] protected float maxHp = 10f;
     [SerializeField] protected float hp = 10f;
     [SerializeField] protected float damage = 1f;
+    [SerializeField] protected float defense;
     [SerializeField] protected int rewardKillCount = 1;
 
     [Header("资源引用（运行时，可选）")]
@@ -42,6 +43,9 @@ public class EnemyBase : MonoBehaviour
     [Header("死亡后处理")]
     [Tooltip("死亡时是否自动给 GameLayer 增加击杀数")]
     public bool addKillToGameLayer = true;
+
+    /// <summary>复活用：为 true 时 Die() 不发布事件、不回收，仅隐藏。</summary>
+    [System.NonSerialized] public bool preventPoolDeath;
 
     public int EnemyId => enemyId;
     public string EnemyName => enemyName;
@@ -74,13 +78,14 @@ public class EnemyBase : MonoBehaviour
     }
 
     /// <summary>
-    /// 唯一数值入口：所有攻血速只能从 Excel 表（LevelWave.attack/maxHp/speed）来。
+    /// 唯一数值入口：所有攻血速防只能从 Excel 表（LevelWave.attack/maxHp/speed/defense）来。
     /// </summary>
-    public virtual void ApplyTableStats(int attackRaw, int hpRaw, float moveSpeed)
+    public virtual void ApplyTableStats(int attackRaw, int hpRaw, float moveSpeed, int defenseRaw = 0)
     {
         if (attackRaw > 0)    damage    = attackRaw;
         if (hpRaw > 0)        maxHp     = Mathf.Max(1f, hpRaw);
         if (moveSpeed > 0f)   this.moveSpeed = moveSpeed;
+        if (defenseRaw > 0)   this.defense = defenseRaw;
         hp = maxHp;
 
         SyncComponents();
@@ -125,23 +130,34 @@ public class EnemyBase : MonoBehaviour
         }
     }
 
-    public virtual void TakeDamage(float amount, SkillId damageSource = SkillId.None, bool isCrit = false)
+    public virtual void TakeDamage(float amount, SkillId damageSource = SkillId.None, bool isCrit = false, bool isPenetration = false)
     {
         if (amount <= 0f) return;
         if (hp <= 0f) return;
 
-        hp -= amount;
-        OnDamaged.Invoke(amount);
+        // 防御减伤（破防时无视）
+        float final = amount;
+        if (!isPenetration && defense > 0f)
+            final = amount * (100f / (100f + defense));
+
+        // Boss 免伤护盾（按技能伤害类型过滤减伤，内部发布 DamageResistedEvent）
+        var shield = GetComponent<ResistShield>();
+        if (shield != null)
+            shield.ApplyResist(damageSource, ref final);
+
+        hp -= final;
+        OnDamaged.Invoke(final);
 
         if (damageSource != SkillId.None)
-            BattleRunMetrics.AddSkillDamage(damageSource, amount);
+            BattleRunMetrics.AddSkillDamage(damageSource, final);
 
         EventBus.Publish(new EnemyDamagedEvent
         {
             enemy = this,
-            damage = amount,
+            damage = final,
             worldPosition = transform.position,
             isCrit = isCrit,
+            isPenetration = isPenetration,
         });
 
         if (hp <= 0f)
@@ -150,7 +166,17 @@ public class EnemyBase : MonoBehaviour
 
     protected virtual void Die()
     {
-        // 通过事件发布“怪物死亡”，由 UI/掉落/统计等模块订阅处理（避免强耦合 FindObjectOfType）
+        // 先通知 OnDied 订阅者（供 BossBrain 复活拦截）
+        OnDied.Invoke();
+
+        // 复活拦截：BossBrain 在 OnDied 中设 preventPoolDeath=true
+        if (preventPoolDeath)
+        {
+            HideForRevive();
+            return;
+        }
+
+        // 通过事件发布”怪物死亡”，由 UI/掉落/统计等模块订阅处理
         int killReward = Mathf.Max(1, rewardKillCount);
         EventBus.Publish(new EnemyDiedEvent
         {
@@ -160,10 +186,9 @@ public class EnemyBase : MonoBehaviour
             position = transform.position
         });
 
-        OnDied.Invoke();
-
-        // 注销上限计数
-        SpawnLimiter.Instance?.Unregister("Enemy", gameObject);
+            // 注销上限计数
+            if (SpawnLimiter.Instance != null)
+                SpawnLimiter.Instance.Unregister("Enemy", gameObject);
 
         // 池化回收或销毁
         var pooled = GetComponent<PooledObject>();
@@ -171,6 +196,40 @@ public class EnemyBase : MonoBehaviour
             GameObjectPool.Release(gameObject);
         else
             Destroy(gameObject);
+    }
+
+    /// <summary>复活流程的第一步：隐藏渲染与碰撞，不发布死亡事件。</summary>
+    public void HideForRevive()
+    {
+        var col = GetComponent<Collider2D>();
+        if (col == null) col = GetComponentInChildren<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        var sprites = GetComponentsInChildren<SpriteRenderer>();
+        foreach (var sr in sprites) sr.enabled = false;
+
+        var renderers = GetComponentsInChildren<MeshRenderer>();
+        foreach (var mr in renderers) mr.enabled = false;
+
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null) rb.simulated = false;
+    }
+
+    /// <summary>复活流程的最后一步：恢复渲染与碰撞。</summary>
+    public void ShowFromRevive()
+    {
+        var col = GetComponent<Collider2D>();
+        if (col == null) col = GetComponentInChildren<Collider2D>();
+        if (col != null) col.enabled = true;
+
+        var sprites = GetComponentsInChildren<SpriteRenderer>();
+        foreach (var sr in sprites) sr.enabled = true;
+
+        var renderers = GetComponentsInChildren<MeshRenderer>();
+        foreach (var mr in renderers) mr.enabled = true;
+
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null) rb.simulated = true;
     }
 
     /// <summary>
