@@ -10,8 +10,10 @@ public class FieldGeneratorSkillDefinition : SkillDefinitionBase
     public float[] damagePerSecondByLevel = { 15f, 20f, 26f, 33f, 42f };
     [Tooltip("伤害结算间隔（秒），越短越频繁；单次伤害 = DPS × 间隔")]
     public float[] damageTickIntervalByLevel = { 0.25f, 0.22f, 0.19f, 0.16f, 0.13f };
-    [Tooltip("力场特效强度（粒子 emission 倍率）")]
+    [Tooltip("力场特效不透明度")]
     public float[] visualIntensityByLevel = { 0.7f, 0.85f, 1f, 1.15f, 1.3f };
+    [Tooltip("脉冲周期（秒），越小越快。等级越高脉冲越密。")]
+    public float[] pulseCycleDurationByLevel = { 1.4f, 1.2f, 1.0f, 0.85f, 0.7f };
 
     [Header("Visual")]
     [Tooltip("附着玩家的力场特效 Prefab（循环粒子，如 fx-Goku-Supper）")]
@@ -24,6 +26,7 @@ public class FieldGeneratorSkillDefinition : SkillDefinitionBase
     public float DamagePerSecondAt(int level) => damagePerSecondByLevel[Mathf.Clamp(level, 1, damagePerSecondByLevel.Length) - 1];
     public float DamageTickIntervalAt(int level) => damageTickIntervalByLevel[Mathf.Clamp(level, 1, damageTickIntervalByLevel.Length) - 1];
     public float VisualIntensityAt(int level) => visualIntensityByLevel[Mathf.Clamp(level, 1, visualIntensityByLevel.Length) - 1];
+    public float PulseCycleDurationAt(int level) => pulseCycleDurationByLevel[Mathf.Clamp(level, 1, pulseCycleDurationByLevel.Length) - 1];
 
     protected override string GenerateLevelDescription(int level)
     {
@@ -32,13 +35,11 @@ public class FieldGeneratorSkillDefinition : SkillDefinitionBase
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
     {
-        if (fieldVisualPrefab == null) return null;
-
         int lv = 1;
-        var s = new SkillFieldGenerator(fieldVisualPrefab)
+        var s = new SkillFieldGenerator
         {
-            visualBaseDiameter = visualBaseDiameter,
-            sortingOrder = sortingOrder
+            sortingOrder = sortingOrder,
+            pulseCycleDuration = PulseCycleDurationAt(lv)
         };
         s.ApplyRuntimeStats(
             RadiusAt(lv),
@@ -54,8 +55,8 @@ public class FieldGeneratorSkillDefinition : SkillDefinitionBase
         if (s == null) return;
 
         level = ClampLevel(level);
-        s.visualBaseDiameter = visualBaseDiameter;
         s.sortingOrder = sortingOrder;
+        s.pulseCycleDuration = PulseCycleDurationAt(level);
         s.ApplyRuntimeStats(
             RadiusAt(level),
             DamagePerSecondAt(level),

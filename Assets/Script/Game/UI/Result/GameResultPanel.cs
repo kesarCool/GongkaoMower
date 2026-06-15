@@ -28,6 +28,9 @@ public sealed class GameResultViewModel
     public List<string> unlockedCharacters;
     /// <summary>本次获得的奖励物品列表（含金币）。</summary>
     public List<RewardItemEntry> rewardItems;
+    /// <summary>完成的波次数 / 总波次数。</summary>
+    public int completedWaves;
+    public int totalWaves;
 }
 
 /// <summary>
@@ -39,6 +42,13 @@ public class GameResultPanel : UIPanelBase
     [Header("可选：未拖则用 Resources.Load<Sprite>(\"pic_sl\"/\"pic_sb\")")]
     [SerializeField] private Sprite winBannerSprite;
     [SerializeField] private Sprite loseBannerSprite;
+
+    [Header("波次统计")]
+    [SerializeField] private TextMeshProUGUI textWave;
+
+    [Header("被动技能")]
+    [SerializeField] private Transform passiveSkillListParent;
+    [SerializeField] private GameObject passiveSkillRowPrefab;
 
     [Header("技能行预制体（默认空则运行时 Load：见 skillRowPrefabResourcesPath）")]
     [SerializeField] private GameObject skillDamageRowPrefab;
@@ -255,6 +265,22 @@ public class GameResultPanel : UIPanelBase
         if (_textKillNum != null)
             _textKillNum.text = $"击杀数量：{_vm.killCount}";
 
+        // 波次统计
+        if (textWave != null)
+        {
+            if (_vm.totalWaves > 0)
+            {
+                BattleChineseFontRuntime.EnsureLoaded();
+                BattleChineseFontRuntime.ApplyToTMP(textWave);
+                textWave.text = $"完成波次：{_vm.completedWaves}/{_vm.totalWaves}";
+                textWave.gameObject.SetActive(true);
+            }
+            else
+            {
+                textWave.gameObject.SetActive(false);
+            }
+        }
+
         RefreshLevelLabel();
 
         if (_btnAgain != null) _btnAgain.gameObject.SetActive(!win);
@@ -276,6 +302,7 @@ public class GameResultPanel : UIPanelBase
         }
 
         BuildSkillRows();
+        BuildPassiveSkillList();
 
         transform.SetAsLastSibling();
     }
@@ -403,6 +430,39 @@ public class GameResultPanel : UIPanelBase
             float dmg = BattleRunMetrics.GetSkillDamage(id);
             cell.Bind(ic, nm, dmg);
             cell.SetBreakthrough(isBreakthrough);
+        }
+    }
+
+    private void BuildPassiveSkillList()
+    {
+        if (passiveSkillListParent == null || passiveSkillRowPrefab == null) return;
+
+        for (int i = passiveSkillListParent.childCount - 1; i >= 0; i--)
+            Destroy(passiveSkillListParent.GetChild(i).gameObject);
+
+        PlayerSkills ps = FindObjectOfType<PlayerSkills>();
+        if (ps == null) return;
+
+        var ids = new List<SkillId>();
+        ps.GetEquippedPassiveIdsOrdered(ids);
+
+        SkillCatalog catalog = ps.skillCatalog;
+        if (catalog == null) catalog = Resources.Load<SkillCatalog>("SkillCatalog");
+
+        foreach (SkillId id in ids)
+        {
+            var def = catalog != null ? catalog.Get(id) : null;
+            int level = ps.GetPassiveSkillLevel(id);
+
+            GameObject row = Instantiate(passiveSkillRowPrefab, passiveSkillListParent, false);
+
+            var cell = row.GetComponent<GamePassiveSkillCell>();
+            if (cell != null)
+            {
+                string name = def != null ? def.displayName : id.ToString();
+                Sprite icon = def != null ? def.icon : null;
+                cell.Bind(icon, name, level);
+            }
         }
     }
 

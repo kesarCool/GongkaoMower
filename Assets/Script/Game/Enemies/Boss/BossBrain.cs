@@ -37,6 +37,23 @@ public class BossBrain : MonoBehaviour
 
     private void Start()
     {
+        if (monsterId <= 0)
+        {
+            // 公用 prefab 的 monsterId=0，需等 InitFromDefinition 注入 ID
+            Debug.LogWarning($"[BossBrain] monsterId=0，等待 EnemyBase.InitFromDefinition 注入……");
+            return;
+        }
+        BuildModules();
+    }
+
+    /// <summary>由 EnemyBase.InitFromDefinition 或 SpawnerWaves 在赋完 EnemyId 后调用。</summary>
+    public void OnEnemyDataReady()
+    {
+        if (monsterId <= 0)
+        {
+            EnemyBase eb = GetComponent<EnemyBase>();
+            if (eb != null) monsterId = eb.EnemyId;
+        }
         if (monsterId <= 0) return;
         BuildModules();
     }

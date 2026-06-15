@@ -105,10 +105,15 @@ public class CharacterSelectionPanel : UIPanelBase
 
         PopulateList();
         AutoSelectDefault();
+
+        // 订阅数据变更（商店购买后自动刷新碎片数）
+        EventBus.Subscribe<PlayerDataChangedEvent>(OnPlayerDataChanged, owner: this);
     }
 
     public override void OnClose()
     {
+        EventBus.Unsubscribe<PlayerDataChangedEvent>(OnPlayerDataChanged);
+
         if (closeButton != null) closeButton.onClick.RemoveListener(OnCloseClicked);
         if (confirmButton != null) confirmButton.onClick.RemoveListener(OnConfirmClicked);
         if (startGameButton != null) startGameButton.onClick.RemoveListener(OnStartGameClicked);
@@ -547,6 +552,12 @@ public class CharacterSelectionPanel : UIPanelBase
     }
 
     // ── 升级 ──────────────────────────────────────────
+
+    private void OnPlayerDataChanged(PlayerDataChangedEvent _)
+    {
+        if (!gameObject.activeInHierarchy) return;
+        PopulateList();
+    }
 
     private void OnUpgradeClicked()
     {

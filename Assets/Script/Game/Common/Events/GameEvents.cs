@@ -74,6 +74,9 @@ public struct PlayerDiedEvent
     public PlayerHealth playerHealth;
 }
 
+/// <summary>玩家数据变更（金币/碎片/物品增减）。局外订阅刷新 UI。</summary>
+public struct PlayerDataChangedEvent { }
+
 /// <summary>技能施放/命中（供音效等旁路系统订阅；手雷等在落地爆炸时发布，其余技能在释放时发布）。</summary>
 public struct SkillCastEvent
 {

@@ -75,6 +75,10 @@ public class EnemyBase : MonoBehaviour
         bulletPrefab = def.bulletPrefab;
 
         ApplyToComponents();
+
+        // BossBrain 公用 prefab：monsterId 在 Unity Start 时为 0，等 InitFromDefinition 注入
+        var brain = GetComponent<BossBrain>();
+        if (brain != null) brain.OnEnemyDataReady();
     }
 
     /// <summary>

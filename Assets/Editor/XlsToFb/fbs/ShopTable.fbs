@@ -1,0 +1,37 @@
+namespace ProtoTable.ShopTable;
+enum eShopType:int { 
+	ShopType_None = 0,   // default
+	normal = 1,    // 普通商店
+	holiday = 2,    // 节日商店
+	gift_package = 3,    // 幸运礼包
+	sevenday = 4,    // 七日商店
+	integral = 5,    // 积分商店
+	box = 6,    // 幸运宝库礼包
+	reputation = 7,    // 声望商店
+}
+namespace ProtoTable.ShopTable;
+enum eCrypt :int{
+	code = 182865018,}
+
+namespace ProtoTable;
+table ShopTable{
+	ID:int32;
+	ShopName:string;
+	ShopType:ShopTable.eShopType;
+	LatticeName:string;
+	ItemID:int32;
+	ItemNumber:int32;
+	DropID:int32;
+	Rotate:int32;
+	PriceType:int32;
+	OldPrice:int32;
+	PurchaseDiscount:int32;
+	PurchaseNum:int32;
+	ActiveSet:int32;
+	Refresh:int32;
+	Unlock:int32;
+	Hide:int32;
+	RedPoint:int32;
+}
+
+root_type ShopTable;

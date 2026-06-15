@@ -21,7 +21,7 @@ public static class CharacterUnlockEvaluator
         }
         if (def.unlockFragmentCount > 0)
         {
-            int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId);
+            int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId, def.fragmentItemId);
             int need = def.unlockFragmentCount;
             return $"集齐 {need} 片「{def.displayName}」碎片可解锁（{have}/{need}）";
         }
@@ -55,7 +55,7 @@ public static class CharacterUnlockEvaluator
         if (IsUnlocked(def)) return false;
         if (def.unlockFragmentCount <= 0) return false;
 
-        int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId);
+        int have = GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId, def.fragmentItemId);
         return have >= def.unlockFragmentCount;
     }
 
@@ -111,12 +111,26 @@ public static class CharacterUnlockEvaluator
         return newUnlocks;
     }
 
-    public static int GetFragmentCount(PlayerSaveData data, string charId)
+    public static int GetFragmentCount(PlayerSaveData data, string charId, int fragmentItemId = 0)
     {
-        if (data?.characterFragmentKeys == null) return 0;
-        int idx = System.Array.IndexOf(data.characterFragmentKeys, charId);
-        if (idx < 0 || idx >= (data.characterFragmentValues?.Length ?? 0)) return 0;
-        return data.characterFragmentValues[idx];
+        // 1. 专用碎片数组
+        int count = 0;
+        if (data?.characterFragmentKeys != null)
+        {
+            int idx = System.Array.IndexOf(data.characterFragmentKeys, charId);
+            if (idx >= 0 && idx < (data.characterFragmentValues?.Length ?? 0))
+                count = data.characterFragmentValues[idx];
+        }
+
+        // 2. 兜底：通用物品背包（碎片在 AddItem 路由修复前存入此处）
+        if (count == 0 && fragmentItemId > 0 && data?.itemIds != null)
+        {
+            int idx = System.Array.IndexOf(data.itemIds, fragmentItemId);
+            if (idx >= 0 && idx < (data.itemCounts?.Length ?? 0))
+                count = data.itemCounts[idx];
+        }
+
+        return count;
     }
 
     private static void AddUnlockedCharacter(PlayerSaveData data, string charId)

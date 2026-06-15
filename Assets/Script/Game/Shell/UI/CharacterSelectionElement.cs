@@ -88,13 +88,22 @@ public class CharacterSelectionElement : MonoBehaviour
         bool unlocked = CharacterUnlockEvaluator.IsUnlocked(def);
 
         if (lockedOverlay != null)
+        {
             lockedOverlay.SetActive(!unlocked);
+            if (!unlocked)
+            {
+                // lockedOverlay 上的中文（如"未解锁"）需要中文字体
+                BattleChineseFontRuntime.EnsureLoaded();
+                foreach (var tmp in lockedOverlay.GetComponentsInChildren<TextMeshProUGUI>(true))
+                    BattleChineseFontRuntime.ApplyToTMP(tmp);
+            }
+        }
 
         // 未解锁碎片信息
         if (!unlocked && def.unlockFragmentCount > 0)
         {
             int have = CharacterUnlockEvaluator.GetFragmentCount(
-                PlayerProfileService.Instance.Data, def.characterId);
+                PlayerProfileService.Instance.Data, def.characterId, def.fragmentItemId);
             int need = def.unlockFragmentCount;
 
             if (fragmentIcon != null)

@@ -89,6 +89,10 @@ public sealed class PlayerProfileService
             return;
         }
 
+        // 角色碎片：同步写入 characterFragmentKeys/Values，供角色面板读取
+        if (TryRouteFragment(itemId, count))
+            return;
+
         // 通用物品：线性查找 + 更新
         if (_data.itemIds == null) _data.itemIds = System.Array.Empty<int>();
         if (_data.itemCounts == null) _data.itemCounts = System.Array.Empty<int>();
@@ -219,6 +223,43 @@ public sealed class PlayerProfileService
     public int GetFragmentCount(string characterId)
     {
         return CharacterUnlockEvaluator.GetFragmentCount(_data, characterId);
+    }
+
+    /// <summary>检测 itemId 是否为角色碎片，是则写入 characterFragmentKeys/Values 并返回 true。</summary>
+    private bool TryRouteFragment(int itemId, int count)
+    {
+        var charId = GetCharacterIdForFragmentItem(itemId);
+        if (string.IsNullOrEmpty(charId)) return false;
+        AddFragments(charId, count);
+        return true;
+    }
+
+    private static string GetCharacterIdForFragmentItem(int itemId)
+    {
+        if (itemId <= 0) return null;
+        var catalog = GetCharacterCatalog();
+        if (catalog == null)
+        {
+            Debug.LogWarning($"[AddItem] CharacterCatalog 未找到，碎片 itemId={itemId} 无法路由");
+            return null;
+        }
+        foreach (var def in catalog.characters)
+        {
+            if (def != null && def.fragmentItemId == itemId)
+            {
+                Debug.Log($"[AddItem] 碎片路由: itemId={itemId} → {def.characterId} ({def.displayName})");
+                return def.characterId;
+            }
+        }
+        Debug.LogWarning($"[AddItem] 碎片 itemId={itemId} 未匹配任何角色的 fragmentItemId");
+        return null;
+    }
+
+    private static CharacterCatalog GetCharacterCatalog()
+    {
+        var cca = UnityEngine.Object.FindObjectOfType<CharacterConfigApplier>();
+        if (cca != null && cca.characterCatalog != null) return cca.characterCatalog;
+        return Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
     }
 
     /// <summary>增加英雄碎片。</summary>
@@ -520,6 +561,74 @@ public sealed class PlayerProfileService
 
     [UnityEditor.MenuItem("Tools/发放物品/金币+1万", false, 503)]
     private static void GrantGold10k() { Instance.LoadOrCreate(); Instance.AddItem(1, 10000); ShowGrantResult(1, 10000); }
+
+    // ═══════════════ 商店购买记录 ═══════════════
+
+    /// <summary>获取某商品的已购买次数（本周期内）。</summary>
+    public int GetShopPurchaseCount(int shopItemId)
+    {
+        if (!_loaded) LoadOrCreate();
+        if (_data?.shopPurchaseLogs == null) return 0;
+        for (int i = 0; i < _data.shopPurchaseLogs.Length; i++)
+        {
+            if (_data.shopPurchaseLogs[i] != null && _data.shopPurchaseLogs[i].shopItemId == shopItemId)
+                return _data.shopPurchaseLogs[i].purchasedCount;
+        }
+        return 0;
+    }
+
+    /// <summary>记录一次购买（count 次）。</summary>
+    public void RecordShopPurchase(int shopItemId, int count = 1)
+    {
+        if (!_loaded) LoadOrCreate();
+        if (_data == null) return;
+
+        var logs = _data.shopPurchaseLogs ?? Array.Empty<ShopPurchaseLog>();
+        int idx = -1;
+        for (int i = 0; i < logs.Length; i++)
+        {
+            if (logs[i] != null && logs[i].shopItemId == shopItemId) { idx = i; break; }
+        }
+
+        if (idx >= 0)
+        {
+            logs[idx].purchasedCount += count;
+            logs[idx].lastResetTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        }
+        else
+        {
+            Array.Resize(ref logs, logs.Length + 1);
+            logs[logs.Length - 1] = new ShopPurchaseLog
+            {
+                shopItemId = shopItemId,
+                purchasedCount = count,
+                lastResetTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+        }
+
+        _data.shopPurchaseLogs = logs;
+        Persist();
+    }
+
+    /// <summary>重置某 refreshType 下的所有购买计数（跨周期调用）。</summary>
+    public void ResetShopPurchasesByRefresh(int refreshType)
+    {
+        if (!_loaded) LoadOrCreate();
+        if (_data?.shopPurchaseLogs == null) return;
+
+        var catalog = ShopCatalog.Instance;
+        foreach (var log in _data.shopPurchaseLogs)
+        {
+            if (log == null) continue;
+            var row = catalog.Get(log.shopItemId);
+            if (row != null && row.Refresh == refreshType)
+            {
+                log.purchasedCount = 0;
+                log.lastResetTimestamp = 0;
+            }
+        }
+        Persist();
+    }
 
     [UnityEditor.MenuItem("Tools/发放物品/金币+10万", false, 504)]
     private static void GrantGold100k() { Instance.LoadOrCreate(); Instance.AddItem(1, 100000); ShowGrantResult(1, 100000); }

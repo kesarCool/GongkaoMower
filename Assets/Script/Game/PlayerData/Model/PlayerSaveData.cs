@@ -28,6 +28,9 @@ public class PlayerSaveData
     public int[] itemIds = Array.Empty<int>();
     public int[] itemCounts = Array.Empty<int>();
 
+    // ── v5 商店购买记录 ──
+    public ShopPurchaseLog[] shopPurchaseLogs = Array.Empty<ShopPurchaseLog>();
+
     /// <summary>升级到最新版本（结构迁移）。</summary>
     public void MigrateToLatest()
     {
@@ -36,4 +39,13 @@ public class PlayerSaveData
         // v3 → v4：gold/diamond/itemIds/itemCounts 默认 0/空，无需额外迁移
         version = CurrentVersion;
     }
+}
+
+/// <summary>商店单条购买记录。</summary>
+[Serializable]
+public class ShopPurchaseLog
+{
+    public int shopItemId;           // ShopTable.ID
+    public int purchasedCount;       // 本周期已购买次数
+    public long lastResetTimestamp;  // 上次重置时间（Unix 秒）
 }

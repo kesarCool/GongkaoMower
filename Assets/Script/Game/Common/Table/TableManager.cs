@@ -23,6 +23,7 @@ public class TableManager : MonoSingleton<TableManager>
         typeof(ErrorCodeTable),
         typeof(ItemTable),       // 物品表（Excel 导表后生成 ProtoTable.ItemTable.cs）
         typeof(DropPool),        // 掉落池表（Excel 导表后生成 ProtoTable.DropPool.cs）
+        typeof(ShopTable),       // 商店表
     };
 
     private Dictionary<Type, Dictionary<int, object>> mTypeTableDict = new Dictionary<Type, Dictionary<int, object>>();

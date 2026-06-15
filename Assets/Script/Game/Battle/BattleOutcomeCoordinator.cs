@@ -165,6 +165,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         int stars = ComputeStarsFromLastVictory();
         var newUnlocks = TryRecordVictoryProgress(dur, kills);
         var rewardItems = AwardDropPoolRewards(levelId, isFirstClear);
+        int completedWaves = _gameLayer != null ? _gameLayer.CurrentWave : 0;
+        int totalWaves = _gameLayer != null ? _gameLayer.TotalWaves : 0;
         ShowResultUi(new GameResultViewModel
         {
             victory = true,
@@ -173,6 +175,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             stars = stars,
             unlockedCharacters = newUnlocks,
             rewardItems = rewardItems,
+            completedWaves = completedWaves,
+            totalWaves = totalWaves,
         });
 
         // 恢复
@@ -224,6 +228,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         _screenOverlay.color = blackTarget;
 
         int kills = _gameLayer != null ? _gameLayer.CurrentKills : 0;
+        int completedWaves = _gameLayer != null ? Mathf.Max(0, _gameLayer.CurrentWave - 1) : 0;
+        int totalWaves = _gameLayer != null ? _gameLayer.TotalWaves : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
         var defeatRewards = AwardDefeatGold();
         ShowResultUi(new GameResultViewModel
@@ -232,6 +238,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             battleDurationUnscaled = dur,
             killCount = kills,
             rewardItems = defeatRewards,
+            completedWaves = completedWaves,
+            totalWaves = totalWaves,
         });
 
         // 面板弹出后清除遮罩
@@ -280,6 +288,112 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
         if (Time.timeScale == 0f)
             Time.timeScale = 1f;
+
+        // ── 复活换位 + 无敌光罩 ──
+        bool inBossArena = BossArenaLock.FindInScene()?.IsLocked ?? false;
+        GameObject player = _playerHealth != null ? _playerHealth.gameObject : GameObject.FindGameObjectWithTag("Player");
+
+        if (player != null)
+        {
+            if (!inBossArena)
+                TeleportToMapCenter(player.transform);
+
+            float shieldDuration = inBossArena ? 2f : 2.5f;
+            _playerHealth?.SetInvulnerable(true);
+            StartCoroutine(ReviveShieldRoutine(player.transform, shieldDuration));
+        }
+    }
+
+    /// <summary>传送玩家到地图 Tilemap 中心，WallStuckResolver 修正卡墙。</summary>
+    private static void TeleportToMapCenter(Transform playerTr)
+    {
+        var loader = BattleMapLoader.Instance;
+        if (loader == null || loader.GroundTilemap == null) return;
+
+        var tm = loader.GroundTilemap;
+        tm.CompressBounds();
+        BoundsInt cb = tm.cellBounds;
+        Vector3 mapMin = tm.CellToWorld(cb.min);
+        Vector3 mapMax = tm.CellToWorld(cb.max);
+        Vector2 center = new Vector2(
+            (mapMin.x + mapMax.x) * 0.5f,
+            (mapMin.y + mapMax.y) * 0.5f);
+
+        Vector2 resolved = WallStuckResolver.Resolve(center);
+        playerTr.position = new Vector3(resolved.x, resolved.y, playerTr.position.z);
+
+        Debug.Log($"[Revive] 传送到地图中心 ({resolved.x:F1},{resolved.y:F1})");
+    }
+
+    /// <summary>复活无敌光罩：脉动金环 + 渐隐，duration 秒后自动解除无敌。</summary>
+    private IEnumerator ReviveShieldRoutine(Transform playerTr, float duration)
+    {
+        // 清理旧光罩
+        Transform old = playerTr.Find("ReviveShield");
+        if (old != null) Destroy(old.gameObject);
+
+        var shieldGo = new GameObject("ReviveShield");
+        shieldGo.transform.SetParent(playerTr, false);
+        shieldGo.transform.localPosition = Vector3.zero;
+
+        var sr = shieldGo.AddComponent<SpriteRenderer>();
+        sr.sprite = CreateShieldRingSprite();
+        sr.color = new Color(1f, 0.85f, 0.3f, 0.7f); // 金色光罩
+        sr.sortingOrder = 500;
+        shieldGo.transform.localScale = Vector3.one * 1.2f;
+
+        float elapsed = 0f;
+        const float pulseSpeed = 5f;
+        while (elapsed < duration && shieldGo != null)
+        {
+            elapsed += Time.deltaTime;
+            float remaining = Mathf.Clamp01(1f - elapsed / duration);
+
+            // 脉动 + 缓慢扩大
+            float pulse = 1f + Mathf.Sin(elapsed * pulseSpeed) * 0.1f;
+            shieldGo.transform.localScale = Vector3.one * (1.2f + (1f - remaining) * 0.5f) * pulse;
+
+            Color c = sr.color;
+            c.a = remaining * 0.65f;
+            sr.color = c;
+
+            yield return null;
+        }
+
+        if (shieldGo != null) Destroy(shieldGo);
+        _playerHealth?.SetInvulnerable(false);
+    }
+
+    /// <summary>运行时生成径向渐变光环贴图（256x256，宽环）。</summary>
+    private static Sprite CreateShieldRingSprite()
+    {
+        int size = 256;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var colors = new Color[size * size];
+        float outerR = size * 0.48f;
+        float innerR = size * 0.30f;
+        Vector2 center = new Vector2(size * 0.5f, size * 0.5f);
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), center);
+                float alpha;
+                if (d < innerR)
+                    alpha = 0.1f; // 内部微亮
+                else if (d > outerR)
+                    alpha = 0f;
+                else
+                    alpha = 1f - Mathf.Abs(d - (innerR + outerR) * 0.5f) / ((outerR - innerR) * 0.5f);
+
+                colors[y * size + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha));
+            }
+        }
+
+        tex.SetPixels(colors);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 
     // ── 结算面板 ──

@@ -63,6 +63,7 @@ public class GameLayer : MonoBehaviour
     public int CurrentKills => _kills;
     public int TargetKills => targetKills;
     public int CurrentWave => _currentWave;
+    public int TotalWaves => _totalWaves;
 
     private void Start()
     {

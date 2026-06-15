@@ -45,4 +45,6 @@ public class CharacterDefinition : ScriptableObject
     public int unlockLevelId;
     [Tooltip("收集到此数量的碎片后解锁（0 = 不通过碎片解锁）。")]
     public int unlockFragmentCount;
+    [Tooltip("此角色碎片在 ItemTable 中的 ID（Type=2），用于掉落→碎片存储的映射。")]
+    public int fragmentItemId;
 }

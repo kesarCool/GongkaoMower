@@ -63,18 +63,24 @@ public class DashModule : BossSkillModule
 
             if (wallMask.value != 0)
             {
-                // Rigidbody2D.Cast 天然排除自身碰撞体，且用完整碰撞形状扫描
                 var filter = new ContactFilter2D();
                 filter.SetLayerMask(wallMask);
                 filter.useTriggers = false;
                 var contacts = new RaycastHit2D[4];
                 int count = _rb.Cast(dir, filter, contacts, step);
-                if (count > 0)
+                for (int i = 0; i < count; i++)
                 {
-                    _rb.MovePosition(_rb.position + dir * contacts[0].distance);
+                    var col = contacts[i].collider;
+                    if (col == null) continue;
+                    // 跳过所有怪物（本体/克隆/召唤/小怪）和玩家，只对墙壁停
+                    if (col.GetComponentInParent<EnemyBase>() != null) continue;
+                    if (col.CompareTag("Player")) continue;
+
+                    _rb.MovePosition(_rb.position + dir * contacts[i].distance);
                     wallBlocked = true;
                     break;
                 }
+                if (wallBlocked) break;
             }
 
             _rb.MovePosition(nextPos);
@@ -85,10 +91,8 @@ public class DashModule : BossSkillModule
 
         if (_trail != null) _trail.emitting = false;
 
-        Vector2 endPos = _rb.position;
-        float actualDist = Vector2.Distance(startPos, endPos);
-        string stopReason = wallBlocked ? "撞墙" : (remaining <= 0f ? "满距" : "中断");
-        Debug.Log($"[Dash] {stopReason} | 起点=({startPos.x:F1},{startPos.y:F1}) 终点=({endPos.x:F1},{endPos.y:F1}) 实际={actualDist:F1} 配置={_dashDistance:F1} dir=({dir.x:F2},{dir.y:F2}) CastHits={wallBlocked}");
+        float actualDist = Vector2.Distance(startPos, _rb.position);
+        Debug.Log($"[Dash] {actualDist:F1}/{_dashDistance:F1}{(wallBlocked ? " 撞墙" : "")}");
 
         yield return new WaitForSeconds(_recoveryTime);
 

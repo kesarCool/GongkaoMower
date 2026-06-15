@@ -493,7 +493,7 @@ GameObject:
   - component: {fileID: 4848334414240663388}
   - component: {fileID: 7964391591768637776}
   m_Layer: 0
-  m_Name: boss_30012
+  m_Name: boss_common
   m_TagString: monster
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -544,8 +544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4adc0dcc7f1eede48b197472eac20302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyId: 30002
-  enemyName: "\u5C0F\u8BD5\u725B\u5200"
+  enemyId: 0
+  enemyName: 
   moveSpeed: 1.5
   maxHp: 10000
   hp: 10000
@@ -622,8 +622,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b7e4b5ded86a8843a7f7b54ffbc3274, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  monsterId: 30012
+  monsterId: 0
   prefabRegistry:
   - key: StraightBullet
     prefab: {fileID: 3343132149225423948, guid: f4e547f4b4d52c34088c72dacbf83766, type: 3}
+  - key: HomingBullet
+    prefab: {fileID: 7310771668734871517, guid: 58c1edadaa651964389783403b116297, type: 3}
   inspectorSkills: []

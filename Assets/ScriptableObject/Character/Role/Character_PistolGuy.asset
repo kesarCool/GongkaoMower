@@ -36,3 +36,4 @@ MonoBehaviour:
   locked: 0
   unlockLevelId: 0
   unlockFragmentCount: 0
+  fragmentItemId: 101
