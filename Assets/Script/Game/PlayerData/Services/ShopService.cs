@@ -17,10 +17,11 @@ public enum ShopPurchaseResult
 
 public static class ShopService
 {
-    /// <summary>刷新类型常量。</summary>
+    /// <summary>刷新类型常量（与 ShopTable.Refresh 值对齐：1=每天, 7=每周一, 2=每月1号, 0/空=不刷新）。</summary>
     public const int RefreshNone = 0;
     public const int RefreshDaily = 1;
-    public const int RefreshWeekly = 2;
+    public const int RefreshWeekly = 7;
+    public const int RefreshMonthly = 2;
 
     /// <summary>是否需要刷新（跨周期检查）。返回被重置的 refreshType 列表。</summary>
     public static void CheckAndRefresh()
@@ -29,7 +30,7 @@ public static class ShopService
         if (svc?.Data?.shopPurchaseLogs == null) return;
 
         long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        bool dailyReset = false, weeklyReset = false;
+        bool dailyReset = false, weeklyReset = false, monthlyReset = false;
 
         foreach (var log in svc.Data.shopPurchaseLogs)
         {
@@ -45,10 +46,13 @@ public static class ShopService
                 dailyReset = true;
             else if (row.Refresh == RefreshWeekly && GetWeekStart(last) < GetWeekStart(today))
                 weeklyReset = true;
+            else if (row.Refresh == RefreshMonthly && GetMonthStart(last) < GetMonthStart(today))
+                monthlyReset = true;
         }
 
         if (dailyReset) svc.ResetShopPurchasesByRefresh(RefreshDaily);
         if (weeklyReset) svc.ResetShopPurchasesByRefresh(RefreshWeekly);
+        if (monthlyReset) svc.ResetShopPurchasesByRefresh(RefreshMonthly);
     }
 
     /// <summary>获取实际售价。</summary>
@@ -64,8 +68,28 @@ public static class ShopService
     {
         if (row == null) return false;
         if (row.Unlock <= 0) return true;
-        if (row.Hide != 0) return false;
-        return PlayerProfileService.Instance.HasCleared(row.Unlock);
+
+        // 确保 profile 已加载（HasCleared 内部不自动 LoadOrCreate）
+        PlayerProfileService.Instance.LoadOrCreate();
+
+        bool cleared = PlayerProfileService.Instance.HasCleared(row.Unlock);
+
+        if (row.Hide != 0)
+        {
+            // Hide=1: 关卡未解锁时隐藏商品入口，解锁后显示
+            // Hide=其他: 无条件隐藏
+            if (row.Hide == 1)
+            {
+                if (!cleared) return false;
+                // 已解锁 → 不隐藏，继续往下
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return cleared;
     }
 
     /// <summary>本周期剩余可购买次数（-1=不限购）。</summary>
@@ -108,7 +132,38 @@ public static class ShopService
 
     private static DateTime GetWeekStart(DateTime dt)
     {
+        // 周一为一周之始
         int diff = (7 + (int)dt.DayOfWeek - 1) % 7;
         return dt.AddDays(-diff).Date;
+    }
+
+    private static DateTime GetMonthStart(DateTime dt) => new DateTime(dt.Year, dt.Month, 1);
+
+    /// <summary>根据 Refresh 类型计算下一个重置时刻（本地时间）。</summary>
+    public static DateTime GetNextResetTime(int refresh)
+    {
+        DateTime now = DateTime.Now;
+        switch (refresh)
+        {
+            case RefreshDaily:
+            {
+                DateTime next = now.Date.AddDays(1);
+                return next;
+            }
+            case RefreshWeekly:
+            {
+                DateTime weekStart = GetWeekStart(now);
+                DateTime next = weekStart.AddDays(7);
+                return next;
+            }
+            case RefreshMonthly:
+            {
+                DateTime monthStart = GetMonthStart(now);
+                DateTime next = monthStart.AddMonths(1);
+                return next;
+            }
+            default:
+                return DateTime.MaxValue; // 不刷新
+        }
     }
 }

@@ -123,7 +123,7 @@ public class ShopCell : MonoBehaviour
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(textLimit);
             int total = ShopRow.PurchaseNum;
-            textLimit.text = $"限购{total - remaining}/{total}";
+            textLimit.text = $"限购{remaining}/{total}";
         }
     }
 

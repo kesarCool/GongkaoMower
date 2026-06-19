@@ -111,11 +111,13 @@ public class GamePausePanel : UIPanelBase
 
     private void OnResume()
     {
+        UiClickSound.Play();
         UIManager.Instance.CloseTop();
     }
 
     private void OnQuit()
     {
+        UiClickSound.Play();
         UIManager.Instance.ShowConfirm("退出游戏", "确定要退出当前关卡吗？\n进度将不会保存。", confirmed =>
         {
             if (confirmed)
@@ -123,6 +125,7 @@ public class GamePausePanel : UIPanelBase
                 UIManager.Instance.CloseAllStack();
                 Time.timeScale = 1f;
                 SceneManager.LoadScene("Home");
+                Resources.UnloadUnusedAssets();
             }
         });
     }

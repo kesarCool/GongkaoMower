@@ -62,6 +62,8 @@ public sealed class AudioService : MonoBehaviour
 
         if (catalog == null)
             Debug.LogWarning("[AudioService] 未找到 AudioCatalog，请在 Resources/Audio/MainAudioCatalog 创建或 Inspector 指定。");
+
+        LoadMasterMute();
     }
 
     private void OnDestroy()
@@ -141,6 +143,35 @@ public sealed class AudioService : MonoBehaviour
         if (_backend == null || id == AudioId.None)
             return;
         _backend.StopLoop((int)id);
+    }
+
+    // ── 主音量静音 ──
+
+    private const string MasterMuteKey = "audio_master_mute";
+    private bool _masterMute;
+
+    /// <summary>全局静音开关，PlayerPrefs 持久化，默认 false（不静音）。不影响局内各音效的相对缩放。</summary>
+    public bool MasterMute
+    {
+        get => _masterMute;
+        set
+        {
+            _masterMute = value;
+            PlayerPrefs.SetInt(MasterMuteKey, value ? 1 : 0);
+            PlayerPrefs.Save();
+            ApplyMasterMute();
+        }
+    }
+
+    private void ApplyMasterMute()
+    {
+        AudioListener.volume = _masterMute ? 0f : 1f;
+    }
+
+    private void LoadMasterMute()
+    {
+        _masterMute = PlayerPrefs.GetInt(MasterMuteKey, 0) == 1;
+        ApplyMasterMute();
     }
 
     private IAudioBackend CreateBackend()

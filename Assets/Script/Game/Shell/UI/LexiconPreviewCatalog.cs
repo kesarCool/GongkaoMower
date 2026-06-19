@@ -177,7 +177,7 @@ public static class LexiconPreviewCatalog
     public static string GetThemeTabLabel(int themePackId)
     {
         if (themePackId == LexiconCategoryTags.ThemePackChengyu)
-            return "主题一 · 成语";
+            return "成语篇";
         return "主题 " + themePackId;
     }
 

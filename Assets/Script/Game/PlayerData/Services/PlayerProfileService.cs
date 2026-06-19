@@ -89,9 +89,9 @@ public sealed class PlayerProfileService
             return;
         }
 
-        // 角色碎片：同步写入 characterFragmentKeys/Values，供角色面板读取
-        if (TryRouteFragment(itemId, count))
-            return;
+        // 角色碎片：同步写入 characterFragmentKeys/Values，供角色面板查询。
+        // 不 return，继续写入 itemIds/itemCounts，确保背包面板可见。
+        TryRouteFragment(itemId, count);
 
         // 通用物品：线性查找 + 更新
         if (_data.itemIds == null) _data.itemIds = System.Array.Empty<int>();
@@ -455,6 +455,8 @@ public sealed class PlayerProfileService
 
     public bool HasCleared(int levelId)
     {
+        if (!_loaded) LoadOrCreate();
+
         return _levels.TryGetValue(levelId, out var e) && e.cleared;
     }
 
@@ -561,6 +563,7 @@ public sealed class PlayerProfileService
 
     [UnityEditor.MenuItem("Tools/发放物品/金币+1万", false, 503)]
     private static void GrantGold10k() { Instance.LoadOrCreate(); Instance.AddItem(1, 10000); ShowGrantResult(1, 10000); }
+#endif
 
     // ═══════════════ 商店购买记录 ═══════════════
 
@@ -583,7 +586,7 @@ public sealed class PlayerProfileService
         if (!_loaded) LoadOrCreate();
         if (_data == null) return;
 
-        var logs = _data.shopPurchaseLogs ?? Array.Empty<ShopPurchaseLog>();
+        var logs = _data.shopPurchaseLogs ?? new ShopPurchaseLog[0];
         int idx = -1;
         for (int i = 0; i < logs.Length; i++)
         {
@@ -628,6 +631,24 @@ public sealed class PlayerProfileService
             }
         }
         Persist();
+    }
+
+    /// <summary>清空所有商店购买记录（开发用）。</summary>
+    public void ClearAllShopPurchaseLogs()
+    {
+        if (!_loaded) LoadOrCreate();
+        if (_data == null) return;
+        _data.shopPurchaseLogs = new ShopPurchaseLog[0];
+        Persist();
+    }
+
+#if UNITY_EDITOR
+    [UnityEditor.MenuItem("Tools/商店/清空购买记录", false, 510)]
+    private static void ClearShopPurchaseLogs()
+    {
+        Instance.LoadOrCreate();
+        Instance.ClearAllShopPurchaseLogs();
+        UnityEditor.EditorUtility.DisplayDialog("完成", "商店购买记录已全部清空", "确定");
     }
 
     [UnityEditor.MenuItem("Tools/发放物品/金币+10万", false, 504)]

@@ -25,8 +25,8 @@ MonoBehaviour:
   - 0.5
   - 0.5
   - 0.55
-  - 0.65
-  - 0.75
+  - 0.6
+  - 0.7
   tickIntervalByLevel:
   - 0.1
   - 0.1
@@ -49,13 +49,13 @@ MonoBehaviour:
   - 3
   - 4
   - 5
+  - 6
   - 7
-  - 8
   cooldownDurationByLevel:
+  - 6
   - 5
   - 4
   - 3
-  - 2
   - 2
   bladePrefab: {fileID: 8012345678901234001, guid: b1c2d3e4f5a6789012345678c9def012, type: 3}
   bladeSprite: {fileID: 0}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MiniGameConfig
   m_EditorClassIdentifier: 
   ProjectConf:
-    projectName: GongkaoMower
+    projectName: "\u6587\u5B57\u5272\u8349\u673A"
     Appid: wx27c7354ddadf45da
     CDN: 
     assetLoadType: 1
@@ -30,7 +30,7 @@ MonoBehaviour:
     HideAfterCallMain: 1
     preloadFiles: 
     Orientation: 0
-    bgImageSrc: Assets/WX-WASM-SDK-V2/Runtime/wechat-default/images/background.jpg
+    bgImageSrc: Assets/Res/image/login2.png
     dataFileSubPrefix: 
     maxStorage: 200
     defaultReleaseSize: 31457280
@@ -50,7 +50,7 @@ MonoBehaviour:
   CompileOptions:
     DevelopBuild: 1
     AutoProfile: 0
-    ScriptOnly: 1
+    ScriptOnly: 0
     Il2CppOptimizeSize: 1
     profilingFuncs: 1
     Webgl2: 0
@@ -60,12 +60,12 @@ MonoBehaviour:
     CleanBuild: 0
     CustomNodePath: 
     autoAdaptScreen: 0
-    showMonitorSuggestModal: 1
+    showMonitorSuggestModal: 0
     enableProfileStats: 0
     enableRenderAnalysis: 0
     enablePerfAnalysis: 0
     iOSAutoGCInterval: 10000
-    enableIOSPerformancePlus: 0
+    enableIOSPerformancePlus: 1
     enableiOSMetal: 0
     enableEmscriptenGLX: 0
     brotliMT: 1

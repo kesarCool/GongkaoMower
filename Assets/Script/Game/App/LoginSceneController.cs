@@ -12,6 +12,10 @@ public class LoginSceneController : MonoBehaviour
     [Tooltip("点击后进入 Home 场景（老玩家流程）。")]
     [SerializeField] private Button startGameButton;
 
+    [Header("版本号")]
+    [Tooltip("登录页版本号显示（TMP 或 Text），运行时自动填入 Application.version。")]
+    [SerializeField] private TMPro.TextMeshProUGUI versionText;
+
     [Tooltip("Home 场景名，须在 Build Settings 中。")]
     [SerializeField] private string homeSceneName = "Home";
 
@@ -27,6 +31,12 @@ public class LoginSceneController : MonoBehaviour
 
     [Tooltip("快速入局的目标场景名，默认 BattleLoading。")]
     [SerializeField] private string quickStartSceneName = "BattleLoading";
+
+    private void Start()
+    {
+        if (versionText != null)
+            versionText.text = $"版本号：v{Application.version}";
+    }
 
     private void OnEnable()
     {

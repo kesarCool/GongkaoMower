@@ -90,12 +90,65 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
             }
         }
 
+        // 兜底：characterFragmentKeys 中的碎片（AddItem 路由修复前仅存此处，itemIds 中查不到的补进来）
+        if (data?.characterFragmentKeys != null)
+        {
+            var catalog = GetCharacterCatalog();
+            for (int i = 0; i < data.characterFragmentKeys.Length; i++)
+            {
+                string charId = data.characterFragmentKeys[i];
+                int count = i < (data.characterFragmentValues?.Length ?? 0) ? data.characterFragmentValues[i] : 0;
+                if (count <= 0) continue;
+
+                // 解析 fragmentItemId
+                int fragmentItemId = 0;
+                if (catalog != null)
+                {
+                    foreach (var def in catalog.characters)
+                    {
+                        if (def != null && def.characterId == charId)
+                        { fragmentItemId = def.fragmentItemId; break; }
+                    }
+                }
+                if (fragmentItemId <= 0) continue;
+
+                // 避免重复：itemIds 已有则跳过（新数据已双写）
+                bool alreadyInItems = false;
+                for (int j = 0; j < _items.Count; j++)
+                {
+                    if (_items[j].itemId == fragmentItemId) { alreadyInItems = true; break; }
+                }
+                if (alreadyInItems) continue;
+
+                ItemTable itemRow = null;
+                if (itemTable != null && itemTable.TryGetValue(fragmentItemId, out var obj))
+                    itemRow = obj as ItemTable;
+
+                _items.Add(new BackPackItemInfo
+                {
+                    itemId = fragmentItemId,
+                    itemName = itemRow?.ItemName ?? $"{charId}碎片",
+                    iconPath = itemRow?.IconPath ?? "",
+                    count = count,
+                    grade = itemRow?.Grade ?? 0,
+                    description = itemRow?.Description ?? "",
+                });
+            }
+        }
+
         // 补空格子：至少 minRows 行
         int minSlots = minRows * columnsPerRow;
         while (_items.Count < minSlots)
             _items.Add(new BackPackItemInfo { itemId = 0 });
 
         RefreshUI();
+    }
+
+    private static CharacterCatalog GetCharacterCatalog()
+    {
+        var cca = Object.FindObjectOfType<CharacterConfigApplier>();
+        if (cca != null && cca.characterCatalog != null) return cca.characterCatalog;
+        return Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
     }
 
     private void RefreshUI()

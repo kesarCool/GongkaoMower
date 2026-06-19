@@ -194,6 +194,7 @@ public class HomeTabBar : MonoBehaviour
             entry.button.onClick.AddListener(() =>
             {
                 Debug.Log($"[HomeTabBar] 按钮点击: tabId=\"{capturedId}\"");
+                UiClickSound.Play();
                 SwitchTo(capturedId);
             });
             Debug.Log($"[HomeTabBar] 已绑定按钮: tabId=\"{entry.tabId}\", button={entry.button.name}");

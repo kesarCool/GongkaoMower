@@ -20,10 +20,22 @@ public class AppBootstrap : MonoBehaviour
 
         DontDestroyOnLoad(root.gameObject);
 
-        // 全局性能设置：30fps + 物理对齐，降低 CPU/GPU 负载
-        // WebGL 下 vSync=0 会让浏览器无限制刷帧导致 CPU 空转，故设为 1
+#if !UNITY_EDITOR
+        // 非 Editor 下关 Debug.Log / LogWarning，保留 LogError 用于异常定位
+        Debug.unityLogger.logEnabled = false;
+#endif
+
+        // 全局性能设置
+        //   Editor/Standalone: vSync=1 + targetFrameRate=30
+        //   WebGL/微信小游戏: vSyncCount/targetFrameRate 在微信环境均无效，
+        //     帧率由 WX.SetPreferredFramesPerSecond 通过 .jslib 桥直接调 wx API
         QualitySettings.vSyncCount = 1;
+#if !UNITY_WEBGL || UNITY_EDITOR
         Application.targetFrameRate = 30;
+#else
+        WeChatWASM.WX.SetPreferredFramesPerSecond(30);
+#endif
+
         Time.fixedDeltaTime = 1f / 30f;
         Time.maximumDeltaTime = 1f / 15f;
 

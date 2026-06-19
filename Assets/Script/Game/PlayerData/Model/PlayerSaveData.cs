@@ -29,7 +29,7 @@ public class PlayerSaveData
     public int[] itemCounts = Array.Empty<int>();
 
     // ── v5 商店购买记录 ──
-    public ShopPurchaseLog[] shopPurchaseLogs = Array.Empty<ShopPurchaseLog>();
+    public ShopPurchaseLog[] shopPurchaseLogs = new ShopPurchaseLog[0];
 
     /// <summary>升级到最新版本（结构迁移）。</summary>
     public void MigrateToLatest()

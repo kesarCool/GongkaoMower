@@ -1111,6 +1111,20 @@ namespace WeChatWASM
             }
 
             {
+                // GL/FS 兜底：微信 UnityPlugin 在某些环境下未提供这些全局对象，
+                // 但框架 JS 的 ReplaceRules 已将所有 Emscripten 内置对象替换为外部依赖。
+                // 此处注入空实现防止 Module['GL'] = GL / FS.createDataFile 等崩溃。
+                // 注意：不污染 GameGlobal/window，否则 Plugin 检测到已存在 FS 会跳过自建。
+                text = text.Replace(
+                    "var Module=typeof Module!==\"undefined\"?Module:{};",
+                    "var Module=typeof Module!==\"undefined\"?Module:{};" +
+                    "var GL=typeof GL!==\"undefined\"?GL:{};" +
+                    "var FS=typeof FS!==\"undefined\"?FS:{createPath:function(){},createDataFile:function(){},mkdir:function(){},mount:function(){},syncfs:function(cb){cb&&cb()}};" +
+                    "Module[\"GL\"]=GL;Module[\"FS\"]=FS;"
+                );
+            }
+
+            {
                 Rule[] rules =
                 {
                     new Rule()
@@ -1788,20 +1802,50 @@ namespace WeChatWASM
                     }
                 }
             }
-            if (config.CompileOptions.brotliMT)
-            {
-                MultiThreadBrotliCompress(sourcePath, targetPath);
-            }
-            else
-            {
-                UnityUtil.brotli(sourcePath, targetPath);
-            }
+            // 使用系统 Node.js 进行 brotli 压缩（绕过 native DLL 的加载/卡死问题）
+            BrotliWithNode(sourcePath, targetPath);
 
             if (targetPath != cachePath)
             {
                 File.Copy(targetPath, cachePath, true);
             }
             return 0;
+        }
+
+        private static void BrotliWithNode(string sourcePath, string dstPath)
+        {
+            var tmpScript = Path.Combine(Path.GetTempPath(), "wx_brotli_" + DateTime.Now.Ticks + ".js");
+            var script = "const zlib=require('zlib');const fs=require('fs');\n" +
+                "try{\n" +
+                "var buf=fs.readFileSync('" + sourcePath.Replace("\\", "\\\\") + "');\n" +
+                "var br=zlib.brotliCompressSync(buf,{params:{" +
+                    "[zlib.constants.BROTLI_PARAM_QUALITY]:11," +
+                    "[zlib.constants.BROTLI_PARAM_LGWIN]:21}});\n" +
+                "fs.writeFileSync('" + dstPath.Replace("\\", "\\\\") + "',br);\n" +
+                "}catch(e){console.error(e.message);process.exit(1);}\n";
+            File.WriteAllText(tmpScript, script, Encoding.UTF8);
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "node",
+                    Arguments = "\"" + tmpScript + "\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true,
+                };
+                var p = System.Diagnostics.Process.Start(psi);
+                p.WaitForExit(300000);
+                if (p.ExitCode != 0)
+                {
+                    var err = p.StandardError.ReadToEnd();
+                    throw new Exception("Node brotli failed (exit=" + p.ExitCode + "): " + err);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tmpScript)) File.Delete(tmpScript);
+            }
         }
 
         public static bool MultiThreadBrotliCompress(string sourcePath, string dstPath, int quality = 11, int window = 21, int maxCpuThreads = 0)
@@ -2459,11 +2503,18 @@ namespace WeChatWASM
 #endif
         }
 
+        private static string _unmatchedLogPath;
         public static bool ShowMatchFailedWarning(string text, string rule, string file)
         {
             if (Regex.IsMatch(text, rule) == false)
             {
-                Debug.Log($"UnMatched {file} rule: {rule}");
+                var msg = $"UnMatched {file} rule: {rule}";
+                Debug.Log(msg);
+                if (_unmatchedLogPath == null)
+                {
+                    _unmatchedLogPath = Path.Combine(Application.dataPath, "..", "Build", "unmatched_rules.log");
+                }
+                File.AppendAllText(_unmatchedLogPath, msg + Environment.NewLine);
                 return true;
             }
             return false;

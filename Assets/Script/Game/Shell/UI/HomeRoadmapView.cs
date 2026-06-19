@@ -19,7 +19,7 @@ public class HomeRoadmapView : MonoBehaviour
     [SerializeField] private float rowHeight = 220f;
     [SerializeField] private float sideOffset = 300f;
     [SerializeField] private float dividerHeight = 50f;
-    [SerializeField] private float chapterGap = 60f; // 章末节点到分隔线的额外间距
+    [SerializeField] private float chapterGap = 60f;
     [SerializeField] private float paddingBottom = 300f;
     [SerializeField] private float paddingTop = 300f;
 
@@ -54,31 +54,47 @@ public class HomeRoadmapView : MonoBehaviour
     private GameObject _activePopup;
     private readonly List<RoadmapNodeView> _nodes = new List<RoadmapNodeView>();
 
+    // [DEBUG] 需要日志时取消下行注释：
+    // private static void L(string msg) => DebugFileLog.Log(msg);
+    private static void L(string msg) { }
+
     // ═══════════════ 生命周期 ═══════════════
 
     private IEnumerator Start()
     {
+        // DebugFileLog.Init("roadmap_debug.log");  // [DEBUG] 需要日志时取消注释
+        L($"[R] Start BEGIN f={Time.frameCount}");
         if (_circleSprite == null) _circleSprite = GenerateCircleSprite(circleTexSize);
         if (_whitePixelSprite == null) _whitePixelSprite = GenerateWhitePixelSprite();
         PlayerProfileService.Instance.LoadOrCreate();
         TableManager.Instance.Init();
         ResolveCurrentHeroPortrait();
-        if (scrollRect != null) scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
+        // if (scrollRect != null) scrollRect.onValueChanged.AddListener(OnScrollValueChanged);  // [DEBUG]
 
         yield return null;
         yield return null;
+        L($"[R] Start after yields f={Time.frameCount}");
 
-        // 强制设为 ScrollRect 标准垂直布局: content 顶部对齐视口顶部
-        content.anchorMin = new Vector2(0, 1);
-        content.anchorMax = new Vector2(1, 1);
-        content.pivot = new Vector2(0.5f, 1f);
-        content.anchoredPosition = Vector2.zero;
+        content.anchorMin = new Vector2(0, 0);
+        content.anchorMax = new Vector2(1, 0);
+        content.pivot = new Vector2(0f, 0f);
 
-        BuildAll(); // 内部已调用 ScrollToCurrentLevel
+        if (scrollRect != null) scrollRect.horizontal = false;
+
+        BuildAll();
+        L($"[R] Start END _sd=true _b={_built} _n={_nodes.Count}");
         _startDone = true;
     }
 
-    private void OnEnable() { if (_startDone && _built) RefreshAll(); }
+    private void OnEnable()
+    {
+        L($"[R] OnEnable f={Time.frameCount} _sd={_startDone} _b={_built}");
+        if (_startDone)
+        {
+            RefreshAll();
+        }
+    }
+
     private void OnDestroy()
     {
         if (scrollRect != null) scrollRect.onValueChanged.RemoveListener(OnScrollValueChanged);
@@ -86,11 +102,15 @@ public class HomeRoadmapView : MonoBehaviour
 
     public void RefreshAll()
     {
+        if (!_startDone) { L($"[R] RefreshAll SKIP _sd=false"); return; }
+        var stack = new System.Diagnostics.StackTrace(1, true);
+        L($"[R] RefreshAll BEGIN f={Time.frameCount} _sd={_startDone} _b={_built} caller={stack.GetFrame(0)?.GetMethod()?.Name}");
         PlayerProfileService.Instance.LoadOrCreate();
         ResolveCurrentHeroPortrait();
         ClearAll();
         _built = false;
-        BuildAll(); // 内部已同步调用 ScrollToCurrentLevel
+        BuildAll();
+        L($"[R] RefreshAll END _b={_built} _n={_nodes.Count}");
     }
 
     private void ResolveCurrentHeroPortrait()
@@ -108,15 +128,17 @@ public class HomeRoadmapView : MonoBehaviour
 
     private void BuildAll()
     {
-        if (_built || content == null || nodePrefab == null) return;
+        L($"[R] BuildAll BEGIN f={Time.frameCount} _b={_built}");
+        if (_built || content == null || nodePrefab == null) { L($"[R] BuildAll SKIP"); return; }
 
         for (int i = content.childCount - 1; i >= 0; i--)
             DestroyImmediate(content.GetChild(i).gameObject);
         _nodes.Clear();
 
         var allChapters = GetOrderedChapters();
-        if (allChapters.Count == 0) return;
+        if (allChapters.Count == 0) { L($"[R] BuildAll no chapters"); return; }
         _currentLevelId = ResolveCurrentLevelId();
+        L($"[R] BuildAll currentLevelId={_currentLevelId}");
 
         int currentChapterIdx = FindChapterIndex(allChapters, _currentLevelId);
         int maxShowChapterIdx = Mathf.Min(currentChapterIdx + 1, allChapters.Count - 1);
@@ -132,7 +154,7 @@ public class HomeRoadmapView : MonoBehaviour
             foreach (var lv in levels)
                 allLevels.Add((lv, ci, chName));
         }
-        if (allLevels.Count == 0) return;
+        if (allLevels.Count == 0) { L($"[R] BuildAll no levels"); return; }
 
         int totalRows = allLevels.Count;
         int dividerCount = 0;
@@ -145,24 +167,28 @@ public class HomeRoadmapView : MonoBehaviour
 
         float vh = scrollRect?.viewport?.rect.height ?? 1920f;
         float vw = scrollRect?.viewport?.rect.width ?? 1080f;
+        L($"[R] BuildAll vh={vh:F0} vw={vw:F0}");
 
         float rawContentHeight = paddingBottom + paddingTop + totalRows * rowHeight + dividerCount * (dividerHeight + chapterGap);
         _contentHeight = rawContentHeight + vh;
-        float nodeAreaW = sideOffset * 2f + 200f;
-        float cw = Mathf.Max(nodeAreaW, vw);
-        content.sizeDelta = new Vector2(cw, _contentHeight);
+        // Content 拉伸到 viewport 宽度 (sizeDelta.x=0)，不再手工算 cw
+        content.sizeDelta = new Vector2(0, _contentHeight);
 
-        // LayoutRoot: 锚在 content 左下角，高=rawContentHeight，偏移=vh/2 在 content 内居中
+        // Content 上的 VerticalLayoutGroup 会把 _layoutRoot 的 anchoredPosition 强制改掉，
+        // 底锚时尤为致命（930 变成 -2760），必须关闭手动控制位置。
+        var vlg = content.GetComponent<VerticalLayoutGroup>();
+        if (vlg != null) { vlg.enabled = false; L($"[R] BuildAll disabled VerticalLayoutGroup on content"); }
+
         var lrGo = new GameObject("LayoutRoot", typeof(RectTransform));
         lrGo.transform.SetParent(content, false);
         _layoutRoot = lrGo.GetComponent<RectTransform>();
-        _layoutRoot.anchorMin = _layoutRoot.anchorMax = new Vector2(0, 0);
+        // 水平拉伸填满 content，垂直固定在底部
+        _layoutRoot.anchorMin = new Vector2(0, 0);
+        _layoutRoot.anchorMax = new Vector2(1, 0);
         _layoutRoot.pivot = new Vector2(0, 0);
-        _layoutRoot.sizeDelta = new Vector2(cw, rawContentHeight);
+        _layoutRoot.sizeDelta = new Vector2(0, rawContentHeight);
 
-        float contentCenterX = cw * 0.5f;
-
-        // ── 从下往上：第一章在底部（小 y），第三章在顶部（大 y）──
+        float contentCenterX = vw * 0.5f;
         float yCursor = paddingBottom;
         lastCh = -1;
         int globalRow = 0;
@@ -173,8 +199,8 @@ public class HomeRoadmapView : MonoBehaviour
 
             if (chIdx != lastCh)
             {
-                yCursor += chapterGap; // 章末节点上方留空，分隔线往上提
-                MakeDivider(yCursor, contentCenterX, cw, chName);
+                yCursor += chapterGap;
+                MakeDivider(yCursor, contentCenterX, vw, chName);
                 yCursor += dividerHeight;
             }
             lastCh = chIdx;
@@ -185,10 +211,9 @@ public class HomeRoadmapView : MonoBehaviour
 
             var node = Instantiate(nodePrefab, _layoutRoot, false);
             var rt = node.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
             rt.anchoredPosition = new Vector2(nx, ny);
-            // ny = 距 layoutRoot 底部的距离（第一章底部、第三章顶部）
             rt.sizeDelta = new Vector2(180, 90);
 
             Sprite circle = nodeCircleSprite ? nodeCircleSprite : _circleSprite;
@@ -205,27 +230,25 @@ public class HomeRoadmapView : MonoBehaviour
 
         SetNodeLines();
 
-        float offsetX = Mathf.Max(0, (vw - nodeAreaW) * 0.5f);
+        // _layoutRoot 已拉伸到 content 宽度，x 偏移为 0
         float offsetY = Mathf.Max(0, (_contentHeight - rawContentHeight) * 0.5f);
-        _layoutRoot.anchoredPosition = new Vector2(offsetX, offsetY);
+        _layoutRoot.anchoredPosition = new Vector2(0, offsetY);
 
         _built = true;
 
-        // ── 立刻定位到当前关卡（不等待下一帧，避免 ScrollRect 重置）──
         Canvas.ForceUpdateCanvases();
         ScrollToCurrentLevel();
 
-        float firstY = _nodes.Count > 0 ? _nodes[0].GetComponent<RectTransform>().anchoredPosition.y : -1;
-        float lastY = _nodes.Count > 0 ? _nodes[_nodes.Count - 1].GetComponent<RectTransform>().anchoredPosition.y : -1;
-        // Debug.Log($"[Roadmap] 构建完成: {allLevels.Count} 节点, contentH={_contentHeight:F0}, rawH={rawContentHeight:F0}, " +
-        //           $"firstNodeY={firstY:F0}, lastNodeY={lastY:F0}, offsetY={offsetY:F0}, vh={vh:F0}");
+        var n0 = _nodes[0].GetComponent<RectTransform>();
+        var nN = _nodes[_nodes.Count - 1].GetComponent<RectTransform>();
+        L($"[R] BuildAll END _n={_nodes.Count} contentH={_contentHeight:F0} rawH={rawContentHeight:F0} offsetY={offsetY:F0} vh={vh:F0} vw={vw:F0} contentW={content.rect.width:F0}");
+        L($"[R] BuildAll NODE0 x={n0.anchoredPosition.x:F0} y={n0.anchoredPosition.y:F0} NODE_N x={nN.anchoredPosition.x:F0} y={nN.anchoredPosition.y:F0}");
     }
 
     private void SetNodeLines()
     {
         for (int i = 0; i < _nodes.Count; i++)
         {
-            // 仅最后一章的最后一关不往上延伸
             if (i == _nodes.Count - 1) { _nodes[i].HideLines(); continue; }
             bool lineActive = _nodes[i + 1].IsUnlocked;
             Color color = lineActive ? lineActiveColor : lineDimColor;
@@ -237,22 +260,20 @@ public class HomeRoadmapView : MonoBehaviour
     private void MakeDivider(float yBase, float cx, float cw, string chapterName)
     {
         float y = yBase + dividerHeight * 0.5f;
-        // 横线 — 锚在底部，y = 距 layoutRoot 底部
         var go = new GameObject("Div", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(_layoutRoot, false);
         var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot = new Vector2(0.5f, 0f);
         rt.anchoredPosition = new Vector2(cx, y);
         rt.sizeDelta = new Vector2(cw * 0.7f, 2f);
         go.GetComponent<Image>().color = dividerColor;
         go.GetComponent<Image>().raycastTarget = false;
 
-        // 章节名 — 锚在底部
         var lblGo = new GameObject("ChName", typeof(RectTransform), typeof(TextMeshProUGUI));
         lblGo.transform.SetParent(_layoutRoot, false);
         var lrt = lblGo.GetComponent<RectTransform>();
-        lrt.anchorMin = lrt.anchorMax = new Vector2(0.5f, 0f);
+        lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 0f);
         lrt.pivot = new Vector2(0.5f, 0f);
         lrt.anchoredPosition = new Vector2(cx, y + 24f);
         lrt.sizeDelta = new Vector2(cw * 0.7f, 50f);
@@ -269,38 +290,43 @@ public class HomeRoadmapView : MonoBehaviour
 
     private void OnScrollValueChanged(Vector2 _)
     {
-        // 仅打日志，不干预 ScrollRect
-        // Debug.Log($"[Roadmap] scroll normalizedPos={scrollRect.verticalNormalizedPosition:F4}, content.anchoredPos.y={content.anchoredPosition.y:F1}");
+        L($"[R] OnScrollChanged vnp={scrollRect.verticalNormalizedPosition:F4} aY={content.anchoredPosition.y:F1}");
     }
 
+    /// <summary>滚动到当前关卡节点，使其居中在视口。</summary>
     private void ScrollToCurrentLevel()
     {
-        if (_nodes.Count == 0 || scrollRect == null || content == null) return;
+        if (_nodes.Count == 0) { L("[R] ScrollTo SKIP nodes=0"); return; }
+        if (scrollRect == null) { L("[R] ScrollTo SKIP sr=null"); return; }
+        if (content == null) { L("[R] ScrollTo SKIP ct=null"); return; }
 
         RoadmapNodeView tgt = null;
         for (int i = 0; i < _nodes.Count; i++)
             if (_nodes[i].IsCurrent) { tgt = _nodes[i]; break; }
-        if (tgt == null) return;
+        if (tgt == null) { L($"[R] ScrollTo SKIP tgt=null curId={_currentLevelId}"); return; }
 
         float vh = scrollRect.viewport?.rect.height ?? 800f;
-        if (_contentHeight <= vh) return;
-        float scrollable = _contentHeight - vh;
-        if (scrollable <= 0f) return;
+        float contentH = content.rect.height;
+        float scrollable = contentH - vh;
+        L($"[R] ScrollTo IN lv={tgt.LevelId} vh={vh:F0} contentH={contentH:F0} scrollable={scrollable:F0} anchor=bottom");
+        if (scrollable <= 0f) { L("[R] ScrollTo SKIP scrollable<=0"); return; }
 
-        // 节点 anchor=(0.5,0) → anchoredPosition.y 直接 = 距 layoutRoot 底部距离
+        // Content 锚定底部 (0,0), pivot (0.5,0)。
+        // _layoutRoot 在 content 底部上方 offsetY = vh/2 处。
+        // 节点距 content 底部 = lrOffsetY + nodeLocalY。
+        // content 底部位置使节点居中视口：anchoredY = vh/2 - nodeFromContentBottom。
+        float lrOffsetY = _layoutRoot != null ? _layoutRoot.anchoredPosition.y : vh * 0.5f;
         float nodeLocalY = tgt.GetComponent<RectTransform>().anchoredPosition.y;
-        float lrBottomInContent = vh * 0.5f; // layoutRoot 底部在 content 内的 y
-        float posFromBottom = lrBottomInContent + nodeLocalY;
+        float nodeFromContentBottom = lrOffsetY + nodeLocalY;
+        float anchoredY = vh * 0.5f - nodeFromContentBottom;
+        anchoredY = Mathf.Clamp(anchoredY, -scrollable, 0f);
 
-        // content 锚在顶部(0,1), verticalNormalizedPosition: 1=顶部, 0=底部
-        float target = Mathf.Clamp(posFromBottom - vh * 0.5f, 0f, scrollable);
-        float vnp = target / scrollable;
-        scrollRect.verticalNormalizedPosition = vnp;
-
-        // Debug.Log($"[Roadmap] ScrollTo: lv={tgt.LevelId}, nodeLocalY={nodeLocalY:F0}, lrBottom={lrBottomInContent:F0}, posFromBottom={posFromBottom:F0}, target={target:F0}, vnp={vnp:F4}");
+        L($"[R] ScrollTo SET lrOffsetY={lrOffsetY:F0} nodeLocalY={nodeLocalY:F0} nodeFromBottom={nodeFromContentBottom:F0} anchoredY={anchoredY:F0}");
+        content.anchoredPosition = new Vector2(0, anchoredY);
+        L($"[R] ScrollTo AFTER aY={content.anchoredPosition.y:F1} vnpNow={scrollRect.verticalNormalizedPosition:F4}");
     }
 
-    // ═══════════════ 点击 / 弹窗 / 数据 =（不变）═══════════════
+    // ═══════════════ 点击 / 弹窗 / 数据 ═══════════════
 
     private void OnNodeClicked(RoadmapNodeView node)
     {
@@ -415,12 +441,16 @@ public class HomeRoadmapView : MonoBehaviour
         var set = new Dictionary<int, ChapterMeta>();
 #if USE_FB_TABLE
         var dict = TableManager.Instance.GetTable<ProtoTable.ChapterLevel>();
+        L($"[R] GetChapters FB=1 dictNull={dict == null} dictCount={dict?.Count}");
         if (dict != null)
             foreach (var kv in dict)
                 if (kv.Value is ProtoTable.ChapterLevel cl && cl.chapterId > 0 && !set.ContainsKey(cl.chapterId))
                     set[cl.chapterId] = new ChapterMeta { chapterId = cl.chapterId };
+#else
+        L($"[R] GetChapters FB=0 (USE_FB_TABLE not defined)");
 #endif
         var list = new List<ChapterMeta>(set.Values); list.Sort((a, b) => a.chapterId.CompareTo(b.chapterId));
+        L($"[R] GetChapters result={list.Count}");
         return list;
     }
 

@@ -114,6 +114,15 @@ MonoBehaviour:
       pitchVariation: 0
       pitchOffset: 0
       volumeVariation: 0
+    autoProjectileSword:
+      id: 107
+      relativePath: Audio/Battle/PlayerSkill/sfx_skill_sword.mp3
+      group: 1
+      volume: 0.1
+      minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0.15
     autoProjectileTalisman:
       id: 108
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_talisman.wav

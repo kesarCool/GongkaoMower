@@ -39,9 +39,8 @@ public sealed class GameResultViewModel
 [DisallowMultipleComponent]
 public class GameResultPanel : UIPanelBase
 {
-    [Header("可选：未拖则用 Resources.Load<Sprite>(\"pic_sl\"/\"pic_sb\")")]
-    [SerializeField] private Sprite winBannerSprite;
-    [SerializeField] private Sprite loseBannerSprite;
+    [Header("胜负标题")]
+    [SerializeField] private TextMeshProUGUI textBanner;
 
     [Header("波次统计")]
     [SerializeField] private TextMeshProUGUI textWave;
@@ -70,7 +69,6 @@ public class GameResultPanel : UIPanelBase
 
     [SerializeField] private string skillRowPrefabResourcesPath = string.Empty;
 
-    private Image _bannerImage;
     private TextMeshProUGUI _textTime;
     private TextMeshProUGUI _textKillNum;
     private TextMeshProUGUI _textLevel;
@@ -84,7 +82,8 @@ public class GameResultPanel : UIPanelBase
 
     private void Awake()
     {
-        _bannerImage = transform.Find("Image")?.GetComponent<Image>();
+        if (textBanner == null)
+            textBanner = transform.Find("TextBanner")?.GetComponent<TextMeshProUGUI>();
         _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
         _textKillNum = transform.Find("TextKillNum")?.GetComponent<TextMeshProUGUI>();
         _textLevel = transform.Find("Textlevel")?.GetComponent<TextMeshProUGUI>();
@@ -194,6 +193,7 @@ public class GameResultPanel : UIPanelBase
                 {
                     Time.timeScale = 1f;
                     SceneManager.LoadScene("Home");
+                    Resources.UnloadUnusedAssets();
                 });
             }
             else
@@ -232,10 +232,20 @@ public class GameResultPanel : UIPanelBase
             else { goldBalanceText.gameObject.SetActive(false); }
         }
 
-        if (_bannerImage != null)
+        if (textBanner != null)
         {
-            Sprite sp = win ? ResolveWinSprite() : ResolveLoseSprite();
-            if (sp != null) _bannerImage.sprite = sp;
+            BattleChineseFontRuntime.EnsureLoaded();
+            BattleChineseFontRuntime.ApplyToTMP(textBanner);
+            if (win)
+            {
+                textBanner.text = "战斗胜利";
+                textBanner.color = new Color(1f, 0.639f, 0f); // #FFA300
+            }
+            else
+            {
+                textBanner.text = "战斗失败";
+                textBanner.color = new Color(0.616f, 0.616f, 0.616f); // #9d9d9d
+            }
         }
 
         if (_textTime != null)
@@ -332,18 +342,6 @@ public class GameResultPanel : UIPanelBase
         int levelId = SelectedLevelContext.LevelId;
         string mapName = ChapterLevelDisplay.ResolveMapName(levelId);
         _textLevel.text = ChapterLevelDisplay.FormatLevelLabel(levelId, mapName);
-    }
-
-    private Sprite ResolveWinSprite()
-    {
-        if (winBannerSprite != null) return winBannerSprite;
-        return Resources.Load<Sprite>("pic_sl");
-    }
-
-    private Sprite ResolveLoseSprite()
-    {
-        if (loseBannerSprite != null) return loseBannerSprite;
-        return Resources.Load<Sprite>("pic_sb");
     }
 
     private void BuildRewardItems()
@@ -471,6 +469,7 @@ public class GameResultPanel : UIPanelBase
         UiClickSound.PlayClose();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Home");
+        Resources.UnloadUnusedAssets();
     }
 
     private void OnAgainClicked()

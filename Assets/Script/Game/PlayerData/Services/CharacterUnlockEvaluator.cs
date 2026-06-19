@@ -69,13 +69,21 @@ public static class CharacterUnlockEvaluator
         var data = PlayerProfileService.Instance.Data;
         if (data == null) return (false, 0);
 
-        // 扣除碎片
+        // 扣除碎片（characterFragmentKeys）
         int idx = data.characterFragmentKeys != null
             ? System.Array.IndexOf(data.characterFragmentKeys, def.characterId) : -1;
         if (idx < 0 || idx >= (data.characterFragmentValues?.Length ?? 0))
             return (false, 0);
 
         data.characterFragmentValues[idx] -= cost;
+
+        // 同步扣除 itemIds/itemCounts（背包面板展示用）
+        if (def.fragmentItemId > 0 && data.itemIds != null && data.itemCounts != null)
+        {
+            int itemIdx = System.Array.IndexOf(data.itemIds, def.fragmentItemId);
+            if (itemIdx >= 0 && itemIdx < data.itemCounts.Length)
+                data.itemCounts[itemIdx] = Mathf.Max(0, data.itemCounts[itemIdx] - cost);
+        }
 
         // 记录解锁
         AddUnlockedCharacter(data, def.characterId);

@@ -308,6 +308,7 @@ public class SpawnerWaves : MonoBehaviour
                 GameErrorPresenter.Show(GameErrorCodes.LevelWaveConfigMissing, () =>
                 {
                     SceneManager.LoadScene("Home");
+                    Resources.UnloadUnusedAssets();
                 },resolvedLevelId);
                 Debug.LogWarning($"[SpawnerWaves] 关卡 {resolvedLevelId} 缺少 LevelWave 波次配置，不触发波次完成信号。");
             }

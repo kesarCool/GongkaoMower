@@ -160,29 +160,68 @@ public class ShopView : HomeTabViewBase
     {
         while (true)
         {
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            DateTime today = DateTimeOffset.FromUnixTimeSeconds(now).LocalDateTime;
-            DateTime nextReset = today.Date.AddDays(1); // 明天 00:00
-            long secsLeft = (long)(nextReset - today).TotalSeconds;
+            int activeRefresh = ResolveDominantRefresh();
+            DateTime now = DateTime.Now;
+            DateTime nextReset = activeRefresh != ShopService.RefreshNone
+                ? ShopService.GetNextResetTime(activeRefresh)
+                : DateTime.MaxValue;
 
             if (textRefreshCountdown != null)
             {
-                if (secsLeft > 0)
+                if (activeRefresh != ShopService.RefreshNone && nextReset != DateTime.MaxValue)
                 {
-                    textRefreshCountdown.text = $"刷新倒计时 {secsLeft / 3600:D2}:{secsLeft / 60 % 60:D2}:{secsLeft % 60:D2}";
+                    double secsLeft = (nextReset - now).TotalSeconds;
+                    if (secsLeft <= 0)
+                    {
+                        textRefreshCountdown.text = "即将刷新…";
+                        ShopService.CheckAndRefresh();
+                        RebuildList();
+                    }
+                    else if (secsLeft < 86400) // < 24 小时 → HH:MM:SS
+                    {
+                        textRefreshCountdown.text = $"刷新倒计时 {Math.Floor(secsLeft / 3600):00}:{Math.Floor(secsLeft / 60) % 60:00}:{Math.Floor(secsLeft) % 60:00}";
+                    }
+                    else // ≥ 24 小时 → X天 HH:MM:SS
+                    {
+                        int days = (int)Math.Floor(secsLeft / 86400);
+                        double remain = secsLeft - days * 86400;
+                        textRefreshCountdown.text = $"刷新倒计时 {days}天 {Math.Floor(remain / 3600):00}:{Math.Floor(remain / 60) % 60:00}:{Math.Floor(remain) % 60:00}";
+                    }
                 }
                 else
                 {
-                    textRefreshCountdown.text = "即将刷新…";
-                    ShopService.CheckAndRefresh();
-                    RebuildList();
+                    textRefreshCountdown.text = string.Empty;
                 }
             }
 
             if (groupCountdown != null)
-                groupCountdown.SetActive(true);
+                groupCountdown.SetActive(activeRefresh != ShopService.RefreshNone && nextReset != DateTime.MaxValue);
 
             yield return new WaitForSeconds(1f);
         }
+    }
+
+    /// <summary>
+    /// 按优先级取当前可见商品的主导刷新类型：每日(1) > 每周(7) > 每月(2) > 不刷新(0)。
+    /// </summary>
+    private int ResolveDominantRefresh()
+    {
+        bool hasDaily = false, hasWeekly = false, hasMonthly = false;
+        var items = ShopCatalog.Instance.NormalItems;
+        foreach (var row in items)
+        {
+            if (!ShopService.IsUnlocked(row)) continue;
+            switch (row.Refresh)
+            {
+                case ShopService.RefreshDaily:   hasDaily = true; break;
+                case ShopService.RefreshWeekly:  hasWeekly = true; break;
+                case ShopService.RefreshMonthly: hasMonthly = true; break;
+            }
+        }
+
+        if (hasDaily) return ShopService.RefreshDaily;
+        if (hasWeekly) return ShopService.RefreshWeekly;
+        if (hasMonthly) return ShopService.RefreshMonthly;
+        return ShopService.RefreshNone;
     }
 }

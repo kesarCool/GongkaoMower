@@ -33,6 +33,10 @@ public class HomeHubController : MonoBehaviour
     [Header("背包（可选）")]
     [SerializeField] private Button openBackpackButton;
 
+    [Header("设置")]
+    [Tooltip("打开设置弹窗的按钮（右上角齿轮）。")]
+    [SerializeField] private Button openSettingsButton;
+
     [Header("货币 HUD")]
     [Tooltip("金币数量文本（TMP）。")]
     [SerializeField] private TMPro.TextMeshProUGUI goldHudText;
@@ -53,6 +57,8 @@ public class HomeHubController : MonoBehaviour
             openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
         if (openBackpackButton != null)
             openBackpackButton.onClick.AddListener(OpenBackpack);
+        if (openSettingsButton != null)
+            openSettingsButton.onClick.AddListener(OpenSettings);
 
         // 战斗/角色切换按钮由 HomeTabBar 管理（Inspector 中拖入 HomeTabBar.tabs[i].button）
 
@@ -67,6 +73,8 @@ public class HomeHubController : MonoBehaviour
             openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
         if (openBackpackButton != null)
             openBackpackButton.onClick.RemoveListener(OpenBackpack);
+        if (openSettingsButton != null)
+            openSettingsButton.onClick.RemoveListener(OpenSettings);
     }
 
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
@@ -84,6 +92,14 @@ public class HomeHubController : MonoBehaviour
 
         var opt = pauseWhenLevelSelectOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
         UIManager.Instance.Open<LevelSelectPanel>(null, opt);
+    }
+
+    /// <summary>打开设置面板（模态弹窗）。</summary>
+    public void OpenSettings()
+    {
+        UiClickSound.Play();
+        if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
+        UIManager.Instance.Open<SettingsPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
     /// <summary>打开背包面板（模态弹窗）。</summary>
@@ -119,7 +135,7 @@ public class HomeHubController : MonoBehaviour
         int diamond = PlayerProfileService.Instance.Diamond;
 
         if (goldHudText != null)
-            goldHudText.text = $"金币 {PlayerProfileService.FormatGold(gold)}";
+            goldHudText.text = $"{PlayerProfileService.FormatGold(gold)}";
         if (diamondHudText != null)
             diamondHudText.text = $"钻石 {diamond}";
 
