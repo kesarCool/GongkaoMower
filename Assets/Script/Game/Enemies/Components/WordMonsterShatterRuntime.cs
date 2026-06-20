@@ -62,6 +62,18 @@ public class WordMonsterShatterRuntime : MonoBehaviour
 
     private readonly Queue<PendFragment> _pending = new Queue<PendFragment>(256);
 
+    /// <summary>活跃碎片（集中 Tick，无物理/独立 Update）</summary>
+    private readonly List<ActiveFragment> _activeFragments = new List<ActiveFragment>(64);
+
+    private struct ActiveFragment
+    {
+        public GameObject go;
+        public Transform tr;
+        public Vector2 velocity;
+        public float angularVelocity;
+        public float releaseAt;
+    }
+
     /// <summary>全局活跃碎片（跨实例，避免 Runtime 先于碎片销毁时计数泄漏）</summary>
     private static int s_globalActiveFragments;
 
@@ -125,6 +137,8 @@ public class WordMonsterShatterRuntime : MonoBehaviour
             SpawnOne(p);
             spawned++;
         }
+
+        TickFragments(Time.deltaTime);
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
@@ -213,12 +227,7 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         tmp.sortingOrder = p.sortingOrder;
         tmp.ForceMeshUpdate(true);
 
-        var rb = go.AddComponent<Rigidbody2D>();
-        rb.gravityScale = 0f;
-        rb.drag = fragmentDrag;
-        rb.angularDrag = fragmentAngularDrag;
-        rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-
+        // 纯 Transform 运动，无 Rigidbody2D / 无物理 / 无独立 Update
         Vector2 dir = Random.insideUnitCircle;
         if (dir.sqrMagnitude < 1e-6f)
             dir = Vector2.right;
@@ -226,50 +235,55 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         float impMin = p.isBoss ? burstImpulseMin * p.burstMul : burstImpulseMin;
         float impMax = p.isBoss ? burstImpulseMax * p.burstMul : burstImpulseMax;
         float imp = Random.Range(impMin, impMax);
-        rb.AddForce(dir * imp, ForceMode2D.Impulse);
-        rb.angularVelocity = Random.Range(-torqueRangeDegPerSec, torqueRangeDegPerSec);
 
         float life = p.isBoss ? fragmentLifetime * p.lifeMul : fragmentLifetime;
-        var track = go.AddComponent<WordMonsterShatterFragmentTracker>();
-        track.Init(life);
+
+        _activeFragments.Add(new ActiveFragment
+        {
+            go = go,
+            tr = go.transform,
+            velocity = dir * imp,
+            angularVelocity = Random.Range(-torqueRangeDegPerSec, torqueRangeDegPerSec),
+            releaseAt = Time.time + Mathf.Max(0.05f, life),
+        });
         s_globalActiveFragments++;
+    }
+
+    /// <summary>集中 Tick 所有碎片（无 Rigidbody2D、无独立 MonoBehaviour.Update）。</summary>
+    private void TickFragments(float dt)
+    {
+        float dragMul = 1f - fragmentDrag * dt;
+        float angularDragMul = 1f - fragmentAngularDrag * dt;
+
+        for (int i = _activeFragments.Count - 1; i >= 0; i--)
+        {
+            var f = _activeFragments[i];
+            if (Time.time >= f.releaseAt || f.go == null)
+            {
+                ReleaseFragmentAt(i);
+                continue;
+            }
+
+            f.velocity *= dragMul;
+            f.angularVelocity *= angularDragMul;
+            f.tr.position += (Vector3)(f.velocity * dt);
+            f.tr.Rotate(0f, 0f, f.angularVelocity * dt);
+            _activeFragments[i] = f;
+        }
+    }
+
+    private void ReleaseFragmentAt(int index)
+    {
+        int last = _activeFragments.Count - 1;
+        var f = _activeFragments[index];
+        if (f.go != null) Destroy(f.go);
+        if (index < last) _activeFragments[index] = _activeFragments[last];
+        _activeFragments.RemoveAt(last);
+        s_globalActiveFragments = Mathf.Max(0, s_globalActiveFragments - 1);
     }
 
     internal static void NotifyFragmentEnd()
     {
         s_globalActiveFragments = Mathf.Max(0, s_globalActiveFragments - 1);
-    }
-}
-
-/// <summary>碎片销毁或寿命结束时递减全局活跃计数。</summary>
-internal sealed class WordMonsterShatterFragmentTracker : MonoBehaviour
-{
-    private float _releaseAt;
-
-    public void Init(float lifetime)
-    {
-        _releaseAt = Time.time + Mathf.Max(0.05f, lifetime);
-    }
-
-    private void Update()
-    {
-        if (Time.time >= _releaseAt)
-            Release();
-    }
-
-    private void OnDestroy()
-    {
-        Release();
-    }
-
-    private bool _released;
-
-    private void Release()
-    {
-        if (_released)
-            return;
-        _released = true;
-        WordMonsterShatterRuntime.NotifyFragmentEnd();
-        Destroy(gameObject);
     }
 }

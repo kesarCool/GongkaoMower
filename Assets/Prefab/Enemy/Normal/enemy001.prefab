@@ -296,6 +296,7 @@ MonoBehaviour:
   maxHp: 10
   hp: 10
   damage: 1
+  defense: 0
   rewardKillCount: 1
   sprite: {fileID: 0}
   bulletPrefab: {fileID: 0}

@@ -47,6 +47,9 @@ public class EnemyBase : MonoBehaviour
     /// <summary>复活用：为 true 时 Die() 不发布事件、不回收，仅隐藏。</summary>
     [System.NonSerialized] public bool preventPoolDeath;
 
+    private ResistShield _cachedResistShield;
+    private bool _resistShieldCached;
+
     public int EnemyId => enemyId;
     public string EnemyName => enemyName;
 
@@ -145,9 +148,13 @@ public class EnemyBase : MonoBehaviour
             final = amount * (100f / (100f + defense));
 
         // Boss 免伤护盾（按技能伤害类型过滤减伤，内部发布 DamageResistedEvent）
-        var shield = GetComponent<ResistShield>();
-        if (shield != null)
-            shield.ApplyResist(damageSource, ref final);
+        if (!_resistShieldCached)
+        {
+            _cachedResistShield = GetComponent<ResistShield>();
+            _resistShieldCached = true;
+        }
+        if (_cachedResistShield != null)
+            _cachedResistShield.ApplyResist(damageSource, ref final);
 
         hp -= final;
         OnDamaged.Invoke(final);

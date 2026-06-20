@@ -44,17 +44,23 @@ public class PlayerController : MonoBehaviour
         _joystick = FindObjectOfType<DynamicJoystick>();
     }
 
+    private GameObject _cachedNearestEnemy;
+
     private void Update()
     {
         HandleInput();
         MoveToTarget();
+
+        // 一次查询复用给射击和朝向
+        _cachedNearestEnemy = FindNearestEnemy();
+
         if (!disableLegacyAutoShoot)
-            AutoShootNearestEnemy();
+            AutoShootNearestEnemyCached();
     }
 
     private void LateUpdate()
     {
-        UpdateBodyFacing();
+        UpdateBodyFacingCached();
     }
 
     private void HandleInput()
@@ -135,24 +141,22 @@ public class PlayerController : MonoBehaviour
             hasTarget = false;
     }
 
-    private void UpdateBodyFacing()
+    private void UpdateBodyFacingCached()
     {
         if (bodyRenderer == null) return;
 
-        // 优先朝向最近怪物（攻击方向）
-        GameObject enemy = CombatTargetRegistry.FindNearest(enemyTag, transform.position);
+        GameObject enemy = _cachedNearestEnemy;
         if (enemy != null)
         {
             float dx = enemy.transform.position.x - transform.position.x;
             if (Mathf.Abs(dx) > FacingEpsilon)
             {
                 bodyRenderer.flipX = dx < 0f;
-                _lastPosition = transform.position; // 同步位置记录，避免下一帧移动方向覆盖
+                _lastPosition = transform.position;
                 return;
             }
         }
 
-        // 无怪时退回移动方向
         float horizontal = transform.position.x - _lastPosition.x;
         _lastPosition = transform.position;
 
@@ -160,7 +164,7 @@ public class PlayerController : MonoBehaviour
         bodyRenderer.flipX = horizontal < 0f;
     }
 
-    private void AutoShootNearestEnemy()
+    private void AutoShootNearestEnemyCached()
     {
         if (bulletPrefab == null) return;
 
@@ -168,7 +172,7 @@ public class PlayerController : MonoBehaviour
         float interval = Mathf.Max(0.01f, attackSpeed);
         if (attackTimer < interval) return;
 
-        GameObject enemy = FindNearestEnemy();
+        GameObject enemy = _cachedNearestEnemy;
         if (enemy == null) return;
 
         Vector2 dir = (enemy.transform.position - transform.position);

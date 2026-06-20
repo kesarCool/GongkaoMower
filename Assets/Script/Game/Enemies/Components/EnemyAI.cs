@@ -10,6 +10,8 @@ public class EnemyAI : MonoBehaviour
     private Transform player;
     private Rigidbody2D rb;
     private float _nextDamageToPlayerTime;
+    private PlayerHealth _cachedPlayerHealth;
+    private EnemyBase _cachedEnemyBase;
 
     private void Start()
     {
@@ -26,6 +28,7 @@ public class EnemyAI : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         FindPlayer();
+        _cachedEnemyBase = GetComponent<EnemyBase>();
     }
 
     private BossBrain _brain;
@@ -95,13 +98,12 @@ public class EnemyAI : MonoBehaviour
 
         if (player == null) return;
 
-        PlayerHealth ph = player.GetComponentInChildren<PlayerHealth>(true);
-        if (ph == null) return;
+        // 缓存 PlayerHealth，避免每次碰撞 GetComponentInChildren
+        if (_cachedPlayerHealth == null)
+            _cachedPlayerHealth = player.GetComponentInChildren<PlayerHealth>(true);
+        if (_cachedPlayerHealth == null) return;
 
-        float dmg = 1f;
-        EnemyBase eb = GetComponent<EnemyBase>();
-        if (eb != null) dmg = eb.ContactDamage;
-
-        ph.TakeDamage(Mathf.Max(0.01f, dmg), transform);
+        float dmg = _cachedEnemyBase != null ? _cachedEnemyBase.ContactDamage : 1f;
+        _cachedPlayerHealth.TakeDamage(Mathf.Max(0.01f, dmg), transform);
     }
 }
