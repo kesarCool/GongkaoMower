@@ -102,7 +102,7 @@ public class GameRevivePanel : UIPanelBase
         StopCountdown();
         SetButtonsInteractable(false);
 
-        IReviveAdProvider provider = _payload?.adProvider ?? DefaultReviveAdProvider.Instance;
+        IReviveAdProvider provider = _payload?.adProvider ?? WeChatRewardedAdProvider.Instance;
         provider.RequestReviveAd(success =>
         {
             if (success)

@@ -46,6 +46,7 @@ public static class AudioCatalogSetup
         var common = new AudioCatalog.CommonSection();
         var combat = new AudioCatalog.CombatSection();
         var skills = new AudioCatalog.PlayerSkillSection();
+        var music = new AudioCatalog.MusicSection();
         var warnings = new List<string>(8);
 
         string commonDir = ResAudioRoot + "/Common";
@@ -78,7 +79,9 @@ public static class AudioCatalogSetup
             AssignPath(GetSkillEntry(skills, field), path, warnings, "PlayerSkill/" + field);
         }
 
-        catalog.ApplySections(common, combat, skills);
+        AssignPath(music.bgmGame, FindAudioByStem(commonDir, "bg-game-music"), warnings, "Music/bgmGame");
+
+        catalog.ApplySections(common, combat, skills, music);
         EditorUtility.SetDirty(catalog);
         AssetDatabase.SaveAssets();
 
@@ -88,6 +91,7 @@ public static class AudioCatalogSetup
         sb.AppendLine("  Combat: hit=" + NullOrPath(combat.enemyHit) + ", die=" + NullOrPath(combat.enemyDie) +
                       ", hurt=" + NullOrPath(combat.playerHurt));
         sb.AppendLine("  PlayerSkill: 已绑定 " + CountSkillBindings(skills) + " 项");
+        sb.AppendLine("  Music: bgmGame=" + NullOrPath(music.bgmGame));
         if (warnings.Count > 0)
         {
             sb.AppendLine("  警告:");

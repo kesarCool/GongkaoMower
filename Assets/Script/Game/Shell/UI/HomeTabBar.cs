@@ -200,6 +200,14 @@ public class HomeTabBar : MonoBehaviour
             Debug.Log($"[HomeTabBar] 已绑定按钮: tabId=\"{entry.tabId}\", button={entry.button.name}");
         }
 
+        // 初始刷新红点角标（先强制重算确保数据源就绪）
+        RedDotService.Instance.ForceRecompute();
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            if (tabs[i].badge != null)
+                tabs[i].badge.Refresh();
+        }
+
         // 默认页签
         string startTab = string.IsNullOrEmpty(defaultTabId) ? tabs[0].tabId : defaultTabId;
         SwitchTo(startTab);
@@ -256,6 +264,9 @@ public class HomeTabBar : MonoBehaviour
 
         [Tooltip("Prefab 模式：拖 Prefab 资源（UIPanelBase 或 HomeTabViewBase 子类）。")]
         public GameObject prefab;
+
+        [Tooltip("红点角标组件（挂载在按钮子物体上，可为空）。")]
+        public RedDotBadge badge;
     }
 
     private sealed class TabRuntime

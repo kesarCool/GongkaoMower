@@ -19,4 +19,6 @@ public enum AudioId
     SkillAutoProjectileSword = 107,
 
     SkillAutoProjectileTalisman = 108,
+
+    BgmGame = 200,
 }

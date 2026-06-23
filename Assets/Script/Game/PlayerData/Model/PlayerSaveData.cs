@@ -4,7 +4,7 @@ using System;
 [Serializable]
 public class PlayerSaveData
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
 
     public int version = CurrentVersion;
     public string playerId;
@@ -31,12 +31,17 @@ public class PlayerSaveData
     // ── v5 商店购买记录 ──
     public ShopPurchaseLog[] shopPurchaseLogs = new ShopPurchaseLog[0];
 
+    // ── v5 成就进度 ──
+    public AchievementProgressEntry[] achievementProgress = Array.Empty<AchievementProgressEntry>();
+    public string lastLoginDate;  // "yyyy-MM-dd"，登录天数判定
+
     /// <summary>升级到最新版本（结构迁移）。</summary>
     public void MigrateToLatest()
     {
         if (version >= CurrentVersion) return;
 
         // v3 → v4：gold/diamond/itemIds/itemCounts 默认 0/空，无需额外迁移
+        // v4 → v5：achievementProgress/lastLoginDate 默认空，无需额外迁移
         version = CurrentVersion;
     }
 }

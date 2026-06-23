@@ -84,3 +84,74 @@ public struct SkillCastEvent
     public Vector3 worldPosition;
 }
 
+// ── 成就系统事件 ──
+
+/// <summary>钻石收入（AddDiamond 正数时发布）。</summary>
+public struct DiamondEarnedEvent
+{
+    public int amount;
+}
+
+/// <summary>钻石消费（SpendDiamond 成功后发布）。</summary>
+public struct DiamondSpentEvent
+{
+    public int amount;
+}
+
+/// <summary>关卡通关（胜利结算时发布）。</summary>
+public struct ChapterClearedEvent
+{
+    public int levelId;
+    public bool isFirstClear;
+}
+
+/// <summary>角色解锁时发布。</summary>
+public struct CharacterUnlockedEvent
+{
+    public string characterId;
+}
+
+/// <summary>技能达到满级时发布。</summary>
+public struct SkillMaxLevelReachedEvent
+{
+    public SkillId skillId;
+    public bool isPassive;
+}
+
+/// <summary>关卡累计获得星星（delta=本次新增的星星数）。</summary>
+public struct StarEarnedEvent
+{
+    public int levelId;
+    public int stars; // 本次 delta（首次通关 1~3，重复挑战改善 1~2）
+}
+
+/// <summary>局外英雄升级（每次升级发布一条）。</summary>
+public struct HeroLevelUpEvent
+{
+    public string characterId;
+}
+
+/// <summary>局外英雄升阶（每次升阶发布一条）。</summary>
+public struct HeroStageUpEvent
+{
+    public string characterId;
+}
+
+/// <summary>金币收入（AddGold 正数时发布）。</summary>
+public struct GoldEarnedEvent
+{
+    public int amount;
+}
+
+/// <summary>金币消费（SpendGold 成功后发布）。</summary>
+public struct GoldSpentEvent
+{
+    public int amount;
+}
+
+/// <summary>红点角标数据变更。sourceKey 为发生变化的节点路径（如 "battle/achievement"）。</summary>
+public struct RedDotChangedEvent
+{
+    public string sourceKey;
+}
+

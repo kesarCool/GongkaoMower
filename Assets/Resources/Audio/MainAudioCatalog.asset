@@ -132,3 +132,13 @@ MonoBehaviour:
       pitchVariation: 0
       pitchOffset: 0
       volumeVariation: 0.15
+  music:
+    bgmGame:
+      id: 200
+      relativePath: Audio/Common/bg-game-music.mp3
+      group: 2
+      volume: 0.1
+      minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0

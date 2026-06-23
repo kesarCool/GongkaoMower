@@ -17,6 +17,7 @@ public class CharacterSelectionElement : MonoBehaviour
     [SerializeField] private GameObject lockedOverlay;
     [SerializeField] private GameObject selectedCheckmark;
     [SerializeField] private Button clickButton;
+    [SerializeField] private TextMeshProUGUI levelText;
 
     [Header("未解锁碎片展示（可选，未拖入则仅遮罩）")]
     [SerializeField] private Image fragmentIcon;
@@ -34,6 +35,7 @@ public class CharacterSelectionElement : MonoBehaviour
         if (nameText == null) nameText = transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
         if (highlightBorder == null) highlightBorder = GetComponent<Image>();
         if (clickButton == null) clickButton = GetComponent<Button>();
+        if (levelText == null) levelText = transform.Find("TextLevel")?.GetComponent<TextMeshProUGUI>();
     }
 
     private void OnEnable()
@@ -120,6 +122,23 @@ public class CharacterSelectionElement : MonoBehaviour
         {
             if (fragmentGroup != null)
                 fragmentGroup.SetActive(false);
+        }
+
+        // 等级（已解锁显示，未解锁隐藏）
+        if (levelText != null)
+        {
+            if (unlocked)
+            {
+                int lv = PlayerProfileService.Instance.GetHeroLevel(def.characterId);
+                BattleChineseFontRuntime.EnsureLoaded();
+                BattleChineseFontRuntime.ApplyToTMP(levelText);
+                levelText.text = $"Lv.{lv}";
+                levelText.gameObject.SetActive(true);
+            }
+            else
+            {
+                levelText.gameObject.SetActive(false);
+            }
         }
 
         // 按钮保持可点击，未解锁时点击弹出提示

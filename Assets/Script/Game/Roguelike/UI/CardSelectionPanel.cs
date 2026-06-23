@@ -241,7 +241,8 @@ public class CardSelectionPanel : UIPanelBase
         }
         else if (_adRefreshCount > 0)
         {
-            _adRefreshCount--;
+            // 不在此处扣减——广告成功后由 CardSelectionSystem 扣减并刷新，
+            // 广告失败则次数不变，用户可重试。
             _onAdRefreshRequested?.Invoke();
         }
     }

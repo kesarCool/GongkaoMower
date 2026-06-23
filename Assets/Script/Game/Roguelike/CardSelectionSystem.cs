@@ -213,12 +213,29 @@ public class CardSelectionSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// 广告刷新（预留接口，暂未实现广告加载）
+    /// 广告刷新：播放激励视频，完整观看后刷新卡牌。
+    /// 广告失败则次数不变，用户可重试。
     /// </summary>
     private void OnAdRefreshRequested()
     {
-        Debug.Log("[CardSelectionSystem] 广告刷新——预留接口，暂未接入广告 SDK");
-        OnRefreshRequested();
+        if (_remainingAdRefresh <= 0) return;
+
+        Debug.Log("[CardSelectionSystem] 请求广告刷新…");
+        WeChatRewardedAdProvider.Instance.RequestReviveAd(success =>
+        {
+            if (success)
+            {
+                Debug.Log("[CardSelectionSystem] 广告完成，刷新卡牌");
+                OnRefreshRequested(); // 内部扣减 _remainingAdRefresh 并重抽
+            }
+            else
+            {
+                Debug.LogWarning("[CardSelectionSystem] 广告未完成");
+                if (UIManager.Instance != null)
+                    UIManager.Instance.ShowToast("广告未完成，可重试", 1.5f);
+                // 次数不回退（面板端也未扣减）
+            }
+        });
     }
 
     /// <summary>

@@ -9,10 +9,11 @@ using UnityEngine;
 public enum ShopPurchaseResult
 {
     Success,
-    SoldOut,        // 已售罄
-    NotEnoughGold,  // 金币不足
-    Locked,         // 未解锁
-    Error,          // 其他错误
+    SoldOut,            // 已售罄
+    NotEnoughGold,      // 金币不足
+    NotEnoughDiamond,   // 钻石不足
+    Locked,             // 未解锁
+    Error,              // 其他错误
 }
 
 public static class ShopService
@@ -116,17 +117,38 @@ public static class ShopService
         int count = Mathf.Max(1, row.ItemNumber);
 
         var svc = PlayerProfileService.Instance;
-        if (!svc.CanAffordGold(price))
+        bool isDiamond = row.PriceType == 2;
+        bool isFree = row.PriceType == 0;
+        bool isAd = row.PriceType == 3;
+
+        if (isFree || isAd)
         {
-            errorMessage = "金币不足";
-            return ShopPurchaseResult.NotEnoughGold;
+            // 免费/广告：不扣货币，直接给物品
+        }
+        else if (isDiamond)
+        {
+            if (!svc.CanAffordDiamond(price))
+            {
+                errorMessage = "钻石不足";
+                return ShopPurchaseResult.NotEnoughDiamond;
+            }
+            svc.SpendDiamond(price);
+        }
+        else
+        {
+            if (!svc.CanAffordGold(price))
+            {
+                errorMessage = "金币不足";
+                return ShopPurchaseResult.NotEnoughGold;
+            }
+            svc.SpendGold(price);
         }
 
-        svc.SpendGold(price);
         svc.AddItem(row.ItemID, count);
         svc.RecordShopPurchase(row.ID);
 
-        Debug.Log($"[Shop] 购买成功: {row.ShopName} ×{count}, 消耗 {price} 金币");
+        string currencyLabel = isFree ? "免费" : isAd ? "广告" : isDiamond ? "钻石" : "金币";
+        Debug.Log($"[Shop] 购买成功: {row.ShopName} ×{count}, 消耗 {price} {currencyLabel}");
         return ShopPurchaseResult.Success;
     }
 

@@ -50,13 +50,21 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private void OnDestroy()
     {
         if (Instance == this)
+        {
+            // 离开战斗场景时停止 BGM
+            if (AudioService.Instance != null)
+                AudioService.Instance.StopBattleBgm();
             Instance = null;
+        }
     }
 
     private void OnEnable()
     {
         // 兜底：上局失败/复活等流程可能残留非 1 的 timeScale，新局强制复位
         Time.timeScale = 1f;
+
+        // 局内背景音乐
+        AudioService.Ensure().PlayBattleBgm();
 
         _gameLayer = FindObjectOfType<GameLayer>(true);
         _playerHealth = FindObjectOfType<PlayerHealth>(true);
@@ -165,6 +173,11 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         int stars = ComputeStarsFromLastVictory();
         var newUnlocks = TryRecordVictoryProgress(dur, kills);
         var rewardItems = AwardDropPoolRewards(levelId, isFirstClear);
+
+        // 成就系统：记录击杀 + 关卡通关 + 本局技能满级次数
+        AchievementService.Instance.RecordKills(kills);
+        EventBus.Publish(new ChapterClearedEvent { levelId = levelId, isFirstClear = isFirstClear });
+        AchievementService.Instance.FinalizeBattle();
         int completedWaves = _gameLayer != null ? _gameLayer.CurrentWave : 0;
         int totalWaves = _gameLayer != null ? _gameLayer.TotalWaves : 0;
         ShowResultUi(new GameResultViewModel
@@ -231,6 +244,11 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         int completedWaves = _gameLayer != null ? Mathf.Max(0, _gameLayer.CurrentWave - 1) : 0;
         int totalWaves = _gameLayer != null ? _gameLayer.TotalWaves : 0;
         float dur = BattleRunMetrics.GetBattleElapsedUnscaled();
+
+        // 成就系统：失败也记录击杀 + 本局技能满级次数
+        AchievementService.Instance.RecordKills(kills);
+        AchievementService.Instance.FinalizeBattle();
+
         var defeatRewards = AwardDefeatGold();
         ShowResultUi(new GameResultViewModel
         {
@@ -255,7 +273,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         var payload = new GameRevivePanelPayload
         {
             countdownSeconds = 10f,
-            adProvider = DefaultReviveAdProvider.Instance,
+            adProvider = WeChatRewardedAdProvider.Instance,
             onGiveUp = OnReviveGiveUp,
             onRevived = OnReviveAccepted
         };
@@ -471,20 +489,26 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         {
             if (drop.itemId == 1)
                 PlayerProfileService.Instance.AddGold(drop.count);
+            else if (drop.itemId == 2)
+                PlayerProfileService.Instance.AddDiamond(drop.count);
             else
                 PlayerProfileService.Instance.AddItem(drop.itemId, drop.count);
 
             var itemRow = TableManager.Instance.GetTableItem<ProtoTable.ItemTable>(drop.itemId) as ProtoTable.ItemTable;
+            string fallbackName = drop.itemId == 1 ? "金币" : drop.itemId == 2 ? "钻石" : $"物品{drop.itemId}";
             result.Add(new RewardItemEntry
             {
                 itemId = drop.itemId,
-                itemName = itemRow?.ItemName ?? (drop.itemId == 1 ? "金币" : $"物品{drop.itemId}"),
+                itemName = itemRow?.ItemName ?? fallbackName,
                 iconPath = itemRow?.IconPath ?? "",
                 count = drop.count,
                 grade = itemRow?.Grade ?? 0,
                 description = itemRow?.Description ?? "",
             });
         }
+
+        // 品级降序排列，高品质奖励靠前展示
+        result.Sort((a, b) => b.grade.CompareTo(a.grade));
 
         if (result.Count > 0)
         {

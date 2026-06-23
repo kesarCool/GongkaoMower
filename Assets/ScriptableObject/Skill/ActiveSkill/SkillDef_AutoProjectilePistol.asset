@@ -17,7 +17,7 @@ MonoBehaviour:
   bondedPassiveId: 102
   maxLevelPrefab: {fileID: 685301462951185581, guid: 03158df583d01324fa531b8253668db3, type: 3}
   displayName: "\u767E\u6B65\u7A7F\u6768"
-  description: "\u767E\u6B65\u7A7F\u6768\uFF0C\u4E00\u51FB\u4E0A\u5CB8"
+  description: "\u9501\u5B9A\u76EE\u6807\uFF0C\u767E\u53D1\u767E\u4E2D\uFF0C\u767E\u6B65\u7A7F\u6768\uFF0C\u4E00\u51FB\u4E0A\u5CB8\uFF1B"
   icon: {fileID: 21300000, guid: 0af94e125d23a4f4387e8b520f04096c, type: 3}
   levelDescriptions:
   - "\u767E\u6B65\u7A7F\u6768\uFF0C\u4E00\u51FB\u4E0A\u5CB8"

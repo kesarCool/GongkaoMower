@@ -36,12 +36,14 @@ public class CharacterSelectionPanel : UIPanelBase
     [Header("升级操作")]
     [SerializeField] private TextMeshProUGUI upgradeCostText;
     [SerializeField] private Button upgradeButton;
+    [SerializeField] private GameObject upgradeRedPoint; // 金币足够时显示
 
     [Header("升阶操作")]
     [Tooltip("升阶面板（含碎片消耗 + 升阶按钮），与升级按钮互斥。")]
     [SerializeField] private GameObject promotePanel;
     [SerializeField] private TextMeshProUGUI promoteFragmentCostText;
     [SerializeField] private Button promoteButton;
+    [SerializeField] private GameObject promoteRedPoint; // 碎片+等级足够时显示
 
     [Header("升阶技能描述")]
     [Tooltip("一阶 Rare 技能描述文本。")]
@@ -62,9 +64,21 @@ public class CharacterSelectionPanel : UIPanelBase
     private int _selectedIndex = -1;
     private readonly List<CharacterSelectionElement> _cells = new List<CharacterSelectionElement>();
     private readonly List<UpgradeAttrRow> _attrRows = new List<UpgradeAttrRow>();
+    private bool _upgradeCooldown;
+    private Coroutine _upgradeCooldownRoutine;
 
     public override void OnOpen(object payload)
     {
+        // 已打开时仅刷新列表保持选中（避免 HomeTabBar.RefreshActive 重走 AutoSelectDefault 跳角色）
+        if (_cells.Count > 0)
+        {
+            string savedCharId = _selectedCharId;
+            PopulateList();
+            if (!string.IsNullOrEmpty(savedCharId))
+                SelectCellByCharId(savedCharId);
+            return;
+        }
+
         // 读已上阵角色
         PlayerProfileService.Instance.LoadOrCreate();
         _equippedCharId = PlayerProfileService.Instance.EquippedCharacterId;
@@ -105,14 +119,12 @@ public class CharacterSelectionPanel : UIPanelBase
 
         PopulateList();
         AutoSelectDefault();
-
-        // 订阅数据变更（商店购买后自动刷新碎片数）
-        EventBus.Subscribe<PlayerDataChangedEvent>(OnPlayerDataChanged, owner: this);
     }
 
     public override void OnClose()
     {
-        EventBus.Unsubscribe<PlayerDataChangedEvent>(OnPlayerDataChanged);
+        if (_upgradeCooldownRoutine != null) { StopCoroutine(_upgradeCooldownRoutine); _upgradeCooldownRoutine = null; }
+        _upgradeCooldown = false;
 
         if (closeButton != null) closeButton.onClick.RemoveListener(OnCloseClicked);
         if (confirmButton != null) confirmButton.onClick.RemoveListener(OnConfirmClicked);
@@ -262,6 +274,19 @@ public class CharacterSelectionPanel : UIPanelBase
         SelectCell(cell.Index, isEquipped);
     }
 
+    /// <summary>按角色 ID 选中（用于数据刷新后恢复选中）。</summary>
+    private void SelectCellByCharId(string charId)
+    {
+        for (int i = 0; i < _cells.Count; i++)
+        {
+            if (_cells[i].CharacterDef?.characterId == charId)
+            {
+                SelectCell(i, isEquipped: charId == _equippedCharId);
+                return;
+            }
+        }
+    }
+
     /// <summary>碎片解锁后自动选中刚解锁的角色。</summary>
     private void AutoSelectUnlocked(string charId)
     {
@@ -380,8 +405,10 @@ public class CharacterSelectionPanel : UIPanelBase
         if (upgradeButton != null)
         {
             upgradeButton.gameObject.SetActive(showUpgrade);
-            if (showUpgrade) upgradeButton.interactable = svc.CanAffordGold(data.GetCostForLevel(nextLv));
+            if (showUpgrade) upgradeButton.interactable = !_upgradeCooldown && svc.CanAffordGold(data.GetCostForLevel(nextLv));
         }
+        if (upgradeRedPoint != null)
+            upgradeRedPoint.SetActive(showUpgrade && svc.CanAffordGold(data.GetCostForLevel(nextLv)));
 
         // 升阶技能描述（始终可见，未解锁置灰）
         string gray = "#666666";
@@ -421,6 +448,8 @@ public class CharacterSelectionPanel : UIPanelBase
             if (showPromote)
                 promoteButton.interactable = svc.CanPromoteStage(def.characterId, data, out _, out _);
         }
+        if (promoteRedPoint != null)
+            promoteRedPoint.SetActive(showPromote && svc.CanPromoteStage(def.characterId, data, out _, out _));
     }
 
     // ── 按钮 ──────────────────────────────────────────
@@ -553,28 +582,35 @@ public class CharacterSelectionPanel : UIPanelBase
 
     // ── 升级 ──────────────────────────────────────────
 
-    private void OnPlayerDataChanged(PlayerDataChangedEvent _)
-    {
-        if (!gameObject.activeInHierarchy) return;
-        PopulateList();
-    }
-
     private void OnUpgradeClicked()
     {
+        if (_upgradeCooldown) return;
         if (string.IsNullOrEmpty(_selectedCharId)) return;
         var def = characterCatalog?.Get(_selectedCharId);
         if (def?.upgradeData == null) return;
+
+        // 冷却锁：防止连点/长按触发多次升级
+        _upgradeCooldown = true;
+        if (upgradeButton != null) upgradeButton.interactable = false;
 
         var svc = PlayerProfileService.Instance;
         bool ok = svc.UpgradeHero(_selectedCharId, def.upgradeData);
         if (ok)
         {
-            UiClickSound.Play();
-            ShowDetail(def);
+            // 刷新列表并保持当前选中（UpgradeHero 内部事件会触发 RefreshActive → OnOpen，
+            // OnOpen 现在对 reopen 做了保护不再跳角色，但这里仍兜底确保选中不变）
+            string savedCharId = _selectedCharId;
+            PopulateList();
+            if (!string.IsNullOrEmpty(savedCharId))
+                SelectCellByCharId(savedCharId);
             RefreshGoldHudIfPresent();
         }
         else
         {
+            // 失败时立即解冻（按钮状态由 ShowDetail → 这里没调用，手动恢复）
+            _upgradeCooldown = false;
+            if (upgradeButton != null && upgradeButton.gameObject.activeInHierarchy)
+                upgradeButton.interactable = svc.CanAffordGold(def.upgradeData.GetCostForLevel(svc.GetHeroLevel(_selectedCharId) + 1));
             int lv = svc.GetHeroLevel(_selectedCharId);
             int maxLv = svc.GetEffectiveMaxLevel(_selectedCharId, def.upgradeData);
             if (lv >= maxLv)
@@ -584,6 +620,25 @@ public class CharacterSelectionPanel : UIPanelBase
                 int cost = def.upgradeData.GetCostForLevel(lv + 1);
                 UIManager.Instance?.ShowToast($"升级需要 {PlayerProfileService.FormatGold(cost)} 金币", 1f);
             }
+            return;
+        }
+
+        // 成功：延迟解冻
+        if (_upgradeCooldownRoutine != null) StopCoroutine(_upgradeCooldownRoutine);
+        _upgradeCooldownRoutine = StartCoroutine(ResetUpgradeCooldown(def.upgradeData));
+    }
+
+    private System.Collections.IEnumerator ResetUpgradeCooldown(HeroUpgradeData data)
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
+        _upgradeCooldown = false;
+        if (upgradeButton != null && upgradeButton.gameObject.activeInHierarchy
+            && !string.IsNullOrEmpty(_selectedCharId) && data != null)
+        {
+            int nextLv = PlayerProfileService.Instance.GetHeroLevel(_selectedCharId) + 1;
+            int maxLv = PlayerProfileService.Instance.GetEffectiveMaxLevel(_selectedCharId, data);
+            bool showUpgrade = nextLv <= maxLv;
+            upgradeButton.interactable = showUpgrade && PlayerProfileService.Instance.CanAffordGold(data.GetCostForLevel(nextLv));
         }
     }
 
@@ -597,8 +652,10 @@ public class CharacterSelectionPanel : UIPanelBase
         bool ok = svc.PromoteStage(_selectedCharId, def.upgradeData);
         if (ok)
         {
-            UiClickSound.Play();
-            ShowDetail(def);
+            string savedCharId = _selectedCharId;
+            PopulateList();
+            if (!string.IsNullOrEmpty(savedCharId))
+                SelectCellByCharId(savedCharId);
         }
         else
         {

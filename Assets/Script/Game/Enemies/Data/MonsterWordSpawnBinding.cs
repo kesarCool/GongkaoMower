@@ -147,7 +147,7 @@ public static class MonsterWordSpawnBinding
         {
             if (!(kv.Value is LexiconTable lx))
                 continue;
-            if (lx.CategoryTag != monster.CategoryTag)
+            if (monster.CategoryTag > 0 && lx.CategoryTag != monster.CategoryTag)
                 continue;
 
             // 敏感词过滤

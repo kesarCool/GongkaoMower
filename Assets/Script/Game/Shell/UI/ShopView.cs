@@ -66,7 +66,17 @@ public class ShopView : HomeTabViewBase
     {
         ClearCells();
 
-        var items = ShopCatalog.Instance.NormalItems;
+        var items = new List<ShopTable>(ShopCatalog.Instance.NormalItems);
+
+        // 排序：免费 > 看广告 > 金币 > 钻石 > 已售罄
+        items.Sort((a, b) =>
+        {
+            bool soldOutA = ShopService.IsSoldOut(a);
+            bool soldOutB = ShopService.IsSoldOut(b);
+            if (soldOutA != soldOutB) return soldOutA ? 1 : -1;
+            return GetPriceTypePriority(a.PriceType).CompareTo(GetPriceTypePriority(b.PriceType));
+        });
+
         foreach (var row in items)
         {
             if (!ShopService.IsUnlocked(row)) continue;
@@ -77,6 +87,19 @@ public class ShopView : HomeTabViewBase
 
         if (emptyHint != null)
             emptyHint.SetActive(_cells.Count == 0);
+    }
+
+    /// <summary>PriceType 排序优先级（越小越靠前）。</summary>
+    private static int GetPriceTypePriority(int priceType)
+    {
+        switch (priceType)
+        {
+            case 0: return 0; // 免费
+            case 3: return 1; // 看广告
+            case 1: return 2; // 金币
+            case 2: return 3; // 钻石
+            default: return 4;
+        }
     }
 
     private void RebuildList()
@@ -98,45 +121,98 @@ public class ShopView : HomeTabViewBase
     {
         if (cell == null || cell.ShopRow == null) return;
 
-        int price = ShopService.GetPrice(cell.ShopRow);
+        int priceType = cell.ShopRow.PriceType;
         int count = Mathf.Max(1, cell.ShopRow.ItemNumber);
         string itemName = cell.ItemRow?.ItemName ?? cell.ShopRow.ShopName ?? "物品";
 
-        string currencyLabel = cell.ShopRow.PriceType == 2 ? "钻石" : "金币";
+        // 免费：直接发奖，不弹确认框
+        if (priceType == 0)
+        {
+            ExecuteShopPurchase(cell, itemName, count);
+            return;
+        }
 
+        // 广告：直接播广告，不弹确认框
+        if (priceType == 3)
+        {
+            StartCoroutine(ClaimAdReward(cell, itemName, count));
+            return;
+        }
+
+        // 金币/钻石：弹确认框
+        int price = ShopService.GetPrice(cell.ShopRow);
+        string currencyLabel = priceType == 2 ? "钻石" : "金币";
         UIManager.Instance.ShowConfirm("兑换确认",
             $"确定购买「{itemName}」×{count}？\n消耗 {price} {currencyLabel}",
             confirmed =>
             {
                 if (!confirmed) return;
-
-                var result = ShopService.Purchase(cell.ShopRow, out string errMsg);
-                switch (result)
-                {
-                    case ShopPurchaseResult.Success:
-                        UIManager.Instance.ShowToast($"已购买 {itemName}×{count}", 1.5f);
-                        cell.RefreshLimitDisplay();
-                        OnTabRefresh(); // 刷新商店列表
-                        EventBus.Publish(new PlayerDataChangedEvent()); // 通知其他页签刷新
-                        break;
-
-                    case ShopPurchaseResult.SoldOut:
-                        UIManager.Instance.ShowToast("已售罄", 1f);
-                        break;
-
-                    case ShopPurchaseResult.NotEnoughGold:
-                        UIManager.Instance.ShowToast("金币不足", 1f);
-                        break;
-
-                    case ShopPurchaseResult.Locked:
-                        UIManager.Instance.ShowToast(errMsg, 1f);
-                        break;
-
-                    default:
-                        Debug.LogWarning($"[Shop] 购买失败: {errMsg}");
-                        break;
-                }
+                ExecuteShopPurchase(cell, itemName, count);
             });
+    }
+
+    private void ExecuteShopPurchase(ShopCell cell, string itemName, int count)
+    {
+        var result = ShopService.Purchase(cell.ShopRow, out string errMsg);
+        switch (result)
+        {
+            case ShopPurchaseResult.Success:
+                UIManager.Instance.ShowToast($"已获得 {itemName}×{count}", 1.5f);
+                cell.RefreshLimitDisplay();
+                OnTabRefresh();
+                EventBus.Publish(new PlayerDataChangedEvent());
+                break;
+
+            case ShopPurchaseResult.SoldOut:
+                UIManager.Instance.ShowToast("已售罄", 1f);
+                break;
+
+            case ShopPurchaseResult.NotEnoughGold:
+                UIManager.Instance.ShowToast("金币不足", 1f);
+                break;
+
+            case ShopPurchaseResult.NotEnoughDiamond:
+                UIManager.Instance.ShowToast("钻石不足", 1f);
+                break;
+
+            case ShopPurchaseResult.Locked:
+                UIManager.Instance.ShowToast(errMsg, 1f);
+                break;
+
+            default:
+                Debug.LogWarning($"[Shop] 购买失败: {errMsg}");
+                break;
+        }
+    }
+
+    private System.Collections.IEnumerator ClaimAdReward(ShopCell cell, string itemName, int count)
+    {
+        bool adCompleted = false;
+        bool adResponded = false;
+
+        WeChatRewardedAdProvider.Instance.RequestReviveAd(success =>
+        {
+            adCompleted = success;
+            adResponded = true;
+        });
+
+        // 等待广告回调（DefaultReviveAdProvider 同步完成，真机广告异步）
+        float timeout = 30f;
+        float elapsed = 0f;
+        while (!adResponded && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (adCompleted)
+        {
+            ExecuteShopPurchase(cell, itemName, count);
+        }
+        else
+        {
+            UIManager.Instance.ShowToast("广告未完成，请稍后再试", 1.5f);
+        }
     }
 
     // ═══════════════ 倒计时 ═══════════════

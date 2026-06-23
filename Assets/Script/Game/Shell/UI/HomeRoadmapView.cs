@@ -34,7 +34,6 @@ public class HomeRoadmapView : MonoBehaviour
     [Header("颜色")]
     [SerializeField] private Color lineActiveColor = new Color(0.55f, 0.55f, 0.6f, 1f);
     [SerializeField] private Color lineDimColor = new Color(0.2f, 0.2f, 0.22f, 1f);
-    [SerializeField] private Color dividerColor = new Color(0.35f, 0.35f, 0.4f, 1f);
 
     [Header("详情弹窗")]
     [SerializeField] private Vector2 popupPanelSize = new Vector2(460f, 300f);
@@ -200,7 +199,7 @@ public class HomeRoadmapView : MonoBehaviour
             if (chIdx != lastCh)
             {
                 yCursor += chapterGap;
-                MakeDivider(yCursor, contentCenterX, vw, chName);
+                MakeDivider(yCursor, contentCenterX, vw, chName, d.unlocked);
                 yCursor += dividerHeight;
             }
             lastCh = chIdx;
@@ -257,8 +256,9 @@ public class HomeRoadmapView : MonoBehaviour
         }
     }
 
-    private void MakeDivider(float yBase, float cx, float cw, string chapterName)
+    private void MakeDivider(float yBase, float cx, float cw, string chapterName, bool chapterUnlocked)
     {
+        Color color = chapterUnlocked ? lineActiveColor : lineDimColor;
         float y = yBase + dividerHeight * 0.5f;
         var go = new GameObject("Div", typeof(RectTransform), typeof(Image));
         go.transform.SetParent(_layoutRoot, false);
@@ -267,7 +267,7 @@ public class HomeRoadmapView : MonoBehaviour
         rt.pivot = new Vector2(0.5f, 0f);
         rt.anchoredPosition = new Vector2(cx, y);
         rt.sizeDelta = new Vector2(cw * 0.7f, 2f);
-        go.GetComponent<Image>().color = dividerColor;
+        go.GetComponent<Image>().color = color;
         go.GetComponent<Image>().raycastTarget = false;
 
         var lblGo = new GameObject("ChName", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -281,7 +281,7 @@ public class HomeRoadmapView : MonoBehaviour
         tmp.text = chapterName;
         tmp.fontSize = 42;
         tmp.alignment = TMPro.TextAlignmentOptions.Center;
-        tmp.color = dividerColor;
+        tmp.color = color;
         BattleChineseFontRuntime.EnsureLoaded();
         BattleChineseFontRuntime.ApplyToTMP(tmp);
     }

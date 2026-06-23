@@ -37,6 +37,9 @@ public sealed class AudioCatalog : ScriptableObject
     [Header("Battle/PlayerSkill（技能施放）")]
     [SerializeField] private PlayerSkillSection playerSkill = new PlayerSkillSection();
 
+    [Header("Music（背景音乐）")]
+    [SerializeField] private MusicSection music = new MusicSection();
+
     private Dictionary<AudioId, Entry> _byId;
 
     [Serializable]
@@ -67,9 +70,16 @@ public sealed class AudioCatalog : ScriptableObject
         public Entry autoProjectileTalisman = new Entry { id = AudioId.SkillAutoProjectileTalisman, group = AudioLoadGroup.Battle };
     }
 
+    [Serializable]
+    public sealed class MusicSection
+    {
+        public Entry bgmGame = new Entry { id = AudioId.BgmGame, group = AudioLoadGroup.Music, volume = 0.7f };
+    }
+
     public CommonSection Common => common;
     public CombatSection Combat => combat;
     public PlayerSkillSection PlayerSkill => playerSkill;
+    public MusicSection Music => music;
 
     /// <summary>SkillId → AudioId 映射（原来的 SkillAudioMapping）。</summary>
     public static AudioId ResolveSkillAudioId(SkillId skillId)
@@ -107,11 +117,12 @@ public sealed class AudioCatalog : ScriptableObject
         }
     }
 
-    public void ApplySections(CommonSection commonSection, CombatSection combatSection, PlayerSkillSection skillSection)
+    public void ApplySections(CommonSection commonSection, CombatSection combatSection, PlayerSkillSection skillSection, MusicSection musicSection)
     {
         common = commonSection ?? new CommonSection();
         combat = combatSection ?? new CombatSection();
         playerSkill = skillSection ?? new PlayerSkillSection();
+        music = musicSection ?? new MusicSection();
         SyncEntryIds();
         _byId = null;
     }
@@ -142,6 +153,11 @@ public sealed class AudioCatalog : ScriptableObject
             if (playerSkill.autoProjectileSword != null) { playerSkill.autoProjectileSword.id = AudioId.SkillAutoProjectileSword; playerSkill.autoProjectileSword.group = AudioLoadGroup.Battle; }
             if (playerSkill.autoProjectileTalisman != null) { playerSkill.autoProjectileTalisman.id = AudioId.SkillAutoProjectileTalisman; playerSkill.autoProjectileTalisman.group = AudioLoadGroup.Battle; }
         }
+
+        if (music != null)
+        {
+            if (music.bgmGame != null) { music.bgmGame.id = AudioId.BgmGame; music.bgmGame.group = AudioLoadGroup.Music; }
+        }
     }
 
     private IEnumerable<Entry> EnumerateAll()
@@ -169,6 +185,11 @@ public sealed class AudioCatalog : ScriptableObject
             if (playerSkill.lightningStrike != null) yield return playerSkill.lightningStrike;
             if (playerSkill.autoProjectileSword != null) yield return playerSkill.autoProjectileSword;
             if (playerSkill.autoProjectileTalisman != null) yield return playerSkill.autoProjectileTalisman;
+        }
+
+        if (music != null)
+        {
+            if (music.bgmGame != null) yield return music.bgmGame;
         }
     }
 

@@ -17,14 +17,14 @@ MonoBehaviour:
   bondedPassiveId: 104
   maxLevelPrefab: {fileID: 1613592626320682331, guid: 6d9c95e26a789c540992068aa597938d, type: 3}
   displayName: "\u5200\u5149\u5251\u5F71"
-  description: "\u4E07\u5203\u9F50\u98DE\uFF0C\u5F39\u5E55\u538B\u5236\uFF0C\u4EE5\u91CF\u53D6\u80DC\u3002"
+  description: "\u4E07\u5203\u9F50\u98DE\uFF0C\u5F39\u5E55\u538B\u5236\uFF0C\u4EE5\u91CF\u53D6\u80DC\u3002\u521D\u59CB\u53D1\u5C04\u4E24\u628A\u98DE\u5200\uFF0C\u4F24\u5BB3\u7FFB\u500D\uFF1B"
   icon: {fileID: 21300000, guid: cb135778532c36b42b3a81c7c0fd18cb, type: 3}
   levelDescriptions:
   - "\u9AD8\u9891\u4F4E\u4F24\uFF0C\u5F39\u5E55\u538B\u5236\uFF0C\u4EE5\u91CF\u53D6\u80DC\u3002"
   - "\u4F24\u5BB3+8%\uFF0C\u5C04\u901F+5%"
   - "\u98DE\u5200+1\uFF0C\u4F24\u5BB3+8%"
   - "\u98DE\u5200+1\uFF0C\u5C04\u901F+5%\uFF0C\u4F24\u5BB3+8%"
-  - "\u98DE\u5200+1\uFF0C\u5B50\u5F39+1\uFF0C\u5C04\u901F+5%"
+  - "\u98DE\u5200+1\uFF0C\u4F24\u5BB3+9%\uFF0C\u5C04\u901F+5%"
   targetSkillId: 8
   bulletPrefab: {fileID: 1613592626320682331, guid: dfb94cfdb2fe49940aa637c44c4faf13, type: 3}
   bulletSpeed: 12

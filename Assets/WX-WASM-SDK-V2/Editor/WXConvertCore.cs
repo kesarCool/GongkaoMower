@@ -1648,7 +1648,23 @@ namespace WeChatWASM
                 Path.Combine(Application.dataPath, "WX-WASM-SDK-V2", "Editor", "template"),
                 Path.Combine(config.ProjectConf.DST, miniGameDir)
                 );
-            buildTemplate.start();
+            // 重试：文件被外部进程（VSCode / 杀软等）锁住时等待释放
+            const int maxRetries = 5;
+            const int retryDelayMs = 1000;
+            for (int retry = 0; ; retry++)
+            {
+                try
+                {
+                    buildTemplate.start();
+                    break;
+                }
+                catch (System.IO.IOException ex)
+                {
+                    if (retry >= maxRetries) throw;
+                    UnityEngine.Debug.LogWarning($"[Converter] 文件被占用({ex.Message})，{retryDelayMs}ms 后重试({retry + 1}/{maxRetries})…");
+                    System.Threading.Thread.Sleep(retryDelayMs);
+                }
+            }
             // FIX: 2021.2版本生成symbol有bug，导出时生成symbol报错，有symbol才copy
             // 代码分包需要symbol文件以进行增量更新
             if (File.Exists(symbolPath))

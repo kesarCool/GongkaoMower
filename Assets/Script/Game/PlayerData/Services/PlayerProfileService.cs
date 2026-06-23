@@ -48,6 +48,11 @@ public sealed class PlayerProfileService
         if (_data == null) return 0;
         _data.gold = Mathf.Max(0, _data.gold + delta);
         Persist();
+
+        // 成就系统：金币收入事件
+        if (delta > 0)
+            EventBus.Publish(new GoldEarnedEvent { amount = delta });
+
         return _data.gold;
     }
 
@@ -58,6 +63,11 @@ public sealed class PlayerProfileService
         if (_data == null) return 0;
         _data.diamond = Mathf.Max(0, _data.diamond + delta);
         Persist();
+
+        // 成就系统：钻石收入事件
+        if (delta > 0)
+            EventBus.Publish(new DiamondEarnedEvent { amount = delta });
+
         return _data.diamond;
     }
 
@@ -69,6 +79,25 @@ public sealed class PlayerProfileService
     {
         if (!CanAffordGold(cost)) return false;
         AddGold(-cost);
+
+        // 成就系统：金币消费事件
+        EventBus.Publish(new GoldSpentEvent { amount = cost });
+
+        return true;
+    }
+
+    /// <summary>钻石是否足够消费。</summary>
+    public bool CanAffordDiamond(int cost) => Diamond >= cost;
+
+    /// <summary>消费钻石，不足则返回 false。</summary>
+    public bool SpendDiamond(int cost)
+    {
+        if (!CanAffordDiamond(cost)) return false;
+        AddDiamond(-cost);
+
+        // 成就系统：钻石消费事件
+        EventBus.Publish(new DiamondSpentEvent { amount = cost });
+
         return true;
     }
 
@@ -81,13 +110,9 @@ public sealed class PlayerProfileService
         if (!_loaded) LoadOrCreate();
         if (_data == null) return;
 
-        // 金币走专用字段（快取 + HUD 兼容）
-        if (itemId == 1)
-        {
-            _data.gold = Mathf.Max(0, _data.gold + count);
-            Persist();
-            return;
-        }
+        // 金币/钻石走专用方法（快取 + HUD 兼容 + 事件发布）
+        if (itemId == 1) { AddGold(count); return; }
+        if (itemId == 2) { AddDiamond(count); return; }
 
         // 角色碎片：同步写入 characterFragmentKeys/Values，供角色面板查询。
         // 不 return，继续写入 itemIds/itemCounts，确保背包面板可见。
@@ -125,6 +150,7 @@ public sealed class PlayerProfileService
         if (_data == null) return 0;
 
         if (itemId == 1) return _data.gold;
+        if (itemId == 2) return _data.diamond;
 
         if (_data.itemIds == null || _data.itemCounts == null) return 0;
         int idx = System.Array.IndexOf(_data.itemIds, itemId);
@@ -200,6 +226,11 @@ public sealed class PlayerProfileService
 
         SetHeroLevel(characterId, currentLevel + 1);
         Debug.Log($"[PlayerProfile] {characterId} 升级 {currentLevel} → {currentLevel + 1}，消耗金币 {cost}");
+
+        // 成就系统：英雄升级事件
+        EventBus.Publish(new HeroLevelUpEvent { characterId = characterId });
+        EventBus.Publish(new PlayerDataChangedEvent());
+
         return true;
     }
 
@@ -291,6 +322,7 @@ public sealed class PlayerProfileService
             }
         }
         Persist();
+        EventBus.Publish(new PlayerDataChangedEvent());
     }
 
     /// <summary>是否满足升阶条件。返回 (canPromote, 缺少的碎片数, 等级是否达标)。</summary>
@@ -330,6 +362,11 @@ public sealed class PlayerProfileService
 
         SetHeroStage(characterId, stage + 1);
         Debug.Log($"[PlayerProfile] {characterId} 升阶 {stage} → {stage + 1}，消耗碎片 {cost}");
+
+        // 成就系统：英雄升阶事件
+        EventBus.Publish(new HeroStageUpEvent { characterId = characterId });
+        EventBus.Publish(new PlayerDataChangedEvent());
+
         return true;
     }
 
@@ -487,8 +524,10 @@ public sealed class PlayerProfileService
         }
 
         bool wasCleared = entry.cleared;
+        int oldStars = entry.stars;
         entry.cleared = true;
         entry.stars = Mathf.Max(entry.stars, stars);
+        int starDelta = entry.stars - oldStars;
         if (!wasCleared || entry.bestTimeSec <= 0f)
             entry.bestTimeSec = durationSec;
         else
@@ -496,6 +535,10 @@ public sealed class PlayerProfileService
         entry.bestKills = Mathf.Max(entry.bestKills, killCount);
 
         Persist();
+
+        // 成就系统：星星累计事件（delta=本次新增的星星，重复挑战只计改善部分）
+        if (starDelta > 0)
+            EventBus.Publish(new StarEarnedEvent { levelId = levelId, stars = starDelta });
     }
 
     /// <summary>当前上阵角色 ID（持久化到本地存档）。</summary>

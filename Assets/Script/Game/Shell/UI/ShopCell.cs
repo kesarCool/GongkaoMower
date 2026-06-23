@@ -18,6 +18,7 @@ public class ShopCell : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textOldPrice; // 预留划线原价
     [SerializeField] private Button btnBuy;
     [SerializeField] private GameObject imgSoldOut;
+    [SerializeField] private GameObject redDotTag; // 免费/广告标签
 
     public ShopTable ShopRow { get; private set; }
     public ItemTable ItemRow { get; private set; }
@@ -42,6 +43,7 @@ public class ShopCell : MonoBehaviour
         if (textLimit == null) textLimit = transform.Find("TextLimit")?.GetComponent<TextMeshProUGUI>();
         if (btnBuy == null) btnBuy = transform.Find("BtnBuy")?.GetComponent<Button>();
         if (imgSoldOut == null) imgSoldOut = transform.Find("ImgSoldOut")?.gameObject;
+        if (redDotTag == null) redDotTag = transform.Find("RedDotTag")?.gameObject;
     }
 
     public void Bind(ShopTable shopRow, System.Action<ShopCell> onBuyClicked)
@@ -80,17 +82,28 @@ public class ShopCell : MonoBehaviour
         {
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(textName);
-            textName.text = ItemRow?.ItemName ?? shopRow.ShopName ?? "";
+            textName.text = shopRow.LatticeName ?? "";
         }
 
         // 价格
         int price = ShopService.GetPrice(shopRow);
-        string currencyLabel = shopRow.PriceType == 2 ? "钻石" : "金币";
+        string currencyLabel;
+        if (shopRow.PriceType == 0)
+            currencyLabel = "";
+        else if (shopRow.PriceType == 3)
+            currencyLabel = "";
+        else
+            currencyLabel = shopRow.PriceType == 2 ? "钻石" : "金币";
         if (textPrice != null)
         {
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(textPrice);
-            textPrice.text = $"{price} {currencyLabel}";
+            if (shopRow.PriceType == 0)
+                textPrice.text = "免费";
+            else if (shopRow.PriceType == 3)
+                textPrice.text = "看广告";
+            else
+                textPrice.text = $"{price} {currencyLabel}";
         }
 
         // 划线原价（预留）
@@ -106,6 +119,10 @@ public class ShopCell : MonoBehaviour
         bool soldOut = ShopService.IsSoldOut(shopRow);
         if (imgSoldOut != null) imgSoldOut.SetActive(soldOut);
         if (btnBuy != null) btnBuy.interactable = !soldOut;
+
+        // 红点标签：免费和看广告显示（售罄不显示）
+        if (redDotTag != null)
+            redDotTag.SetActive(!soldOut && (shopRow.PriceType == 0 || shopRow.PriceType == 3));
     }
 
     /// <summary>购买后外部调用来刷新限购显示。</summary>

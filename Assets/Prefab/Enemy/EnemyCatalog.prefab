@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   entries:
-  - id: 10001
+  - id: 10002
     enemyName: "\u6210\u8BED\u602A"
     prefab: {fileID: 4941738149415093580, guid: f521838753b685b459b2ef3e64c52e82, type: 3}
     sprite: {fileID: 0}

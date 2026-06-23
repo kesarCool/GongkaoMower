@@ -37,6 +37,18 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("打开设置弹窗的按钮（右上角齿轮）。")]
     [SerializeField] private Button openSettingsButton;
 
+    [Header("成就")]
+    [Tooltip("打开成就面板的按钮。")]
+    [SerializeField] private Button openAchievementButton;
+
+    [Header("数据")]
+    [Tooltip("角色目录（供 RedDotService 等使用，非 Resources 路径）。")]
+    [SerializeField] private CharacterCatalog characterCatalog;
+
+    [Header("红点角标")]
+    [Tooltip("成就按钮的红点角标。")]
+    [SerializeField] private RedDotBadge achievementBadge;
+
     [Header("货币 HUD")]
     [Tooltip("金币数量文本（TMP）。")]
     [SerializeField] private TMPro.TextMeshProUGUI goldHudText;
@@ -47,6 +59,9 @@ public class HomeHubController : MonoBehaviour
     {
         // Start 在所有 Awake/OnEnable 之后，UIManager 已就绪，可以安全弹框
         PlayerProfileService.Instance.ConsumeCorruptionAlert();
+
+        // 成就系统：登录天数（Init 已由 RuntimeInitializeOnLoadMethod 自动完成）
+        AchievementService.Instance.OnEnterHome();
     }
 
     private void OnEnable()
@@ -59,14 +74,27 @@ public class HomeHubController : MonoBehaviour
             openBackpackButton.onClick.AddListener(OpenBackpack);
         if (openSettingsButton != null)
             openSettingsButton.onClick.AddListener(OpenSettings);
+        if (openAchievementButton != null)
+            openAchievementButton.onClick.AddListener(OpenAchievement);
 
         // 战斗/角色切换按钮由 HomeTabBar 管理（Inspector 中拖入 HomeTabBar.tabs[i].button）
 
+        // 注入 CharacterCatalog（不在 Resources 下），并触发首次红点重算
+        if (characterCatalog != null)
+            RedDotService.Instance.SetCharacterCatalog(characterCatalog);
+
         RefreshCurrencyHud();
+
+        if (achievementBadge != null)
+            achievementBadge.Refresh();
+
+        EventBus.Subscribe<PlayerDataChangedEvent>(OnPlayerDataChanged, owner: this);
     }
 
     private void OnDisable()
     {
+        EventBus.Unsubscribe<PlayerDataChangedEvent>(OnPlayerDataChanged);
+
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
         if (openLexiconPreviewButton != null)
@@ -75,6 +103,13 @@ public class HomeHubController : MonoBehaviour
             openBackpackButton.onClick.RemoveListener(OpenBackpack);
         if (openSettingsButton != null)
             openSettingsButton.onClick.RemoveListener(OpenSettings);
+        if (openAchievementButton != null)
+            openAchievementButton.onClick.RemoveListener(OpenAchievement);
+    }
+
+    private void OnPlayerDataChanged(PlayerDataChangedEvent _)
+    {
+        RefreshCurrencyHud();
     }
 
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
@@ -100,6 +135,16 @@ public class HomeHubController : MonoBehaviour
         UiClickSound.Play();
         if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
         UIManager.Instance.Open<SettingsPanel>(null, UiOpenOptions.NonPausingModal);
+    }
+
+    /// <summary>打开成就面板（模态弹窗）。</summary>
+    public void OpenAchievement()
+    {
+        UiClickSound.Play();
+        if (TableManager.Instance != null)
+            TableManager.Instance.Init();
+        if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
+        UIManager.Instance.Open<AchievementPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
     /// <summary>打开背包面板（模态弹窗）。</summary>
@@ -137,7 +182,7 @@ public class HomeHubController : MonoBehaviour
         if (goldHudText != null)
             goldHudText.text = $"{PlayerProfileService.FormatGold(gold)}";
         if (diamondHudText != null)
-            diamondHudText.text = $"钻石 {diamond}";
+            diamondHudText.text = $"{PlayerProfileService.FormatGold(diamond)}";
 
         if (roadmapView != null)
             roadmapView.RefreshAll();

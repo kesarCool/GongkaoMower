@@ -1,0 +1,19 @@
+namespace ProtoTable.AchievementConfig;
+enum eCrypt :int{
+	code = 1392603177,}
+
+namespace ProtoTable;
+table AchievementConfig{
+	ID:int32;
+	GroupId:int32;
+	Stage:int32;
+	TaskType:int32;
+	SortOrder:int32;
+	TaskParam:int32;
+	Description:string;
+	TargetValue:int32;
+	RewardId:int32;
+	RewardCount:int32;
+}
+
+root_type AchievementConfig;

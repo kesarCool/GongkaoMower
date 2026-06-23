@@ -18,6 +18,12 @@ public class GamePausePanel : UIPanelBase
     public Button resumeButton;
     public Button quitButton;
 
+    [Header("音频控制")]
+    public Toggle bgmToggle;
+    public TMPro.TextMeshProUGUI bgmLabel;
+    public Toggle sfxToggle;
+    public TMPro.TextMeshProUGUI sfxLabel;
+
     [Header("数据源")]
     public PlayerSkills playerSkills;
 
@@ -33,12 +39,29 @@ public class GamePausePanel : UIPanelBase
             resumeButton.onClick.AddListener(OnResume);
         if (quitButton != null)
             quitButton.onClick.AddListener(OnQuit);
+
+        // 音频控制
+        if (bgmToggle != null)
+        {
+            bgmToggle.isOn = !AudioService.Instance.BgmMute;
+            bgmToggle.onValueChanged.AddListener(OnBgmToggled);
+        }
+        RefreshBgmLabel();
+
+        if (sfxToggle != null)
+        {
+            sfxToggle.isOn = !AudioService.Instance.SfxMute;
+            sfxToggle.onValueChanged.AddListener(OnSfxToggled);
+        }
+        RefreshSfxLabel();
     }
 
     public override void OnClose()
     {
         if (resumeButton != null) resumeButton.onClick.RemoveListener(OnResume);
         if (quitButton != null) quitButton.onClick.RemoveListener(OnQuit);
+        if (bgmToggle != null) bgmToggle.onValueChanged.RemoveListener(OnBgmToggled);
+        if (sfxToggle != null) sfxToggle.onValueChanged.RemoveListener(OnSfxToggled);
     }
 
     private void BuildSkillList()
@@ -128,5 +151,29 @@ public class GamePausePanel : UIPanelBase
                 Resources.UnloadUnusedAssets();
             }
         });
+    }
+
+    private void OnBgmToggled(bool isOn)
+    {
+        AudioService.Instance.BgmMute = !isOn;
+        RefreshBgmLabel();
+    }
+
+    private void OnSfxToggled(bool isOn)
+    {
+        AudioService.Instance.SfxMute = !isOn;
+        RefreshSfxLabel();
+    }
+
+    private void RefreshBgmLabel()
+    {
+        if (bgmLabel != null)
+            bgmLabel.text = AudioService.Instance.BgmMute ? "音乐关" : "音乐开";
+    }
+
+    private void RefreshSfxLabel()
+    {
+        if (sfxLabel != null)
+            sfxLabel.text = AudioService.Instance.SfxMute ? "音效关" : "音效开";
     }
 }

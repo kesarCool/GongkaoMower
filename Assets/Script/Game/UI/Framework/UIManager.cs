@@ -441,7 +441,12 @@ public class UIManager : MonoBehaviour
     private void AddPauseLock()
     {
         if (_pauseLocks == 0)
+        {
             _storedTimeScale = Time.timeScale;
+            // 第一个暂停锁：暂停 BGM
+            if (AudioService.Instance != null)
+                AudioService.Instance.PauseBattleBgm();
+        }
         _pauseLocks++;
         Time.timeScale = 0f;
     }
@@ -450,7 +455,12 @@ public class UIManager : MonoBehaviour
     {
         _pauseLocks = Mathf.Max(0, _pauseLocks - 1);
         if (_pauseLocks == 0)
+        {
             Time.timeScale = _storedTimeScale;
+            // 所有暂停锁释放：恢复 BGM
+            if (AudioService.Instance != null)
+                AudioService.Instance.ResumeBattleBgm();
+        }
     }
 
     private void RefreshStackBackdrop()

@@ -146,11 +146,13 @@ public static class CharacterUnlockEvaluator
         if (data.unlockedCharacters == null)
         {
             data.unlockedCharacters = new[] { charId };
+            EventBus.Publish(new CharacterUnlockedEvent { characterId = charId });
             return;
         }
         if (System.Array.IndexOf(data.unlockedCharacters, charId) >= 0) return;
         var list = new List<string>(data.unlockedCharacters) { charId };
         data.unlockedCharacters = list.ToArray();
+        EventBus.Publish(new CharacterUnlockedEvent { characterId = charId });
     }
 
     private static CharacterCatalog GetCatalog()

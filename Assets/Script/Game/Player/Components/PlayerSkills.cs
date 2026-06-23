@@ -310,6 +310,11 @@ public class PlayerSkills : MonoBehaviour
 
             s.OnLevelUp();
             ApplyStatsFromDefinition(s, def);
+
+            // 成就系统：技能达到满级
+            if (def != null && IsMaxLevel(s, def))
+                EventBus.Publish(new SkillMaxLevelReachedEvent { skillId = id, isPassive = false });
+
             return true;
         }
         return false;
@@ -438,6 +443,11 @@ public class PlayerSkills : MonoBehaviour
 
         s.OnLevelUp();
         ApplyStatsFromDefinition(s, def);
+
+        // 成就系统：被动技能达到满级
+        if (def != null && IsMaxLevel(s, def))
+            EventBus.Publish(new SkillMaxLevelReachedEvent { skillId = id, isPassive = true });
+
         return true;
     }
 

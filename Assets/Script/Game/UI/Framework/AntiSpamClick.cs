@@ -43,6 +43,9 @@ public sealed class AntiSpamClick : MonoBehaviour
 
     private void OnButtonClick()
     {
+        // 如果业务逻辑在按钮点击中把自身 SetActive(false)，不再启协程
+        if (!gameObject.activeInHierarchy) return;
+
         // 遮罩盖住按钮，后续点击被阻断
         _blocker.raycastTarget = true;
         SetBlockerVisible(true);

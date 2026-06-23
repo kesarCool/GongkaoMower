@@ -3,4 +3,5 @@ public enum AudioLoadGroup
 {
     Common = 0,
     Battle = 1,
+    Music = 2,
 }
