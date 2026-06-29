@@ -15,9 +15,10 @@ MonoBehaviour:
   id: 2
   maxLevel: 5
   bondedPassiveId: 106
+  maxLevelPrefab: {fileID: 0}
   displayName: "\u6C14\u8D2F\u957F\u8679"
   description: "\u51DD\u805A\u5185\u529B\u5411\u524D\u65B9\u5C04\u51FA\u4E00\u9053\u8D2F\u7A7F\u5149\u675F\uFF0C\u7A7F\u900F\u8DEF\u5F84\u4E0A\u6240\u6709\u654C\u4EBA\u3002"
-  icon: {fileID: 21300000, guid: e8b69382f66d6614da16232fa1d589fc, type: 3}
+  icon: {fileID: 21300000, guid: 229c3a11ad098ae4ca1395e7372b0c37, type: 3}
   levelDescriptions: []
   beamLength: 8
   beamHitMask:
@@ -38,3 +39,5 @@ MonoBehaviour:
   beamCountByLevel: 0100000001000000020000000200000003000000
   singleTargetSpreadDeg: 10
   spreadDegrees: 14
+  maxLevelVariantInterval: 5
+  variantBeamCount: 7

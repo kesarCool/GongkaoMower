@@ -7,7 +7,7 @@ table Monster{
 	ID:int32;
 	monsterId:int32;
 	type:int32;
-	CategoryTag :int32;
+	CategoryTag :[int32];
 	ThemePackId:int32;
 	randomKillPro:int32;
 	triggerMode:int32;

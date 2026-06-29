@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 #if USE_FB_TABLE
 using ProtoTable;
@@ -6,7 +7,8 @@ using ProtoTable;
 
 /// <summary>
 /// 出怪后根据 <see cref="Monster"/> + <see cref="LexiconTable"/> 为「文字怪」赋值展示文案。
-/// 约定：<c>Monster.type == <see cref="MonsterTypeIds.Word"/></c> 为文字怪；词条按 <c>CategoryTag</c> 匹配，<c>ThemePackId</c> 在怪物表大于 0 时再按词库 <c>ThemePackId</c> 过滤（无命中则退回仅 CategoryTag）。
+/// 约定：<c>Monster.type == <see cref="MonsterTypeIds.Word"/></c> 为文字怪；词条按 <c>CategoryTag</c> 数组匹配（<c>monster.CategoryTag</c> 为 int[]，<c>lx.CategoryTag</c> 命中数组中任一即匹配），
+/// <c>ThemePackId</c> 在怪物表大于 0 时再按词库 <c>ThemePackId</c> 过滤（无命中则退回仅 CategoryTag）。
 /// </summary>
 public static class MonsterTypeIds
 {
@@ -59,7 +61,10 @@ public static class MonsterWordSpawnBinding
             return;
         }
 
-        L($"命中 Monster ID={monster.ID} monsterId={monster.monsterId} type={monster.type}(需={MonsterTypeIds.Word}为文字怪) CategoryTag={monster.CategoryTag} ThemePackId={monster.ThemePackId} name={monster.name}");
+        string catTags = monster.CategoryTagLength > 0
+            ? string.Join("|", Enumerable.Range(0, monster.CategoryTagLength).Select(j => monster.CategoryTag[j]))
+            : "0";
+        L($"命中 Monster ID={monster.ID} monsterId={monster.monsterId} type={monster.type}(需={MonsterTypeIds.Word}为文字怪) CategoryTag=[{catTags}] ThemePackId={monster.ThemePackId} name={monster.name}");
 
         string display;
 
@@ -130,6 +135,17 @@ public static class MonsterWordSpawnBinding
         return false;
     }
 
+    /// <summary>检查 <paramref name="monster"/> 的 CategoryTag 数组是否包含 <paramref name="tag"/>（数组为空视为不筛选）。</summary>
+    private static bool MonsterHasCategoryTag(Monster monster, int tag)
+    {
+        for (int j = 0; j < monster.CategoryTagLength; j++)
+        {
+            if (monster.CategoryTag[j] == tag)
+                return true;
+        }
+        return false;
+    }
+
     private static string PickLexiconDisplayText(Monster monster, out int strictCount, out int looseCount, out int poolUsedCount)
     {
         strictCount = 0;
@@ -147,7 +163,7 @@ public static class MonsterWordSpawnBinding
         {
             if (!(kv.Value is LexiconTable lx))
                 continue;
-            if (monster.CategoryTag > 0 && lx.CategoryTag != monster.CategoryTag)
+            if (monster.CategoryTagLength > 0 && !MonsterHasCategoryTag(monster, lx.CategoryTag))
                 continue;
 
             // 敏感词过滤

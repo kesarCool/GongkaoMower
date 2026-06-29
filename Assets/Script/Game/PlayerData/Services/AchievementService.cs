@@ -40,6 +40,8 @@ public class AchievementService
 
     /// <summary>本局战斗内技能突破到满级的次数（每局重置）。</summary>
     private int _battleSkillMaxCount;
+    /// <summary>本局已计数的技能 ID，防止同一技能重复计数（如羁绊被动解锁后再次突破）。</summary>
+    private readonly HashSet<SkillId> _battleMaxedSkillIds = new HashSet<SkillId>();
 
     private AchievementService() { }
 
@@ -159,6 +161,7 @@ public class AchievementService
     {
         // TaskType=5: SkillMaxLevel —— 只统计主动技能突破，被动技能不计
         if (e.isPassive) return;
+        if (!_battleMaxedSkillIds.Add(e.skillId)) return; // 去重：同一技能本局只计一次
         _battleSkillMaxCount++;
     }
 
@@ -495,6 +498,7 @@ public class AchievementService
     {
         int count = _battleSkillMaxCount;
         _battleSkillMaxCount = 0;
+        _battleMaxedSkillIds.Clear();
         if (count <= 0) return;
 
         UpdateProgressMax(5, count);

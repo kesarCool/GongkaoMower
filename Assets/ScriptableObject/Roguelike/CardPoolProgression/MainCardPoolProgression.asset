@@ -15,22 +15,22 @@ MonoBehaviour:
   unlockConditions:
   - skill: 1
     unlockAtLevel: 101
-    baseWeight: 20
+    baseWeight: 15
   - skill: 2
     unlockAtLevel: 102
-    baseWeight: 20
+    baseWeight: 15
   - skill: 3
     unlockAtLevel: 101
-    baseWeight: 20
+    baseWeight: 15
   - skill: 4
     unlockAtLevel: 103
-    baseWeight: 20
+    baseWeight: 15
   - skill: 5
-    unlockAtLevel: 201
-    baseWeight: 20
+    unlockAtLevel: 104
+    baseWeight: 15
   - skill: 6
-    unlockAtLevel: 202
-    baseWeight: 20
+    unlockAtLevel: 105
+    baseWeight: 15
   - skill: 7
     unlockAtLevel: 101
     baseWeight: 10
@@ -42,27 +42,27 @@ MonoBehaviour:
     baseWeight: 10
   - skill: 101
     unlockAtLevel: 1
-    baseWeight: 10
+    baseWeight: 20
   - skill: 102
     unlockAtLevel: 1
-    baseWeight: 10
+    baseWeight: 20
   - skill: 103
     unlockAtLevel: 1
-    baseWeight: 10
+    baseWeight: 20
   - skill: 104
     unlockAtLevel: 1
     baseWeight: 10
   - skill: 105
     unlockAtLevel: 1
-    baseWeight: 10
+    baseWeight: 20
   - skill: 10
-    unlockAtLevel: 301
+    unlockAtLevel: 201
     baseWeight: 10
   - skill: 11
-    unlockAtLevel: 301
-    baseWeight: 20
+    unlockAtLevel: 106
+    baseWeight: 15
   - skill: 12
-    unlockAtLevel: 103
+    unlockAtLevel: 101
     baseWeight: 10
   - skill: 108
     unlockAtLevel: 1

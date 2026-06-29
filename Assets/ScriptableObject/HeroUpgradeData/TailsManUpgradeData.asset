@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TailsManUpgradeData
   m_EditorClassIdentifier: 
   characterId: character_04
-  maxLevel: 20
+  maxLevel: 30
   baseGoldCost: 200
   goldGrowth: 200
   rareFragmentCost: 20

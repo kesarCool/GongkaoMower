@@ -118,7 +118,7 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     public bool HasReleasedWaveCompletionSignal { get; private set; }
 
-    /// <summary>当前关卡配置的爆兵总波数（按 wave 字段去重计数）。</summary>
+    /// <summary>当前关卡配置的爆兵总波数（按 wave 字段去重计数，排除 wave≤0 召唤波次）。</summary>
     public int GetConfiguredWaveCount()
     {
         if (useLevelWaveTable)
@@ -126,7 +126,14 @@ public class SpawnerWaves : MonoBehaviour
             int levelId = ResolveLevelWaveLevelId();
             var all = BuildTableWavesForLevel(levelId);
             if (all.Count > 0)
-                return GroupByWave(all).Count;
+            {
+                // 排除召唤波次 (wave <= 0)，与 WaveRoutine 逻辑一致
+                var active = new List<TableWaveRuntime>();
+                foreach (var tw in all)
+                    if (tw.wave > 0)
+                        active.Add(tw);
+                return GroupByWave(active).Count;
+            }
         }
 
         return waves != null ? waves.Length : 0;

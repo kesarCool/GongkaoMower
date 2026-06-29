@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PandaManUpgradeData
   m_EditorClassIdentifier: 
   characterId: character_03
-  maxLevel: 20
+  maxLevel: 30
   baseGoldCost: 200
   goldGrowth: 200
   rareFragmentCost: 20

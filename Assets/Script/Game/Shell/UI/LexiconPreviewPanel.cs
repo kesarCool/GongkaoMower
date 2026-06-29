@@ -11,8 +11,8 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class LexiconPreviewPanel : UIPanelBase
 {
-    public const int DefaultThemePackId = LexiconCategoryTags.ThemePackChengyu;
-    public const int DefaultCategoryTag = LexiconCategoryTags.ChengyuShenHua;
+    public const int DefaultThemePackId = LexiconCategoryTags.ThemePackFood;
+    public const int DefaultCategoryTag = LexiconCategoryTags.FoodJingJinJi;
 
     [Header("Prefab 引用（ThemePack / CategoryTag 下各保留一个 Toggle 作模板，运行时会隐藏）")]
     [SerializeField] private Button closeButton;
@@ -130,6 +130,10 @@ public class LexiconPreviewPanel : UIPanelBase
             var toggle = InstantiateToggleFrom(themeToggleTemplate, themeFilterRoot, label, initialOn, on => OnThemeToggleChanged(tid, on), themeGroup);
             _themeToggles.Add(toggle);
         }
+
+        // ToggleGroup allowSwitchOff=false 可能在后续 Toggle 注册时覆盖 SetIsOnWithoutNotify，
+        // 循环结束后把正确 Toggle 的选中态拉回来。
+        FixupToggleSelection(_themeToggles, _themeIds, _selectedThemeId);
     }
 
     private void RebuildCategoryFilters()
@@ -158,6 +162,8 @@ public class LexiconPreviewPanel : UIPanelBase
             var toggle = InstantiateToggleFrom(categoryToggleTemplate, categoryFilterRoot, label, initialOn, on => OnCategoryToggleChanged(cid, on), categoryGroup);
             _categoryToggles.Add(toggle);
         }
+
+        FixupToggleSelection(_categoryToggles, _categoryIds, _selectedCategoryTag);
     }
 
     private static Toggle InstantiateToggleFrom(Toggle template, RectTransform parent, string label, bool initialOn, UnityAction<bool> handler, ToggleGroup group)
@@ -179,6 +185,25 @@ public class LexiconPreviewPanel : UIPanelBase
         }
 
         return toggle;
+    }
+
+    /// <summary>
+    /// ToggleGroup 的 <c>allowSwitchOff=false</c> 可能在后续 Toggle 注册到 Group 时覆盖掉
+    /// <see cref="Toggle.SetIsOnWithoutNotify"/> 的结果。在所有 Toggle 创建完毕后，
+    /// 把匹配 <paramref name="selectedId"/> 的 Toggle 强行拉回选中态。
+    /// </summary>
+    private static void FixupToggleSelection(List<Toggle> toggles, List<int> ids, int selectedId)
+    {
+        if (toggles.Count == 0 || ids.Count != toggles.Count)
+            return;
+        for (int i = 0; i < toggles.Count; i++)
+        {
+            if (ids[i] == selectedId && !toggles[i].isOn)
+            {
+                toggles[i].SetIsOnWithoutNotify(true);
+                break;
+            }
+        }
     }
 
     private static void ClearFilterChildrenExcept(RectTransform root, Transform keep)

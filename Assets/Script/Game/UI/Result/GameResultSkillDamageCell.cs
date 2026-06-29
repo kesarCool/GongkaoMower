@@ -37,7 +37,7 @@ public class GameResultSkillDamageCell : MonoBehaviour
     {
         if (icon != null)
         {
-            icon.color = on ? new Color(1f, 0.2f, 0.15f, 1f) : Color.white;
+            icon.color = on ? new Color(1f, 0f, 0.478f, 1f) : Color.white; // #FF007A
         }
     }
 }

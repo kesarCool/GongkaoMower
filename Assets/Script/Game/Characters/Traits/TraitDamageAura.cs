@@ -62,7 +62,7 @@ public sealed class TraitDamageAura : TraitBehaviour
         if (_timer < _tickInterval) return;
         _timer = 0f;
 
-        float dmg = _skills.attackMultiplier * _damageMul;
+        float dmg = _skills.attackMultiplier * _damageMul * _tickInterval;
         _targets.Clear();
         CombatTargetRegistry.CollectTargets("monster", transform.position, _radius, _targets);
 

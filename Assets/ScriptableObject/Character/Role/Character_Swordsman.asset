@@ -22,7 +22,7 @@ MonoBehaviour:
     maxHp: 80
     defense: 10
     moveSpeed: 6
-    attackRangeMul: 0
+    attackRangeMul: 1
     critRate: 0.1
     critDamageMul: 2
     pierceRate: 0.3
@@ -34,6 +34,6 @@ MonoBehaviour:
   boundSkills: 
   upgradeData: {fileID: 11400000, guid: 1b27f35e5100e464e81214c657b45a9c, type: 2}
   locked: 1
-  unlockLevelId: 0
-  unlockFragmentCount: 30
-  fragmentItemId: 102
+  unlockLevelId: 105
+  unlockFragmentCount: 0
+  fragmentItemId: 0

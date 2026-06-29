@@ -25,11 +25,16 @@ public class RedDotService
     private readonly Dictionary<string, Node> _nodes = new Dictionary<string, Node>();
     private bool _inited;
     private CharacterCatalog _cachedCatalog;
+    private DateTime _lastMidnightCheck = DateTime.MinValue;
 
     private RedDotService() { }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Bootstrap() => Instance.Init();
+    private static void Bootstrap()
+    {
+        Instance.Init();
+        MidnightTimer.Ensure();
+    }
 
     // ── 初始化 ──
 
@@ -154,6 +159,20 @@ public class RedDotService
     /// <summary>强制重算所有节点计数（场景加载后，数据源就绪时调用）。</summary>
     public void ForceRecompute() => RecomputeAndPublish();
 
+    /// <summary>
+    /// 零点刷新：每日首次调用时触发 ShopService 周期重置，然后重算红点。
+    /// 由 MidnightTimer 驱动（每秒检查），也可在 RecomputeAndPublish 中兜底。
+    /// </summary>
+    public void TryMidnightRefresh()
+    {
+        var today = DateTime.Now.Date;
+        if (_lastMidnightCheck >= today) return;
+        _lastMidnightCheck = today;
+
+        ShopService.CheckAndRefresh();
+        RecomputeAndPublish();
+    }
+
     /// <summary>注入 CharacterCatalog（由 Home 场景的 HomeHubController 或其他持有者调用）。</summary>
     public void SetCharacterCatalog(CharacterCatalog catalog)
     {
@@ -246,5 +265,49 @@ public class RedDotService
         if (cca != null && cca.characterCatalog != null)
             return cca.characterCatalog;
         return Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
+    }
+}
+
+/// <summary>
+/// 零点红点刷新：计算距离下一个零点的秒数，到时触发一次，再循环。
+/// 由 RedDotService.Bootstrap 自动创建，DontDestroyOnLoad。
+/// </summary>
+internal sealed class MidnightTimer : MonoBehaviour
+{
+    private static MidnightTimer _instance;
+
+    public static void Ensure()
+    {
+        if (_instance != null) return;
+        var go = new GameObject("MidnightTimer") { hideFlags = HideFlags.HideAndDontSave };
+        DontDestroyOnLoad(go);
+        _instance = go.AddComponent<MidnightTimer>();
+    }
+
+    private void Start()
+    {
+        StartCoroutine(MidnightLoop());
+    }
+
+    private System.Collections.IEnumerator MidnightLoop()
+    {
+        while (true)
+        {
+            DateTime now = DateTime.Now;
+            DateTime nextMidnight = now.Date.AddDays(1);
+            double secondsUntilMidnight = (nextMidnight - now).TotalSeconds;
+
+            // 刚过零点时可能算出极小的负数，clamp 到正
+            if (secondsUntilMidnight <= 0) secondsUntilMidnight = 1;
+
+            yield return new WaitForSecondsRealtime((float)Math.Min(secondsUntilMidnight, 86400f));
+
+            RedDotService.Instance.TryMidnightRefresh();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_instance == this) _instance = null;
     }
 }

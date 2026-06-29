@@ -27,7 +27,19 @@ public enum eCrypt : int
   public int ID { get { int o = __p.__offset(4); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int monsterId { get { int o = __p.__offset(6); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int type { get { int o = __p.__offset(8); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
-  public int CategoryTag { get { int o = __p.__offset(10); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
+  public int CategoryTagArray(int j) { int o = __p.__offset(10); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(__p.__vector(o) + j * 4) : (int)0; }
+  public int CategoryTagLength { get { int o = __p.__offset(10); return o != 0 ? __p.__vector_len(o) : 0; } }
+  public ArraySegment<byte>? GetCategoryTagBytes() { return __p.__vector_as_arraysegment(10); }
+ private FlatBufferArray<int> CategoryTagValue;
+ public FlatBufferArray<int>  CategoryTag
+ {
+  get{
+  if (CategoryTagValue == null)
+  {
+    CategoryTagValue = new FlatBufferArray<int>(this.CategoryTagArray, this.CategoryTagLength);
+  }
+  return CategoryTagValue;}
+ }
   public int ThemePackId { get { int o = __p.__offset(12); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int randomKillPro { get { int o = __p.__offset(14); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
   public int triggerMode { get { int o = __p.__offset(16); return o != 0 ? (int)eCrypt.code^__p.bb.GetInt(o + __p.bb_pos) : 0; } }
@@ -94,7 +106,7 @@ public enum eCrypt : int
       int ID = 0,
       int monsterId = 0,
       int type = 0,
-      int CategoryTag = 0,
+      VectorOffset CategoryTagOffset = default(VectorOffset),
       int ThemePackId = 0,
       int randomKillPro = 0,
       int triggerMode = 0,
@@ -120,7 +132,7 @@ public enum eCrypt : int
     Monster.AddTriggerMode(builder, triggerMode);
     Monster.AddRandomKillPro(builder, randomKillPro);
     Monster.AddThemePackId(builder, ThemePackId);
-    Monster.AddCategoryTag(builder, CategoryTag);
+    Monster.AddCategoryTag(builder, CategoryTagOffset);
     Monster.AddType(builder, type);
     Monster.AddMonsterId(builder, monsterId);
     Monster.AddID(builder, ID);
@@ -131,7 +143,9 @@ public enum eCrypt : int
   public static void AddID(FlatBufferBuilder builder, int ID) { builder.AddInt(0, ID, 0); }
   public static void AddMonsterId(FlatBufferBuilder builder, int monsterId) { builder.AddInt(1, monsterId, 0); }
   public static void AddType(FlatBufferBuilder builder, int type) { builder.AddInt(2, type, 0); }
-  public static void AddCategoryTag(FlatBufferBuilder builder, int CategoryTag) { builder.AddInt(3, CategoryTag, 0); }
+  public static void AddCategoryTag(FlatBufferBuilder builder, VectorOffset CategoryTagOffset) { builder.AddOffset(3, CategoryTagOffset.Value, 0); }
+  public static VectorOffset CreateCategoryTagVector(FlatBufferBuilder builder, int[] data) { builder.StartVector(4, data.Length, 4); for (int i = data.Length - 1; i >= 0; i--) builder.AddInt(data[i]); return builder.EndVector(); }
+  public static void StartCategoryTagVector(FlatBufferBuilder builder, int numElems) { builder.StartVector(4, numElems, 4); }
   public static void AddThemePackId(FlatBufferBuilder builder, int ThemePackId) { builder.AddInt(4, ThemePackId, 0); }
   public static void AddRandomKillPro(FlatBufferBuilder builder, int randomKillPro) { builder.AddInt(5, randomKillPro, 0); }
   public static void AddTriggerMode(FlatBufferBuilder builder, int triggerMode) { builder.AddInt(6, triggerMode, 0); }

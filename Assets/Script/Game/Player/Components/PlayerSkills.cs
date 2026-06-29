@@ -327,8 +327,12 @@ public class PlayerSkills : MonoBehaviour
     {
         if (index < 0 || index >= _skills.Count) return;
         var s = _skills[index];
+        SkillDefinitionBase def = GetDef(s.Id);
         s.OnLevelUp();
-        ApplyStatsFromDefinition(s, GetDef(s.Id));
+        ApplyStatsFromDefinition(s, def);
+        // 成就系统：技能达到满级（不依赖 TryLevelUp 的调用路径）
+        if (def != null && IsMaxLevel(s, def))
+            EventBus.Publish(new SkillMaxLevelReachedEvent { skillId = s.Id, isPassive = false });
     }
 
     /// <summary>

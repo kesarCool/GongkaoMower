@@ -290,7 +290,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4adc0dcc7f1eede48b197472eac20302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyId: 1002
+  enemyId: 2001
   enemyName: 
   moveSpeed: 2
   maxHp: 10

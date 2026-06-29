@@ -108,10 +108,27 @@ public class WordMonsterShatterRuntime : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // 防御：场景重载时强制重置静态计数器（避免上一局 OnDestroy 未触发导致的泄漏）
+        s_globalActiveFragments = 0;
+        _spawnFailCount = 0;
+        _spawnSuccessCount = 0;
     }
 
     private void OnDestroy()
     {
+        // 清理所有活跃碎片 + 待生成队列，重置静态计数器（防止跨场景泄漏导致偶现失效）
+        for (int i = _activeFragments.Count - 1; i >= 0; i--)
+        {
+            var f = _activeFragments[i];
+            if (f.go != null) Destroy(f.go);
+        }
+        _activeFragments.Clear();
+        _pending.Clear();
+        s_globalActiveFragments = 0;
+        _spawnFailCount = 0;
+        _spawnSuccessCount = 0;
+
         if (Instance == this)
             Instance = null;
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
@@ -136,25 +153,46 @@ public class WordMonsterShatterRuntime : MonoBehaviour
             PendFragment p = _pending.Dequeue();
             SpawnOne(p);
             spawned++;
+            _spawnSuccessCount++;
         }
 
         TickFragments(Time.deltaTime);
+
+        // 每 3 秒汇总
+        if (Time.frameCount % 180 == 0 && (_pending.Count > 0 || _activeFragments.Count > 0))
+            Debug.Log($"[Shatter] Status: active={_activeFragments.Count}/{maxActiveFragments} pending={_pending.Count} success={_spawnSuccessCount} fail={_spawnFailCount}");
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
         if (e.enemy == null)
+        {
+            Debug.Log("[Shatter] OnEnemyDied: e.enemy is null, skip");
             return;
+        }
         bool isBoss = e.enemy.GetComponent<LastWaveBossMarker>() != null;
 
         var label = e.enemy.GetComponentInChildren<EnemyWordLabel>(true);
-        if (label == null || !label.TryGetWorldTextForShatter(out TextMeshPro src))
+        if (label == null)
+        {
+            Debug.Log($"[Shatter] OnEnemyDied: no EnemyWordLabel on '{e.enemy.name}' (type={e.enemy.GetType().Name}), skip");
             return;
+        }
+        if (!label.TryGetWorldTextForShatter(out TextMeshPro src))
+        {
+            Debug.Log($"[Shatter] OnEnemyDied: TryGetWorldTextForShatter false on '{e.enemy.name}', skip");
+            return;
+        }
 
         src.ForceMeshUpdate(true);
         TMP_TextInfo textInfo = src.textInfo;
         if (textInfo == null || textInfo.characterCount == 0)
+        {
+            Debug.Log($"[Shatter] OnEnemyDied: textInfo null or charCount=0 on '{e.enemy.name}', skip");
             return;
+        }
+
+        // 正常路径日志已屏蔽，避免刷屏（line 195）
 
         int fragmentCap = isBoss
             ? Mathf.Max(maxFragmentsPerEnemy, Mathf.RoundToInt(maxFragmentsPerEnemy * bossFragmentCountMul))
@@ -204,10 +242,17 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         _pending.Enqueue(p);
     }
 
+    private static int _spawnFailCount;
+    private static int _spawnSuccessCount;
+
     private void SpawnOne(PendFragment p)
     {
         if (p.font == null || p.fontSharedMaterial == null)
+        {
+            if (_spawnFailCount++ < 5)
+                Debug.LogWarning($"[Shatter] SpawnOne: font or material null for char='{p.character}' font={p.font?.name ?? "null"} mat={p.fontSharedMaterial?.name ?? "null"}");
             return;
+        }
 
         var go = new GameObject($"ShatterChar_{p.character}");
         go.transform.SetPositionAndRotation(p.worldPos, p.worldRot);

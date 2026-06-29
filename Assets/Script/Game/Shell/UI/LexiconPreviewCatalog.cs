@@ -170,6 +170,9 @@ public static class LexiconPreviewCatalog
         if (categoryTag == LexiconCategoryTags.ChengyuYuYan) return "寓言故事";
         if (categoryTag == LexiconCategoryTags.ChengyuLiShi) return "历史事件";
         if (categoryTag == LexiconCategoryTags.ChengyuWenXue) return "文学创作";
+        if (categoryTag == LexiconCategoryTags.ChengyuFoJing) return "佛经禅语";
+        if (categoryTag == LexiconCategoryTags.ChengyuMinSu) return "民俗谚语";
+        if (categoryTag == LexiconCategoryTags.ChengyuZhuZi) return "诸子格言";
         return "分类 " + categoryTag;
     }
 
@@ -178,6 +181,8 @@ public static class LexiconPreviewCatalog
     {
         if (themePackId == LexiconCategoryTags.ThemePackChengyu)
             return "成语篇";
+        if (themePackId == LexiconCategoryTags.ThemePackFood)
+            return "美食篇";
         return "主题 " + themePackId;
     }
 
@@ -190,6 +195,23 @@ public static class LexiconPreviewCatalog
             if (categoryTag == LexiconCategoryTags.ChengyuYuYan) return "寓言故事";
             if (categoryTag == LexiconCategoryTags.ChengyuLiShi) return "历史事件";
             if (categoryTag == LexiconCategoryTags.ChengyuWenXue) return "文学创作";
+            if (categoryTag == LexiconCategoryTags.ChengyuFoJing) return "佛经禅语";
+            if (categoryTag == LexiconCategoryTags.ChengyuMinSu) return "民俗谚语";
+            if (categoryTag == LexiconCategoryTags.ChengyuZhuZi) return "诸子格言";
+        }
+
+        if (themePackId == LexiconCategoryTags.ThemePackFood)
+        {
+            if (categoryTag == LexiconCategoryTags.FoodJingJinJi) return "京津冀";
+            if (categoryTag == LexiconCategoryTags.FoodJinLuYu) return "晋鲁豫";
+            if (categoryTag == LexiconCategoryTags.FoodDongBei) return "黑吉辽蒙";
+            if (categoryTag == LexiconCategoryTags.FoodJiangZheHuWan) return "江浙沪皖";
+            if (categoryTag == LexiconCategoryTags.FoodYunGuiChuanYu) return "云贵川渝";
+            if (categoryTag == LexiconCategoryTags.FoodXiangGanE) return "湘赣鄂";
+            if (categoryTag == LexiconCategoryTags.FoodGangAoTai) return "港澳台";
+            if (categoryTag == LexiconCategoryTags.FoodYueGuiQiongMin) return "粤桂琼闽";
+            if (categoryTag == LexiconCategoryTags.FoodShaanGanNing) return "陕甘宁";
+            if (categoryTag == LexiconCategoryTags.FoodXinQingZang) return "新青藏";
         }
 
         return "分类 " + categoryTag;
