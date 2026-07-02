@@ -81,7 +81,11 @@ public class HomeHubController : MonoBehaviour
 
         // 注入 CharacterCatalog（不在 Resources 下），并触发首次红点重算
         if (characterCatalog != null)
+        {
             RedDotService.Instance.SetCharacterCatalog(characterCatalog);
+            // 修复历史数据：itemIds 有但 characterFragmentKeys 缺失的碎片同步
+            PlayerProfileService.Instance.HealFragmentData(characterCatalog);
+        }
 
         RefreshCurrencyHud();
 

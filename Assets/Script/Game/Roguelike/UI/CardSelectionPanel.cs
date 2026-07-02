@@ -107,6 +107,8 @@ public class CardSelectionPanel : UIPanelBase
         if (panelRoot != null)
             panelRoot.SetActive(true);
 
+        GameLog.Info($"[CardTrace] CardSelectionPanel.Show: panelRoot={(panelRoot != null ? panelRoot.activeSelf.ToString() : "NULL")} panelGO={gameObject.activeSelf} activeInHierarchy={gameObject.activeInHierarchy}");
+
         if (cardSlots == null || cardSlots.Length == 0)
         {
             Debug.LogError("[CardSelectionPanel] cardSlots is null or empty");

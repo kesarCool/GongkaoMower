@@ -256,6 +256,44 @@ public sealed class PlayerProfileService
         return CharacterUnlockEvaluator.GetFragmentCount(_data, characterId);
     }
 
+    /// <summary>
+    /// 修复历史数据不一致：itemIds 有但 characterFragmentKeys 缺失/落后的碎片数，同步补齐。
+    /// 在 Home 场景加载时由 HomeHubController 调用一次。
+    /// </summary>
+    public void HealFragmentData(CharacterCatalog catalog)
+    {
+        if (_data == null || catalog == null) return;
+
+        foreach (var def in catalog.characters)
+        {
+            if (def == null || def.fragmentItemId <= 0) continue;
+
+            int fromItems = 0;
+            if (_data.itemIds != null)
+            {
+                int itemIdx = System.Array.IndexOf(_data.itemIds, def.fragmentItemId);
+                if (itemIdx >= 0 && itemIdx < (_data.itemCounts?.Length ?? 0))
+                    fromItems = _data.itemCounts[itemIdx];
+            }
+            if (fromItems <= 0) continue;
+
+            int fromKeys = 0;
+            if (_data.characterFragmentKeys != null)
+            {
+                int keyIdx = System.Array.IndexOf(_data.characterFragmentKeys, def.characterId);
+                if (keyIdx >= 0 && keyIdx < (_data.characterFragmentValues?.Length ?? 0))
+                    fromKeys = _data.characterFragmentValues[keyIdx];
+            }
+
+            if (fromItems > fromKeys)
+            {
+                int diff = fromItems - fromKeys;
+                AddFragments(def.characterId, diff);
+                Debug.Log($"[HealFragment] {def.displayName}：characterFragmentKeys {fromKeys} → {fromItems}（补齐 {diff} 片，来自 itemIds）");
+            }
+        }
+    }
+
     /// <summary>检测 itemId 是否为角色碎片，是则写入 characterFragmentKeys/Values 并返回 true。</summary>
     private bool TryRouteFragment(int itemId, int count)
     {
@@ -286,11 +324,24 @@ public sealed class PlayerProfileService
         return null;
     }
 
-    private static CharacterCatalog GetCharacterCatalog()
+    private static CharacterCatalog _sCachedCatalog;
+
+    /// <summary>获取 CharacterCatalog：优先静态缓存 → FindObjectOfType → Resources 兜底。</summary>
+    internal static CharacterCatalog GetCharacterCatalog()
     {
+        if (_sCachedCatalog != null) return _sCachedCatalog;
+
         var cca = UnityEngine.Object.FindObjectOfType<CharacterConfigApplier>();
-        if (cca != null && cca.characterCatalog != null) return cca.characterCatalog;
-        return Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
+        if (cca != null && cca.characterCatalog != null)
+        {
+            _sCachedCatalog = cca.characterCatalog;
+            return _sCachedCatalog;
+        }
+        // Resources 兜底（需确保 Catalog 放在 Resources 目录下，否则返回 null）
+        _sCachedCatalog = Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
+        if (_sCachedCatalog == null)
+            Debug.LogWarning("[PlayerProfileService] CharacterCatalog 加载失败：不在 Resources 目录且场景中无 CharacterConfigApplier。碎片路由将失效。");
+        return _sCachedCatalog;
     }
 
     /// <summary>增加英雄碎片。</summary>
@@ -354,11 +405,24 @@ public sealed class PlayerProfileService
         int stage = GetHeroStage(characterId);
         int cost = stage == 0 ? data.rareFragmentCost : data.legendFragmentCost;
 
-        // 扣除碎片
+        // 扣除碎片（characterFragmentKeys）
         if (!_loaded) LoadOrCreate();
         int idx = _data.characterFragmentKeys != null ? System.Array.IndexOf(_data.characterFragmentKeys, characterId) : -1;
         if (idx < 0) return false;
         _data.characterFragmentValues[idx] -= cost;
+
+        // 同步扣除 itemIds/itemCounts（保持两数组一致）
+        var cat = GetCharacterCatalog();
+        if (cat != null)
+        {
+            var def = cat.Get(characterId);
+            if (def != null && def.fragmentItemId > 0 && _data.itemIds != null)
+            {
+                int itemIdx = System.Array.IndexOf(_data.itemIds, def.fragmentItemId);
+                if (itemIdx >= 0 && itemIdx < (_data.itemCounts?.Length ?? 0))
+                    _data.itemCounts[itemIdx] = Mathf.Max(0, _data.itemCounts[itemIdx] - cost);
+            }
+        }
 
         SetHeroStage(characterId, stage + 1);
         Debug.Log($"[PlayerProfile] {characterId} 升阶 {stage} → {stage + 1}，消耗碎片 {cost}");
@@ -697,20 +761,20 @@ public sealed class PlayerProfileService
     [UnityEditor.MenuItem("Tools/发放物品/金币+10万", false, 504)]
     private static void GrantGold100k() { Instance.LoadOrCreate(); Instance.AddItem(1, 100000); ShowGrantResult(1, 100000); }
 
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（奋斗哥）", false, 505)]
-    private static void GrantFragmentPistol() { Instance.LoadOrCreate(); Instance.AddFragments("character_01", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 奋斗哥碎片\n总计：{Instance.GetFragmentCount("character_01")} 片", "确定"); }
+    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（弹仔）", false, 505)]
+    private static void GrantFragmentPistol() { Instance.LoadOrCreate(); Instance.AddFragments("character_01", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 弹仔碎片\n总计：{Instance.GetFragmentCount("character_01")} 片", "确定"); }
 
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（上岸侠）", false, 506)]
-    private static void GrantFragmentSword() { Instance.LoadOrCreate(); Instance.AddFragments("character_02", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 上岸侠碎片\n总计：{Instance.GetFragmentCount("character_02")} 片", "确定"); }
+    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（刃娃）", false, 506)]
+    private static void GrantFragmentSword() { Instance.LoadOrCreate(); Instance.AddFragments("character_02", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 刃娃碎片\n总计：{Instance.GetFragmentCount("character_02")} 片", "确定"); }
 
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（熊猫侠）", false, 507)]
-    private static void GrantFragmentPanda() { Instance.LoadOrCreate(); Instance.AddFragments("character_03", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 熊猫侠碎片\n总计：{Instance.GetFragmentCount("character_03")} 片", "确定"); }
+    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（爆爆）", false, 507)]
+    private static void GrantFragmentPanda() { Instance.LoadOrCreate(); Instance.AddFragments("character_03", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 爆爆碎片\n总计：{Instance.GetFragmentCount("character_03")} 片", "确定"); }
 
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（茅山道士）", false, 508)]
-    private static void GrantFragmentTaoist() { Instance.LoadOrCreate(); Instance.AddFragments("character_04", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 茅山道士碎片\n总计：{Instance.GetFragmentCount("character_04")} 片", "确定"); }
+    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（符仔）", false, 508)]
+    private static void GrantFragmentTaoist() { Instance.LoadOrCreate(); Instance.AddFragments("character_04", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 符仔碎片\n总计：{Instance.GetFragmentCount("character_04")} 片", "确定"); }
 
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（机甲小宝）", false, 509)]
-    private static void GrantFragmentIronMan() { Instance.LoadOrCreate(); Instance.AddFragments("character_05", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 机甲小宝碎片\n总计：{Instance.GetFragmentCount("character_05")} 片", "确定"); }
+    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（追风）", false, 509)]
+    private static void GrantFragmentIronMan() { Instance.LoadOrCreate(); Instance.AddFragments("character_05", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 追风碎片\n总计：{Instance.GetFragmentCount("character_05")} 片", "确定"); }
 
     private static void ShowGrantResult(int itemId, int count)
     {

@@ -107,6 +107,8 @@ public class ReviveModule : BossSkillModule
         if (boss != null) boss.localScale = Vector3.one;
 
         // 短暂无敌
+        if (boss == null || boss.gameObject == null) yield break;
+
         var shield = boss.gameObject.AddComponent<ResistShield>();
         shield.Setup(1f, new[] { SkillDamageType.Physical, SkillDamageType.Energy, SkillDamageType.Explosive }, 0, _invincibleDuration);
 

@@ -15,6 +15,8 @@ public class CloneModule : BossSkillModule
     private float _lifetime = 12f;
     private float _chargeTime = 0.35f;
     private string _inheritSkillsRaw;
+    private List<GameObject> _clones = new List<GameObject>();
+    private EnemyBase _trackedBossEb;
 
     public override void Init(string rawParams, BossBrain owner)
     {
@@ -32,6 +34,30 @@ public class CloneModule : BossSkillModule
         _inheritSkillsRaw = ParseInheritSkills(rawParams);
 
         CacheSprites();
+
+        // 主身死亡 → 所有分身一并销毁
+        _trackedBossEb = owner.GetComponent<EnemyBase>();
+        if (_trackedBossEb != null)
+            _trackedBossEb.OnDied.AddListener(OnMainBossDied);
+    }
+
+    /// <summary>主身死亡回调：真死（非复活假死）时销毁所有分身。</summary>
+    private void OnMainBossDied()
+    {
+        if (_trackedBossEb != null && _trackedBossEb.preventPoolDeath) return; // 复活假死
+
+        for (int i = _clones.Count - 1; i >= 0; i--)
+        {
+            if (_clones[i] != null)
+                Object.Destroy(_clones[i]);
+        }
+        _clones.Clear();
+
+        if (_trackedBossEb != null)
+        {
+            _trackedBossEb.OnDied.RemoveListener(OnMainBossDied);
+            _trackedBossEb = null;
+        }
     }
 
     public override bool CanTrigger()
@@ -60,6 +86,9 @@ public class CloneModule : BossSkillModule
         // 解析继承技能集（排除 clone 自身）
         var keepTypes = BuildInheritSet();
 
+        // 清理已销毁的克隆体引用（自然死亡/超时）
+        _clones.RemoveAll(c => c == null);
+
         // 环形分散
         float angleStep = _cloneCount > 1 ? 360f / _cloneCount : 0f;
         float baseAngle = Random.Range(0f, 360f);
@@ -86,6 +115,10 @@ public class CloneModule : BossSkillModule
                     // 无继承技能 → 摧毁 BossBrain，克隆体是纯白板
                     Object.Destroy(cloneBrain);
                 }
+
+                // 始终剥离复活：分身不应复活（RemoveAllModulesExcept 只清列表，监听已在 Start 时挂上）
+                if (cloneBrain != null)
+                    cloneBrain.RemoveModulesOfType("revive");
             }
 
             // 移除护盾（如有，克隆体的 ResistShield 需要重新由 ResistModule 触发）
@@ -93,6 +126,10 @@ public class CloneModule : BossSkillModule
             if (cloneShield != null) Object.Destroy(cloneShield);
 
             clone.AddComponent<CloneMarker>();
+
+            // 移除 Boss 标记：克隆体不是 Boss，死亡不应触发胜利/推进波次
+            var cloneBossMarker = clone.GetComponent<LastWaveBossMarker>();
+            if (cloneBossMarker != null) Object.Destroy(cloneBossMarker);
 
             var eb = clone.GetComponent<EnemyBase>();
             if (eb != null)
@@ -110,6 +147,7 @@ public class CloneModule : BossSkillModule
                 sr.color = c;
             }
 
+            _clones.Add(clone);
             Object.Destroy(clone, _lifetime);
         }
 
@@ -122,7 +160,7 @@ public class CloneModule : BossSkillModule
         string raw = _inheritSkillsRaw?.Trim();
         if (string.IsNullOrEmpty(raw)) return set;
 
-        // "*" → 全部已知技能类型（clone 永远排除）
+        // "*" → 全部已知技能类型（clone 和 revive 永远排除）
         if (raw == "*")
         {
             set.Add("homingKnife");
@@ -131,7 +169,6 @@ public class CloneModule : BossSkillModule
             set.Add("zone");
             set.Add("resist");
             set.Add("summon");
-            set.Add("revive");
             return set;
         }
 
@@ -139,7 +176,7 @@ public class CloneModule : BossSkillModule
         foreach (var t in tokens)
         {
             string trimmed = t.Trim();
-            if (!string.IsNullOrEmpty(trimmed) && trimmed != "clone")
+            if (!string.IsNullOrEmpty(trimmed) && trimmed != "clone" && trimmed != "revive")
                 set.Add(trimmed);
         }
         return set;

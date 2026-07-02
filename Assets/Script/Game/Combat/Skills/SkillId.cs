@@ -16,17 +16,17 @@ public enum SkillId
     FieldGenerator = 5,
     /// <summary>随机落雷，范围内 AOE 伤害；升级增加道数与伤害</summary>
     LightningStrike = 6,
-    /// <summary>自动索敌（手枪版）—— 奋斗哥</summary>
+    /// <summary>自动索敌（手枪版）—— 弹仔</summary>
     AutoProjectilePistol = 7,
-    /// <summary>自动索敌（飞刀版）—— 上岸侠</summary>
+    /// <summary>自动索敌（飞刀版）—— 刃娃</summary>
     AutoProjectileSword = 8,
-    /// <summary>自动索敌（符箓版）—— 茅山道士</summary>
+    /// <summary>自动索敌（符箓版）—— 符仔</summary>
     AutoProjectileTalisman = 9,
-    /// <summary>追踪导弹，命中后 AOE 爆炸 —— 机甲小宝专属</summary>
+    /// <summary>追踪导弹，命中后 AOE 爆炸 —— 追风专属</summary>
     HomingMissile = 10,
     /// <summary>追踪弹（弱化版）—— 全角色通用</summary>
     HomingMissileBasic = 11,
-    /// <summary>弹射雷，命中后弹跳再爆 —— 熊猫侠专属</summary>
+    /// <summary>弹射雷，命中后弹跳再爆 —— 爆爆专属</summary>
     BouncingGrenade = 12,
 
     // ── 被动技能（101+，预留 13~100 给主动技能扩展）──

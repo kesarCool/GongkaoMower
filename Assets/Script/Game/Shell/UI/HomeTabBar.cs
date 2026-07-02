@@ -88,6 +88,7 @@ public class HomeTabBar : MonoBehaviour
         else if (newRt.uiPanel != null)
         {
             newRt.uiPanel.gameObject.SetActive(true);
+            newRt.uiPanel.OnOpen(null); // 切换回来时刷新数据（如商店买碎片后切回角色面板）
         }
         else if (newRt.sceneView != null)
         {

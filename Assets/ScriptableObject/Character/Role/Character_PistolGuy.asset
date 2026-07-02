@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Character_PistolGuy
   m_EditorClassIdentifier: 
   characterId: character_01
-  displayName: "\u594B\u6597\u54E5"
+  displayName: "\u5F39\u4ED4"
   portrait: {fileID: 21300000, guid: c0ab33f0108f82f4ebd2ed7f5e099dd6, type: 3}
   startingSkill: 7
   attributes:

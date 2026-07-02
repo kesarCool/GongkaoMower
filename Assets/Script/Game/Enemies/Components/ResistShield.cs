@@ -97,9 +97,10 @@ public class ResistShield : MonoBehaviour
         transform.localScale = orig * 1.15f;
         StartCoroutine(ScalePunchRoutine(orig));
 
-        // 扩散光环 — 世界空间独立 GameObject，不受 Boss scale/层级遮挡
+        // 扩散光环 — 挂到 Boss 下，确保 Boss 销毁/回池时一并清理
         _activationRing = new GameObject("ShieldRing");
-        _activationRing.transform.position = transform.position;
+        _activationRing.transform.SetParent(transform, false);
+        _activationRing.transform.localPosition = Vector3.zero;
         var sr = _activationRing.AddComponent<SpriteRenderer>();
         sr.sprite = CreateRingSprite();
         sr.color = new Color(0.3f, 0.7f, 1f, 0.85f);

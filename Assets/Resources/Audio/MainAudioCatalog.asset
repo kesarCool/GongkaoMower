@@ -100,7 +100,7 @@ MonoBehaviour:
       id: 105
       relativePath: Audio/Battle/PlayerSkill/sfx_skill_field_generator.mp3
       group: 1
-      volume: 1
+      volume: 0.1
       minInterval: 0
       pitchVariation: 0
       pitchOffset: 0
@@ -135,9 +135,9 @@ MonoBehaviour:
   music:
     bgmGame:
       id: 200
-      relativePath: Audio/Common/bg-game-music.mp3
+      relativePath: Audio/Common/bg-game-music.MP3
       group: 2
-      volume: 0.1
+      volume: 0.05
       minInterval: 0
       pitchVariation: 0
       pitchOffset: 0

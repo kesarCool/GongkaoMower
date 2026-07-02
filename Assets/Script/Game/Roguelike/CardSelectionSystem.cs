@@ -57,25 +57,31 @@ public class CardSelectionSystem : MonoBehaviour
     /// </summary>
     public void BeginSelectionFromManager()
     {
+        GameLog.Info("[CardTrace] CardSelectionSystem.BeginSelectionFromManager: enter");
+
         if (_playerSkills == null)
         {
+            GameLog.Warning("[CardTrace] CardSelectionSystem: _playerSkills is null, abort");
             Debug.LogWarning("[CardSelectionSystem] PlayerSkills not found");
             return;
         }
 
         if (_playerSkills.AllSlotsFullAndMaxLevel)
         {
+            GameLog.Info("[CardTrace] CardSelectionSystem: All skills maxed, skip");
             Debug.Log("[CardSelectionSystem] All skills maxed, skipping");
             return;
         }
 
         if (_isSelecting)
         {
+            GameLog.Info("[CardTrace] CardSelectionSystem: already selecting, queued");
             _pendingRequests.Enqueue(new CardSelectionRequest());
             Debug.Log($"[CardSelectionSystem] Queued request, pending={_pendingRequests.Count}");
             return;
         }
 
+        GameLog.Info("[CardTrace] CardSelectionSystem: calling StartSelection");
         StartSelection();
     }
 
@@ -115,8 +121,12 @@ public class CardSelectionSystem : MonoBehaviour
         if (_currentCards == null || _currentCards.Count == 0)
         {
             Debug.LogWarning("[CardSelectionSystem] 无可用卡牌");
-            return; // 不关面板，只是这次刷新无效
+            // 必须走 EndSelection 清理 _isSelecting，否则后续选卡请求永久排队
+            EndSelection();
+            return;
         }
+
+        GameLog.Info($"[CardTrace] CardSelectionSystem: 抽到 {_currentCards.Count} 张卡，打开选卡面板");
 
         if (UIManager.Instance != null)
         {
@@ -138,9 +148,11 @@ public class CardSelectionSystem : MonoBehaviour
             var opened = UIManager.Instance.Open<CardSelectionPanel>(payload, opts);
             if (opened != null)
             {
+                GameLog.Info($"[CardTrace] UIManager 打开成功, panel.active={opened.gameObject.activeSelf} activeInHierarchy={opened.gameObject.activeInHierarchy}");
                 _selectionUsesUIManager = true;
                 return;
             }
+            GameLog.Warning("[CardTrace] UIManager.Open 返回 null，回退 panel.Show");
             Debug.LogWarning("[CardSelectionSystem] UIManager 未能打开 CardSelectionPanel，请在 UIManager.panelPrefabs 中注册选卡 Prefab。将回退到 CardSelectionSystem.panel。");
         }
 
@@ -152,6 +164,7 @@ public class CardSelectionSystem : MonoBehaviour
             Time.timeScale = 0f;
             var showOk = panel.Show(_currentCards, OnCardSelected, OnRefreshRequested, OnAdRefreshRequested,
                 _remainingFreeRefresh, _remainingAdRefresh);
+            GameLog.Info($"[CardTrace] panel.Show 返回={showOk}, panel.active={panel.gameObject.activeSelf} activeInHierarchy={panel.gameObject.activeInHierarchy}");
             if (!showOk)
                 EndSelection();
         }
@@ -279,6 +292,7 @@ public class CardSelectionSystem : MonoBehaviour
     /// </summary>
     private void EndSelection()
     {
+        GameLog.Info("[CardTrace] CardSelectionSystem.EndSelection");
         _isSelecting = false;
         try
         {

@@ -114,13 +114,29 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     private void OnEnemyDied(EnemyDiedEvent e)
     {
         if (_battleEnded || _reviveFlowActive) return;
-        if (e.enemy == null || e.enemy.GetComponent<LastWaveBossMarker>() == null) return;
+        if (e.enemy == null) return;
 
-        if (BattleVictoryBossTracker.TryRegisterKill())
+        // 克隆体/分身不计入 Boss 击杀
+        if (e.enemy.GetComponent<CloneMarker>() != null) return;
+
+        var marker = e.enemy.GetComponent<LastWaveBossMarker>();
+        if (marker == null) return;
+
+        var (wasKilled, waveComplete, victory) = BattleVictoryBossTracker.RegisterBossKill(marker.isFinalBoss);
+        GameLog.Info($"[CardTrace] OnEnemyDied: isFinalBoss={marker.isFinalBoss} spawner={marker.spawner?.name ?? "NULL"} wasKilled={wasKilled} waveComplete={waveComplete} victory={victory}");
+        if (!wasKilled) return;
+
+        if (victory)
         {
+            // 最终波 Boss 死亡 → 胜利（现有逻辑）
             _bossDeathPosition = e.position;
             _hasBossDeathPosition = true;
             StartCoroutine(VictorySequence());
+        }
+        else if (waveComplete)
+        {
+            // 中间波 Boss 死亡 → 推进到下一波
+            EventBus.Publish(new BossWaveCompletedEvent { spawner = marker.spawner });
         }
     }
 

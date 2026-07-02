@@ -47,15 +47,19 @@ public class RoguelikeCardManager : MonoBehaviour
 
     private void OnCardSelectionTriggered(CardSelectionTriggeredEvent e)
     {
+        GameLog.Info($"[CardTrace] RoguelikeCardManager.OnCardSelectionTriggered: triggerCount={e.triggerCount}");
+
         var ps = FindPlayerSkills();
         if (ps == null)
         {
+            GameLog.Warning("[CardTrace] RoguelikeCardManager: PlayerSkills not found, abort");
             Debug.LogWarning("[RoguelikeCardManager] No PlayerSkills in scene");
             return;
         }
 
         if (ps.AllSlotsFullAndMaxLevel)
         {
+            GameLog.Info("[CardTrace] RoguelikeCardManager: All skills maxed, skip");
             Debug.Log("[RoguelikeCardManager] All skills maxed, skip");
             return;
         }
@@ -63,6 +67,7 @@ public class RoguelikeCardManager : MonoBehaviour
         if (cardSelectionSystem == null)
             cardSelectionSystem = FindObjectOfType<CardSelectionSystem>(true);
 
+        GameLog.Info($"[CardTrace] RoguelikeCardManager: cardSelectionSystem={cardSelectionSystem?.name ?? "NULL"}");
         // 有选卡 UI 流程：交给 CardSelectionSystem
         if (cardSelectionSystem != null)
         {

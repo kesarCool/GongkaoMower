@@ -121,24 +121,27 @@ public static class CharacterUnlockEvaluator
 
     public static int GetFragmentCount(PlayerSaveData data, string charId, int fragmentItemId = 0)
     {
+        int countFromKeys = 0;
+        int countFromItems = 0;
+
         // 1. 专用碎片数组
-        int count = 0;
         if (data?.characterFragmentKeys != null)
         {
             int idx = System.Array.IndexOf(data.characterFragmentKeys, charId);
             if (idx >= 0 && idx < (data.characterFragmentValues?.Length ?? 0))
-                count = data.characterFragmentValues[idx];
+                countFromKeys = data.characterFragmentValues[idx];
         }
 
-        // 2. 兜底：通用物品背包（碎片在 AddItem 路由修复前存入此处）
-        if (count == 0 && fragmentItemId > 0 && data?.itemIds != null)
+        // 2. 通用物品背包
+        if (fragmentItemId > 0 && data?.itemIds != null)
         {
             int idx = System.Array.IndexOf(data.itemIds, fragmentItemId);
             if (idx >= 0 && idx < (data.itemCounts?.Length ?? 0))
-                count = data.itemCounts[idx];
+                countFromItems = data.itemCounts[idx];
         }
 
-        return count;
+        // 取两者较大值（防御 TryRouteFragment 偶发失败导致两数组不一致）
+        return Mathf.Max(countFromKeys, countFromItems);
     }
 
     private static void AddUnlockedCharacter(PlayerSaveData data, string charId)

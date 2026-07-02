@@ -149,7 +149,7 @@ public class HomeRoadmapView : MonoBehaviour
             var levels = GetChapterLevels(allChapters[ci].chapterId);
             if (levels.Count == 0) continue;
             if (ci <= currentChapterIdx && !levels[0].unlocked) break;
-            string chName = $"第{allChapters[ci].chapterId}章";
+            string chName = FormatChapterName(allChapters[ci].chapterId);
             foreach (var lv in levels)
                 allLevels.Add((lv, ci, chName));
         }
@@ -485,6 +485,17 @@ public class HomeRoadmapView : MonoBehaviour
         all.Sort();
         foreach (int id in all) if (PlayerProfileService.Instance.IsLevelUnlocked(id) && !PlayerProfileService.Instance.HasCleared(id)) return id;
         return all.Count > 0 ? all[^1] : 101;
+    }
+
+    /// <summary>
+    /// 章节显示名：第X章（主题名）。主题未知时仅返回"第X章"。
+    /// </summary>
+    private static string FormatChapterName(int chapterId)
+    {
+        string theme = LexiconPreviewCatalog.GetThemeTabLabel(chapterId);
+        if (string.IsNullOrEmpty(theme) || theme.StartsWith("主题 "))
+            return $"第{chapterId}章";
+        return $"第{chapterId}章（{theme}）";
     }
 
     // ═══════════════ 清理 ═══════════════

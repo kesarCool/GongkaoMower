@@ -49,11 +49,11 @@ public class BossBrain : MonoBehaviour
     /// <summary>由 EnemyBase.InitFromDefinition 或 SpawnerWaves 在赋完 EnemyId 后调用。</summary>
     public void OnEnemyDataReady()
     {
-        if (monsterId <= 0)
-        {
-            EnemyBase eb = GetComponent<EnemyBase>();
-            if (eb != null) monsterId = eb.EnemyId;
-        }
+        // 始终从 EnemyBase 同步 monsterId（对象池复用时 BossBrain.monsterId 可能残留旧值）
+        EnemyBase eb = GetComponent<EnemyBase>();
+        if (eb != null && eb.EnemyId > 0)
+            monsterId = eb.EnemyId;
+
         if (monsterId <= 0) return;
         BuildModules();
     }
@@ -149,8 +149,30 @@ public class BossBrain : MonoBehaviour
         for (int i = _modules.Count - 1; i >= 0; i--)
         {
             if (!keepTypes.Contains(_modules[i].moduleType))
+            {
+                CleanupModule(_modules[i]);
                 _modules.RemoveAt(i);
+            }
         }
+    }
+
+    /// <summary>移除指定类型的所有模块并清理资源（如复活模块的 OnDied 监听）。</summary>
+    public void RemoveModulesOfType(string moduleType)
+    {
+        for (int i = _modules.Count - 1; i >= 0; i--)
+        {
+            if (_modules[i].moduleType == moduleType)
+            {
+                CleanupModule(_modules[i]);
+                _modules.RemoveAt(i);
+            }
+        }
+    }
+
+    private static void CleanupModule(BossSkillModule mod)
+    {
+        if (mod is ReviveModule rv)
+            rv.OnBossDestroyed();
     }
 
     private static BossSkillModule CreateModule(string type)

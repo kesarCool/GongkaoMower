@@ -208,6 +208,22 @@ public static class CombatTargetRegistry
         list.RemoveAt(last);
     }
 
+    /// <summary>收集所有活跃目标的 Transform，无范围过滤（调用方负责清空列表）。用于清场等操作。</summary>
+    public static void CollectAllActive(string tag, List<Transform> into)
+    {
+        into.Clear();
+        if (string.IsNullOrEmpty(tag)) return;
+        if (!Buckets.TryGetValue(tag, out TagBucket bucket)) return;
+
+        var list = bucket.Active;
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            Transform tr = list[i];
+            if (tr == null || !tr.gameObject.activeSelf) continue;
+            into.Add(tr);
+        }
+    }
+
     /// <summary>收集范围内所有活跃目标的 Transform（调用方负责清空列表）。</summary>
     public static void CollectTargets(string tag, Vector3 from, float maxRange, List<Transform> into)
     {

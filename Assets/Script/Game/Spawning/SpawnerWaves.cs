@@ -118,6 +118,9 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     public bool HasReleasedWaveCompletionSignal { get; private set; }
 
+    /// <summary>中间波 Boss 已生成，等待 Boss 死亡事件以推进到下一波。</summary>
+    private bool _waitingForBossKill;
+
     /// <summary>当前关卡配置的爆兵总波数（按 wave 字段去重计数，排除 wave≤0 召唤波次）。</summary>
     public int GetConfiguredWaveCount()
     {
@@ -213,6 +216,8 @@ public class SpawnerWaves : MonoBehaviour
 
         if (autoTriggerWavesOnStart && _autoRoutine == null)
             _autoRoutine = StartCoroutine(TriggerWavesAfterDelay());
+
+        EventBus.Subscribe<BossWaveCompletedEvent>(OnBossWaveCompleted, owner: this);
     }
 
     private void Start()
@@ -231,6 +236,8 @@ public class SpawnerWaves : MonoBehaviour
         if (_normalRoutine != null) { StopCoroutine(_normalRoutine); _normalRoutine = null; }
         if (_waveRoutine != null) { StopCoroutine(_waveRoutine); _waveRoutine = null; }
         if (_autoRoutine != null) { StopCoroutine(_autoRoutine); _autoRoutine = null; }
+        if (_cardSelectionTimeoutRoutine != null) { StopCoroutine(_cardSelectionTimeoutRoutine); _cardSelectionTimeoutRoutine = null; }
+        EventBus.Unsubscribe<BossWaveCompletedEvent>(OnBossWaveCompleted);
     }
 
     private IEnumerator NormalLoop()
@@ -363,18 +370,41 @@ public class SpawnerWaves : MonoBehaviour
             for (int w = 0; w < totalWaves; w++)
             {
                 var group = waveGroups[w];
+                bool isLastWave = w == totalWaves - 1;
+                bool isBossWave = group.Exists(tw => tw.isBoss);
+
                 if (debugLogs)
                 {
                     foreach (var tw in group)
-                        Debug.Log($"[SpawnerWaves] wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster} (共{group.Count}条并发)");
+                        Debug.Log($"[SpawnerWaves] wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster} (共{group.Count}条并发) isBoss={tw.isBoss}");
+                }
+
+                // ── 中间波 Boss 清场：Boss 进场前清除场上所有残余怪物 ──
+                if (isBossWave && !isLastWave)
+                {
+                    ClearAllEnemyMonsters();
                 }
 
                 PublishWaveChanged(this, w + 1, totalWaves);
                 WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, group[0].wave);
-                bool isLastWave = w == totalWaves - 1;
                 yield return TableWaveGroupRoutine(group, w + 1, totalWaves, isLastWave);
 
-                if (w < totalWaves - 1)
+                // ── 中间波 Boss：等待 Boss 死亡再推进 ──
+                if (isBossWave && !isLastWave)
+                {
+                    if (debugLogs)
+                        Debug.Log($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已生成，等待 Boss 击杀……");
+                    _waitingForBossKill = true;
+                    while (_waitingForBossKill)
+                        yield return null;
+                    // Boss 被击杀，短暂停顿后继续
+                    float pause = Mathf.Max(0.3f, waveInterval * 0.5f);
+                    if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(pause);
+                    else yield return new WaitForSeconds(pause);
+                    if (debugLogs)
+                        Debug.Log($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已击杀，推进到波 {w+2}。");
+                }
+                else if (w < totalWaves - 1)
                 {
                     float wi = Mathf.Max(0f, waveInterval);
                     if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(wi);
@@ -452,7 +482,7 @@ public class SpawnerWaves : MonoBehaviour
     private IEnumerator TableWaveSpawnRoutine(TableWaveRuntime tw, int displayIndex, int displayTotal, bool isLastWave)
     {
         int bossMarkBudget = 0;
-        if (isLastWave && tw.isBoss)
+        if (tw.isBoss)
             bossMarkBudget = tw.quantityBoss > 0 ? tw.quantityBoss : 1;
 
         // 波次警告闪红（大批量 / Boss）
@@ -502,7 +532,7 @@ public class SpawnerWaves : MonoBehaviour
 
             GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed, tw.defense);
             if (markBoss && spawnedGo != null)
-                TryMarkLastWaveBoss(spawnedGo);
+                TryMarkLastWaveBoss(spawnedGo, isLastWave, this);
             spawned++;
 
             if (spawned >= cap)
@@ -591,12 +621,99 @@ public class SpawnerWaves : MonoBehaviour
         return BattleLevelContext.LevelId;
     }
 
-    private static void TryMarkLastWaveBoss(GameObject enemy)
+    private static void TryMarkLastWaveBoss(GameObject enemy, bool isFinalBoss, SpawnerWaves spawner)
     {
         if (enemy == null) return;
-        if (enemy.GetComponent<LastWaveBossMarker>() == null)
-            enemy.AddComponent<LastWaveBossMarker>();
-        BattleVictoryBossTracker.RegisterBossSpawned();
+        var marker = enemy.GetComponent<LastWaveBossMarker>();
+        if (marker == null)
+            marker = enemy.AddComponent<LastWaveBossMarker>();
+        marker.isFinalBoss = isFinalBoss;
+        marker.spawner = spawner;
+        BattleVictoryBossTracker.RegisterBossSpawned(isFinalBoss);
+    }
+
+    /// <summary>中间波 Boss 死亡回调：触发选卡，选卡结束后推进到下一波。</summary>
+    private void OnBossWaveCompleted(BossWaveCompletedEvent e)
+    {
+        GameLog.Info($"[CardTrace] OnBossWaveCompleted: e.spawner={e.spawner?.name ?? "NULL"} this={name} match={e.spawner == this}");
+        if (e.spawner != this) return;
+
+        // 尝试触发选卡
+        var ps = FindObjectOfType<PlayerSkills>();
+        GameLog.Info($"[CardTrace] OnBossWaveCompleted: ps={ps?.name ?? "NULL"} allMax={ps != null && ps.AllSlotsFullAndMaxLevel}");
+        if (ps != null && !ps.AllSlotsFullAndMaxLevel)
+        {
+            var player = GameObject.FindGameObjectWithTag("Player");
+            GameLog.Info($"[CardTrace] OnBossWaveCompleted: player={player?.name ?? "NULL"}");
+            if (player != null)
+            {
+                GameLog.Info("[CardTrace] OnBossWaveCompleted: 发布 CardSelectionTriggeredEvent");
+                EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEndedAfterBoss, owner: this, once: true);
+                EventBus.Publish(new CardSelectionTriggeredEvent
+                {
+                    player = player.transform,
+                    triggerCount = -1,  // Boss 击杀触发，非能量触发
+                    energyLeft = 0
+                });
+                // 安全超时：30 秒后强制推进（防止选卡系统异常不发布结束事件）
+                if (_cardSelectionTimeoutRoutine != null) StopCoroutine(_cardSelectionTimeoutRoutine);
+                _cardSelectionTimeoutRoutine = StartCoroutine(CardSelectionTimeoutCoroutine());
+                return;
+            }
+        }
+
+        // 无法触发选卡 → 直接推进
+        GameLog.Info("[CardTrace] OnBossWaveCompleted: 跳过选卡，直接推进 _waitingForBossKill=false");
+        _waitingForBossKill = false;
+    }
+
+    private void OnCardSelectionEndedAfterBoss(CardSelectionEndedEvent _)
+    {
+        GameLog.Info("[CardTrace] OnCardSelectionEndedAfterBoss: 选卡结束，_waitingForBossKill=false");
+        if (_cardSelectionTimeoutRoutine != null)
+        {
+            StopCoroutine(_cardSelectionTimeoutRoutine);
+            _cardSelectionTimeoutRoutine = null;
+        }
+        _waitingForBossKill = false;
+    }
+
+    private Coroutine _cardSelectionTimeoutRoutine;
+    private IEnumerator CardSelectionTimeoutCoroutine()
+    {
+        yield return new WaitForSecondsRealtime(30f);
+        _waitingForBossKill = false;
+        _cardSelectionTimeoutRoutine = null;
+    }
+
+    /// <summary>
+    /// Boss 波次开始前清除场上所有非 Boss 怪物。
+    /// 对象池怪物走 GameObjectPool.Release，非池怪物直接 Destroy。
+    /// </summary>
+    private static void ClearAllEnemyMonsters()
+    {
+        var buffer = new List<Transform>(64);
+        CombatTargetRegistry.CollectAllActive("monster", buffer);
+
+        int cleared = 0;
+        for (int i = 0; i < buffer.Count; i++)
+        {
+            Transform tr = buffer[i];
+            if (tr == null) continue;
+            // 保护：跳过已标记的 Boss
+            if (tr.GetComponent<LastWaveBossMarker>() != null) continue;
+
+            var pooled = tr.GetComponent<PooledObject>();
+            if (pooled != null && pooled.sourcePrefabId != 0)
+                GameObjectPool.Release(tr.gameObject);
+            else
+                Destroy(tr.gameObject);
+
+            cleared++;
+        }
+
+        if (cleared > 0)
+            Debug.Log($"[SpawnerWaves] Boss 波次清场：已移除 {cleared} 只怪物。");
     }
 
     /// <summary>常规刷怪（无 Excel 数据 → 攻血速走旧 Inspector 兜底）。</summary>
@@ -627,19 +744,16 @@ public class SpawnerWaves : MonoBehaviour
             windowEnd[i] = tw.waveTimeContinue > 0 ? t0 + Mathf.Max(0, tw.timeStart) + tw.waveTimeContinue : float.MaxValue;
         }
 
-        // Boss 标记预算（最后波且条目标记了 isBoss）
+        // Boss 标记预算（任意波次条目标记了 isBoss 即生效）
         int bossMarkBudget = 0;
-        if (isLastWave)
+        foreach (var tw in group)
         {
-            foreach (var tw in group)
-            {
-                if (tw.isBoss && tw.quantityBoss > 0)
-                    bossMarkBudget += tw.quantityBoss;
-            }
-            // 如果没明确配 quantityBoss，至少给 1 个 Boss 标记
-            if (bossMarkBudget == 0 && group.Exists(tw => tw.isBoss))
-                bossMarkBudget = 1;
+            if (tw.isBoss && tw.quantityBoss > 0)
+                bossMarkBudget += tw.quantityBoss;
         }
+        // 如果没明确配 quantityBoss，至少给 1 个 Boss 标记
+        if (bossMarkBudget == 0 && group.Exists(tw => tw.isBoss))
+            bossMarkBudget = 1;
 
         // 波次警告
         foreach (var tw in group)
@@ -675,7 +789,7 @@ public class SpawnerWaves : MonoBehaviour
 
                 GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed, tw.defense);
                 if (markBoss && spawnedGo != null)
-                    TryMarkLastWaveBoss(spawnedGo);
+                    TryMarkLastWaveBoss(spawnedGo, isLastWave, this);
 
                 remaining[i]--;
                 totalSpawned++;

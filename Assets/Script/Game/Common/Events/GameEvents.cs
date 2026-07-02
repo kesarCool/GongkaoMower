@@ -59,6 +59,13 @@ public struct BattleWavesCompletedEvent
     public Component spawner;
 }
 
+/// <summary>中间波 Boss 被击杀，通知 <see cref="SpawnerWaves"/> 推进到下一波。</summary>
+public struct BossWaveCompletedEvent
+{
+    /// <summary>生成该 Boss 的 <see cref="SpawnerWaves"/> 实例。</summary>
+    public SpawnerWaves spawner;
+}
+
 /// <summary>主角受到伤害（扣血与 <see cref="PlayerHealth.OnDamaged"/> 之后发布）。</summary>
 public struct PlayerDamagedEvent
 {
