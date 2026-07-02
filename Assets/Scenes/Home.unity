@@ -1519,6 +1519,7 @@ MonoBehaviour:
   - {fileID: 3849179020987137729, guid: 72515449bf2ac3842b201fc020b1eeed, type: 3}
   - {fileID: 718171267205805125, guid: 06c23b79a923b314fb10659ef89bca03, type: 3}
   - {fileID: 518001039550226315, guid: 59f7dd650522d8e43b46dd96f2b4236e, type: 3}
+  - {fileID: 2240881502449143497, guid: 33081f15573433648b5aa8b1cae768a9, type: 3}
   confirmDialogPrefab: {fileID: 7028428122260665049, guid: 582e1c8e316586047b2a6185d0094b7d, type: 3}
   toastPanelPrefab: {fileID: 7971915058314420757, guid: 8d28d6898686d1544bf92e8b491bbb18, type: 3}
   defaultToastDuration: 2.5

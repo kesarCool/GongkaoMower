@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Weapon_Missile
   m_EditorClassIdentifier: 
   weaponId: weapon_missile
-  displayName: "\u4E1C\u98CE\u5FEB\u9012"
+  displayName: "\u8FFD\u8E2A\u5BFC\u5F39"
   sprite: {fileID: 0}
   localPosition: {x: 0.35, y: 0, z: 0}
   localRotation: {x: 0, y: 0, z: 0}

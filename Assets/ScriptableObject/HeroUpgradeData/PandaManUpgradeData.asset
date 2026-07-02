@@ -26,12 +26,12 @@ MonoBehaviour:
   - 0.3
   - 0.15
   rareTraitDescription: "\u718A\u732B\u4E4B\u6012\uFF08HP<50%\u89E6\u53D1\uFF09\u2014\u2014\u653B\u51FB+30%\uFF0C\u79FB\u901F+15%\uFF0C\u56DE\u8840\u540E\u6700\u4F4E\u6301\u7EED3\u79D2\u518D\u5173\u95ED"
-  legendBreakthroughDescription: "\u8FDE\u73AF\u7206\u7834\u2014\u2014\u5F39\u5C04\u6B21\u6570+1\uFF0C\u7206\u70B8\u540E0.35\u79D2\u751F\u6210\u4F59\u7206\uFF0850%\u4F24\u5BB3\uFF0C60%\u534A\u5F84\uFF09\uFF0C\u4E8C\u6B21\u6253\u51FB"
+  legendBreakthroughDescription: "\u7206\u7834\u4E4B\u738B\u2014\u2014\u5F39\u5C04\u6B21\u6570+1\uFF0C\u7206\u70B8\u540E0.35\u79D2\u751F\u6210\u4F59\u7206\uFF0850%\u4F24\u5BB3\uFF0C60%\u534A\u5F84\uFF09\uFF0C\u4E8C\u6B21\u6253\u51FB"
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2
-  moveSpeedMulAtMax: 1.3
-  attackRangeMulAtMax: 1.5
+  moveSpeedMulAtMax: 1.5
+  attackRangeMulAtMax: 1.2
   critRateAddAtMax: 0
   critDmgMulAtMax: 2.5
   pierceRateAddAtMax: 0

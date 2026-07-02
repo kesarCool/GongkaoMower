@@ -230,7 +230,11 @@ public class CardSelectionPanel : UIPanelBase
         _onAdRefreshRequested = null;
     }
 
-    private void OnCardClick(int index) => _onCardSelected?.Invoke(index);
+    private void OnCardClick(int index)
+    {
+        GameLog.Info($"[CardTrace] CardSelectionPanel.OnCardClick: index={index} unscaledTime={Time.unscaledTime:F3}");
+        _onCardSelected?.Invoke(index);
+    }
 
     private void OnRefreshClicked()
     {

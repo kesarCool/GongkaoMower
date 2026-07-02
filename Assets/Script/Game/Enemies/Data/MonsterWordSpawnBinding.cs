@@ -135,12 +135,12 @@ public static class MonsterWordSpawnBinding
         return false;
     }
 
-    /// <summary>检查 <paramref name="monster"/> 的 CategoryTag 数组是否包含 <paramref name="tag"/>（数组为空视为不筛选）。</summary>
+    /// <summary>检查 <paramref name="monster"/> 的 CategoryTag 数组是否包含 <paramref name="tag"/>（数组为空或含 0 视为不筛选，全选）。</summary>
     private static bool MonsterHasCategoryTag(Monster monster, int tag)
     {
         for (int j = 0; j < monster.CategoryTagLength; j++)
         {
-            if (monster.CategoryTag[j] == tag)
+            if (monster.CategoryTag[j] == 0 || monster.CategoryTag[j] == tag)
                 return true;
         }
         return false;

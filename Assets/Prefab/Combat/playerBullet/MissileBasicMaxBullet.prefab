@@ -251,7 +251,7 @@ MonoBehaviour:
   wallMask:
     serializedVersion: 2
     m_Bits: 0
-  skillSource: 11
+  skillSource: 10
   targetTag: monster
   turnRate: 180
   explosionRadius: 1.5

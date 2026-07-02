@@ -60,6 +60,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void OnEnable()
     {
+        GameLog.Info("══════════ 新战斗开始 " + System.DateTime.Now.ToString("MM-dd HH:mm:ss") + " ══════════");
+
         // 兜底：上局失败/复活等流程可能残留非 1 的 timeScale，新局强制复位
         Time.timeScale = 1f;
 
@@ -113,18 +115,38 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
-        if (_battleEnded || _reviveFlowActive) return;
-        if (e.enemy == null) return;
+        if (_battleEnded || _reviveFlowActive)
+        {
+            Debug.Log($"[CardTrace] OnEnemyDied SKIP: battleEnded={_battleEnded} reviveFlow={_reviveFlowActive}");
+            return;
+        }
+        if (e.enemy == null)
+        {
+            Debug.Log("[CardTrace] OnEnemyDied SKIP: enemy is null");
+            return;
+        }
 
         // 克隆体/分身不计入 Boss 击杀
-        if (e.enemy.GetComponent<CloneMarker>() != null) return;
+        if (e.enemy.GetComponent<CloneMarker>() != null)
+        {
+            Debug.Log($"[CardTrace] OnEnemyDied SKIP: CloneMarker on {e.enemy.name}");
+            return;
+        }
 
         var marker = e.enemy.GetComponent<LastWaveBossMarker>();
-        if (marker == null) return;
+        if (marker == null)
+        {
+            Debug.Log($"[CardTrace] OnEnemyDied SKIP: no LastWaveBossMarker on {e.enemy.name}");
+            return;
+        }
 
         var (wasKilled, waveComplete, victory) = BattleVictoryBossTracker.RegisterBossKill(marker.isFinalBoss);
         GameLog.Info($"[CardTrace] OnEnemyDied: isFinalBoss={marker.isFinalBoss} spawner={marker.spawner?.name ?? "NULL"} wasKilled={wasKilled} waveComplete={waveComplete} victory={victory}");
-        if (!wasKilled) return;
+        if (!wasKilled)
+        {
+            Debug.Log($"[CardTrace] OnEnemyDied SKIP: RegisterBossKill returned wasKilled=false (BossesAlive={BattleVictoryBossTracker.BossesAlive})");
+            return;
+        }
 
         if (victory)
         {

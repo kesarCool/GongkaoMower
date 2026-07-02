@@ -33,10 +33,10 @@ MonoBehaviour:
   attackMulAtMax: 3
   maxHpMulAtMax: 3
   defenseMulAtMax: 2
-  moveSpeedMulAtMax: 1.3
-  attackRangeMulAtMax: 1.5
+  moveSpeedMulAtMax: 1.2
+  attackRangeMulAtMax: 1.2
   critRateAddAtMax: 0
   critDmgMulAtMax: 2.5
-  pierceRateAddAtMax: 0
+  pierceRateAddAtMax: 0.1
   pierceCountAddAtMax: 0
-  penRateAddAtMax: 0.2
+  penRateAddAtMax: 0.3

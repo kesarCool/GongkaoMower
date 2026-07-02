@@ -71,6 +71,7 @@ public class RoguelikeCardManager : MonoBehaviour
         // 有选卡 UI 流程：交给 CardSelectionSystem
         if (cardSelectionSystem != null)
         {
+            cardSelectionSystem.IsBossTrigger = e.triggerCount == -1;
             cardSelectionSystem.BeginSelectionFromManager();
             return;
         }

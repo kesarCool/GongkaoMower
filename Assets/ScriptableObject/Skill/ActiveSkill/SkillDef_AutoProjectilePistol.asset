@@ -33,13 +33,13 @@ MonoBehaviour:
   - 0.8
   - 0.75
   - 0.7
-  - 0.65
+  - 0.7
   damageByLevel:
   - 1
-  - 1.15
-  - 1.32
-  - 1.52
-  - 1.75
+  - 1.25
+  - 1.25
+  - 1.5
+  - 1.5
   projectileCountByLevel: 0100000001000000020000000200000003000000
   spreadDegrees: 10
   burstBulletPrefab: {fileID: 0}

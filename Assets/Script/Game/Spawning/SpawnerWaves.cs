@@ -632,6 +632,10 @@ public class SpawnerWaves : MonoBehaviour
         BattleVictoryBossTracker.RegisterBossSpawned(isFinalBoss);
     }
 
+    /// <summary>Boss 死亡后延迟再弹选卡面板，等死亡动画播完。</summary>
+    [Header("Boss选卡")]
+    [SerializeField] private float bossCardSelectionDelay = 1.5f;
+
     /// <summary>中间波 Boss 死亡回调：触发选卡，选卡结束后推进到下一波。</summary>
     private void OnBossWaveCompleted(BossWaveCompletedEvent e)
     {
@@ -647,17 +651,8 @@ public class SpawnerWaves : MonoBehaviour
             GameLog.Info($"[CardTrace] OnBossWaveCompleted: player={player?.name ?? "NULL"}");
             if (player != null)
             {
-                GameLog.Info("[CardTrace] OnBossWaveCompleted: 发布 CardSelectionTriggeredEvent");
-                EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEndedAfterBoss, owner: this, once: true);
-                EventBus.Publish(new CardSelectionTriggeredEvent
-                {
-                    player = player.transform,
-                    triggerCount = -1,  // Boss 击杀触发，非能量触发
-                    energyLeft = 0
-                });
-                // 安全超时：30 秒后强制推进（防止选卡系统异常不发布结束事件）
-                if (_cardSelectionTimeoutRoutine != null) StopCoroutine(_cardSelectionTimeoutRoutine);
-                _cardSelectionTimeoutRoutine = StartCoroutine(CardSelectionTimeoutCoroutine());
+                GameLog.Info($"[CardTrace] OnBossWaveCompleted: 延迟 {bossCardSelectionDelay}s 后发布 CardSelectionTriggeredEvent");
+                StartCoroutine(DelayedBossCardSelection(player.transform));
                 return;
             }
         }
@@ -665,6 +660,23 @@ public class SpawnerWaves : MonoBehaviour
         // 无法触发选卡 → 直接推进
         GameLog.Info("[CardTrace] OnBossWaveCompleted: 跳过选卡，直接推进 _waitingForBossKill=false");
         _waitingForBossKill = false;
+    }
+
+    private IEnumerator DelayedBossCardSelection(Transform player)
+    {
+        yield return new WaitForSecondsRealtime(bossCardSelectionDelay);
+
+        GameLog.Info("[CardTrace] OnBossWaveCompleted: 延迟结束，发布 CardSelectionTriggeredEvent");
+        EventBus.Subscribe<CardSelectionEndedEvent>(OnCardSelectionEndedAfterBoss, owner: this, once: true);
+        EventBus.Publish(new CardSelectionTriggeredEvent
+        {
+            player = player,
+            triggerCount = -1,  // Boss 击杀触发，非能量触发
+            energyLeft = 0
+        });
+        // 安全超时：30 秒后强制推进（防止选卡系统异常不发布结束事件）
+        if (_cardSelectionTimeoutRoutine != null) StopCoroutine(_cardSelectionTimeoutRoutine);
+        _cardSelectionTimeoutRoutine = StartCoroutine(CardSelectionTimeoutCoroutine());
     }
 
     private void OnCardSelectionEndedAfterBoss(CardSelectionEndedEvent _)

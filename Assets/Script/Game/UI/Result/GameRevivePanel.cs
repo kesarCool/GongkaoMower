@@ -102,6 +102,8 @@ public class GameRevivePanel : UIPanelBase
         StopCountdown();
         SetButtonsInteractable(false);
 
+        UIManager.Instance.ShowToast("广告还在路上，分享先把奖励领走～", 2f);
+
         IReviveAdProvider provider = _payload?.adProvider ?? WeChatRewardedAdProvider.Instance;
         provider.RequestReviveAd(success =>
         {

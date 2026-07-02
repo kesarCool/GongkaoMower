@@ -83,7 +83,8 @@ public class ReviveModule : BossSkillModule
         _eb.ApplyTableStats(0, Mathf.CeilToInt(newHp), 0);
         _eb.ResetForPool();
         _eb.ShowFromRevive();
-        _eb.preventPoolDeath = false;
+        // 注意：preventPoolDeath 保持 true，等无敌盾加上后再恢复；
+        // 防止复活动画期间被击杀导致 GameObject 被回收、AddComponent 返回 null。
 
         Vector3 revivePos = boss.position;
 
@@ -110,7 +111,15 @@ public class ReviveModule : BossSkillModule
         if (boss == null || boss.gameObject == null) yield break;
 
         var shield = boss.gameObject.AddComponent<ResistShield>();
+        if (shield == null)
+        {
+            Debug.LogWarning($"[ReviveModule] ResistShield 添加失败，Boss='{boss.name}' 可能已被销毁/回收，跳过无敌盾");
+            yield break;
+        }
         shield.Setup(1f, new[] { SkillDamageType.Physical, SkillDamageType.Energy, SkillDamageType.Explosive }, 0, _invincibleDuration);
+
+        // 无敌盾就位后才放开，允许正常的死亡/回收流程
+        _eb.preventPoolDeath = false;
 
         Debug.Log($"[ReviveModule] Boss '{boss.name}' 复活 ({_reviveCount}/{_maxRevives})，HP={newHp:F0}");
     }

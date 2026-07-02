@@ -135,6 +135,7 @@ public class ShopView : HomeTabViewBase
         // 广告：直接播广告，不弹确认框
         if (priceType == 3)
         {
+            UIManager.Instance.ShowToast("广告还在路上，分享先把奖励领走～", 2f);
             StartCoroutine(ClaimAdReward(cell, itemName, count));
             return;
         }

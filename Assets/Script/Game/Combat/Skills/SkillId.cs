@@ -22,11 +22,11 @@ public enum SkillId
     AutoProjectileSword = 8,
     /// <summary>自动索敌（符箓版）—— 符仔</summary>
     AutoProjectileTalisman = 9,
-    /// <summary>追踪导弹，命中后 AOE 爆炸 —— 追风专属</summary>
+    /// <summary>追风逐日，命中后 AOE 爆炸</summary>
     HomingMissile = 10,
-    /// <summary>追踪弹（弱化版）—— 全角色通用</summary>
+    /// <summary>穿云破雾（弱化版）—— 全角色通用</summary>
     HomingMissileBasic = 11,
-    /// <summary>弹射雷，命中后弹跳再爆 —— 爆爆专属</summary>
+    /// <summary>连环爆破 —— 弹跳弹射</summary>
     BouncingGrenade = 12,
 
     // ── 被动技能（101+，预留 13~100 给主动技能扩展）──

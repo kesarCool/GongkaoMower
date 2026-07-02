@@ -355,7 +355,7 @@ public class CharacterSelectionPanel : UIPanelBase
             detailLevelText.gameObject.SetActive(true);
         }
 
-        // 属性行（8 行：攻/血/防/移速/暴击率/暴伤/穿透/范围）
+        // 属性行（9 行：攻/血/防/移速/暴击率/暴伤/穿透/范围/破防率）
         BuildAttrRows(def, data, lv, nextLv, isMax && !canPromote);
 
         // 技能
@@ -568,6 +568,11 @@ public class CharacterSelectionPanel : UIPanelBase
         float curRange = baseAttr.attackRangeMul * Mul(data, data?.attackRangeMulAtMax ?? 0f, curLv);
         float nextRange = baseAttr.attackRangeMul * Mul(data, data?.attackRangeMulAtMax ?? 0f, nextLv);
         AddAttrRow("范围", $"×{curRange:F1}", isMax ? "" : $"×{nextRange:F1}", isMax);
+
+        // 9. 破防率（加算，显示 %）
+        float curPen = baseAttr.penRate + Add(data, data?.penRateAddAtMax ?? 0f, curLv);
+        float nextPen = baseAttr.penRate + Add(data, data?.penRateAddAtMax ?? 0f, nextLv);
+        AddAttrRow("破防率", $"{curPen * 100f:F0}%", isMax ? "" : $"{nextPen * 100f:F0}%", isMax);
     }
 
     private void AddAttrRow(string name, string curValue, string nextValue, bool isMax)

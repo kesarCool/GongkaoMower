@@ -41,6 +41,12 @@ public class CardSelectionSystem : MonoBehaviour
     /// <summary>本次选卡是否由 <see cref="UIManager"/> 打开（影响暂停与关闭方式）。</summary>
     private bool _selectionUsesUIManager;
 
+    /// <summary>面板打开时间（unscaledTime），用于防止误触瞬时选卡。</summary>
+    private float _panelOpenTime;
+
+    /// <summary>是否 Boss 触发（triggerCount=-1），防误触用更长阈值。</summary>
+    public bool IsBossTrigger { get; set; }
+
     private void Awake()
     {
         _playerSkills = GetComponent<PlayerSkills>();
@@ -98,7 +104,7 @@ public class CardSelectionSystem : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError("[CardSelectionSystem] Draw/Show failed: " + ex);
-            EndSelection();
+            EndSelection("exception");
         }
     }
 
@@ -122,7 +128,7 @@ public class CardSelectionSystem : MonoBehaviour
         {
             Debug.LogWarning("[CardSelectionSystem] 无可用卡牌");
             // 必须走 EndSelection 清理 _isSelecting，否则后续选卡请求永久排队
-            EndSelection();
+            EndSelection("no-cards");
             return;
         }
 
@@ -150,6 +156,7 @@ public class CardSelectionSystem : MonoBehaviour
             {
                 GameLog.Info($"[CardTrace] UIManager 打开成功, panel.active={opened.gameObject.activeSelf} activeInHierarchy={opened.gameObject.activeInHierarchy}");
                 _selectionUsesUIManager = true;
+                _panelOpenTime = Time.unscaledTime;
                 return;
             }
             GameLog.Warning("[CardTrace] UIManager.Open 返回 null，回退 panel.Show");
@@ -166,12 +173,12 @@ public class CardSelectionSystem : MonoBehaviour
                 _remainingFreeRefresh, _remainingAdRefresh);
             GameLog.Info($"[CardTrace] panel.Show 返回={showOk}, panel.active={panel.gameObject.activeSelf} activeInHierarchy={panel.gameObject.activeInHierarchy}");
             if (!showOk)
-                EndSelection();
+                EndSelection("panel.Show-false");
         }
         else
         {
             ApplyCard(_currentCards[0]);
-            EndSelection();
+            EndSelection("no-panel-auto-apply");
         }
     }
 
@@ -258,9 +265,18 @@ public class CardSelectionSystem : MonoBehaviour
     {
         if (index < 0 || index >= _currentCards.Count) return;
 
+        // 防止误触：Boss 选卡 1.2s，能量选卡 0.3s
+        float minElapsed = IsBossTrigger ? 1.2f : 0.3f;
+        float elapsed = Time.unscaledTime - _panelOpenTime;
+        if (elapsed < minElapsed)
+        {
+            GameLog.Info($"[CardTrace] CardSelectionSystem.OnCardSelected IGNORED: index={index} elapsed={elapsed:F3}s min={minElapsed}s (anti-mistap isBoss={IsBossTrigger})");
+            return;
+        }
+
         var selected = _currentCards[index];
         ApplyCard(selected);
-        EndSelection();
+        EndSelection("card-picked");
     }
 
     /// <summary>
@@ -290,9 +306,9 @@ public class CardSelectionSystem : MonoBehaviour
     /// <summary>
     /// 结束选卡，恢复游戏
     /// </summary>
-    private void EndSelection()
+    private void EndSelection(string reason)
     {
-        GameLog.Info("[CardTrace] CardSelectionSystem.EndSelection");
+        GameLog.Info($"[CardTrace] CardSelectionSystem.EndSelection reason={reason}");
         _isSelecting = false;
         try
         {

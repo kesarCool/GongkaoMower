@@ -36,10 +36,10 @@ MonoBehaviour:
   - 0.65
   damageByLevel:
   - 1
-  - 1.08
-  - 1.17
-  - 1.26
-  - 1.35
+  - 1.25
+  - 1.25
+  - 1.25
+  - 1.25
   projectileCountByLevel: 0200000002000000030000000400000005000000
   spreadDegrees: 10
   burstBulletPrefab: {fileID: 685301462951185581, guid: c635aa21375f5714889d3315163f1a67, type: 3}

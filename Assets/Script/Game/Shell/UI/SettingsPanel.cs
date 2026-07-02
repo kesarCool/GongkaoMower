@@ -22,6 +22,9 @@ public class SettingsPanel : UIPanelBase
     [SerializeField] private Toggle sfxToggle;
     [SerializeField] private TMPro.TextMeshProUGUI sfxText;
 
+    [Header("关于")]
+    [SerializeField] private Button aboutButton;
+
     [Header("按钮")]
     [SerializeField] private Button closeButton;
 
@@ -46,6 +49,9 @@ public class SettingsPanel : UIPanelBase
         }
         RefreshSfxLabel();
 
+        if (aboutButton != null)
+            aboutButton.onClick.AddListener(OnAboutClicked);
+
         if (closeButton != null)
             closeButton.onClick.AddListener(OnCloseClicked);
     }
@@ -56,6 +62,8 @@ public class SettingsPanel : UIPanelBase
             soundToggle.onValueChanged.RemoveListener(OnBgmToggled);
         if (sfxToggle != null)
             sfxToggle.onValueChanged.RemoveListener(OnSfxToggled);
+        if (aboutButton != null)
+            aboutButton.onClick.RemoveListener(OnAboutClicked);
         if (closeButton != null)
             closeButton.onClick.RemoveListener(OnCloseClicked);
     }
@@ -82,6 +90,12 @@ public class SettingsPanel : UIPanelBase
     {
         if (sfxText != null)
             sfxText.text = AudioService.Instance.SfxMute ? "音效关" : "音效开";
+    }
+
+    private void OnAboutClicked()
+    {
+        UiClickSound.Play();
+        UIManager.Instance.Open<AboutPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
     private void OnCloseClicked()
