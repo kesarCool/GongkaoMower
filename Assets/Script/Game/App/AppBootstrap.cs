@@ -25,6 +25,7 @@ public class AppBootstrap : MonoBehaviour
         Debug.unityLogger.logEnabled = false;
 #endif
 
+
         // 全局性能设置
         //   Editor/Standalone: vSync=1 + targetFrameRate=30
         //   WebGL/微信小游戏: vSyncCount/targetFrameRate 在微信环境均无效，

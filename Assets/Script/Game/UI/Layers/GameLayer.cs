@@ -221,7 +221,7 @@ public class GameLayer : MonoBehaviour
     private void RefreshKillText()
     {
         if (killText == null) return;
-        killText.text = $"{_kills}/{targetKills}";
+        killText.text = $"击杀:{_kills}/{targetKills}";
     }
 
     private void RefreshTimerText()
@@ -231,7 +231,7 @@ public class GameLayer : MonoBehaviour
         int total = Mathf.FloorToInt(_timeElapsed);
         int mm = total / 60;
         int ss = total % 60;
-        timerText.text = $"{mm:00}:{ss:00}";
+        timerText.text = $"计时：{mm:00}:{ss:00}";
     }
 
     private void ResolveWaveTextRef()
@@ -300,7 +300,7 @@ public class GameLayer : MonoBehaviour
         }
 
         int displayCurrent = _currentWave > 0 ? _currentWave : 0;
-        waveText.text = $"波次{displayCurrent}/{_totalWaves}";
+        waveText.text = $"波次：{displayCurrent}/{_totalWaves}";
     }
 
     private void ResolveEnergyProgressRefs()
@@ -382,13 +382,13 @@ public class GameLayer : MonoBehaviour
         if (killText == null)
         {
             killText = CreateHudText("KillText", canvas.transform, new Vector2(10, -10), TextAnchor.UpperLeft);
-            killText.text = "0/100";
+            killText.text = "击杀:0/0";
         }
 
         if (timerText == null)
         {
             timerText = CreateHudText("TimerText", canvas.transform, new Vector2(-10, -10), TextAnchor.UpperRight);
-            timerText.text = "00:00";
+            timerText.text = "计时：00:00";
         }
 
     }

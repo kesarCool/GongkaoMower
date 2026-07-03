@@ -222,21 +222,21 @@ TrailRenderer:
   m_Time: 0.1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.2
+    widthMultiplier: 1
     widthCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
+        value: 0.17499924
+        inSlope: -0.18300235
+        outSlope: -0.18300235
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
-        outWeight: 0.33333334
+        outWeight: 0.5257626
       - serializedVersion: 3
-        time: 1
+        time: 0.34643555
         value: 0
         inSlope: 0
         outSlope: 0
