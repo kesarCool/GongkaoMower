@@ -33,6 +33,10 @@ public class HomeHubController : MonoBehaviour
     [Header("背包（可选）")]
     [SerializeField] private Button openBackpackButton;
 
+    [Header("开始游戏")]
+    [Tooltip("点击直接进入当前最新解锁关卡。")]
+    [SerializeField] private Button startGameButton;
+
     [Header("设置")]
     [Tooltip("打开设置弹窗的按钮（右上角齿轮）。")]
     [SerializeField] private Button openSettingsButton;
@@ -66,6 +70,8 @@ public class HomeHubController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (startGameButton != null)
+            startGameButton.onClick.AddListener(OnStartGameClicked);
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.AddListener(OpenLevelSelect);
         if (openLexiconPreviewButton != null)
@@ -99,6 +105,8 @@ public class HomeHubController : MonoBehaviour
     {
         EventBus.Unsubscribe<PlayerDataChangedEvent>(OnPlayerDataChanged);
 
+        if (startGameButton != null)
+            startGameButton.onClick.RemoveListener(OnStartGameClicked);
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
         if (openLexiconPreviewButton != null)
@@ -131,6 +139,24 @@ public class HomeHubController : MonoBehaviour
 
         var opt = pauseWhenLevelSelectOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
         UIManager.Instance.Open<LevelSelectPanel>(null, opt);
+    }
+
+    /// <summary>开始游戏：取当前最新解锁关卡，直接进入战斗。</summary>
+    private void OnStartGameClicked()
+    {
+        UiClickSound.Play();
+
+        if (TableManager.Instance != null)
+            TableManager.Instance.Init();
+
+        if (!ChapterLevelNavigation.TryGetMaxUnlockedLevel(out int chapterId, out int levelId))
+        {
+            UIManager.Instance?.ShowToast("关卡数据加载失败", 1.5f);
+            return;
+        }
+
+        SelectedLevelContext.Set(chapterId, levelId);
+        BattleFlowLauncher.TryStartBattleLoading();
     }
 
     /// <summary>打开设置面板（模态弹窗）。</summary>

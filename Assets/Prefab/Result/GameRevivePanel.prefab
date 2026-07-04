@@ -365,6 +365,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   backgroundBlocker: {fileID: 287845476752872036}
   countdownSeconds: 10
+  shareTitle: "\u6551\u6211\u590D\u6D3B\uFF01"
+  shareImageUrlId: VdGe7bObQEi2LakmeNWT1g==
 --- !u!1 &287845477304226573
 GameObject:
   m_ObjectHideFlags: 0

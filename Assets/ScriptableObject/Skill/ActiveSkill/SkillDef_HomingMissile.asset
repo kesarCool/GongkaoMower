@@ -29,17 +29,17 @@ MonoBehaviour:
   maxRange: 10
   salvoInterval: 0.2
   cooldownByLevel:
+  - 3
+  - 2.5
+  - 2.5
+  - 2.5
   - 2
-  - 1.8
-  - 1.6
-  - 1.4
-  - 1.2
   damageByLevel:
   - 1
-  - 1.15
+  - 1.1
+  - 1.2
   - 1.25
-  - 1.35
-  - 1.5
+  - 1.25
   salvoByLevel: 0200000003000000040000000500000006000000
   maxTargetsByLevel: 0200000003000000030000000400000005000000
   aoeRadiusByLevel:

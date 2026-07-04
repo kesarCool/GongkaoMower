@@ -628,6 +628,8 @@ MonoBehaviour:
   textRefreshCountdown: {fileID: 9162279338942128562}
   groupCountdown: {fileID: 1670958100596791902}
   emptyHint: {fileID: 9162279339015805747}
+  shopShareTitle: "\u514D\u8D39\u9886\u9053\u5177\uFF0C\u901F\u6765\uFF01"
+  shopShareImageUrlId: y6dKU1EpR/yp3Z5TIxH+gw==
 --- !u!1 &9205383349445719101
 GameObject:
   m_ObjectHideFlags: 0

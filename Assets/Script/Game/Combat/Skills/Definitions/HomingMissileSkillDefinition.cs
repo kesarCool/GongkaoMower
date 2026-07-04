@@ -34,7 +34,7 @@ public class HomingMissileSkillDefinition : SkillDefinitionBase
     protected override string GenerateLevelDescription(int level)
     {
         int lv = ClampLevel(level);
-        return $"CD{CooldownAt(lv):0.#}s, {SalvoAt(lv)}发, AOE{AoeRadiusAt(lv):0.#}m";
+        return $"冷却时长{CooldownAt(lv):0.#}s, {SalvoAt(lv)}发导弹, 爆炸范围{AoeRadiusAt(lv):0.#}m";
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
