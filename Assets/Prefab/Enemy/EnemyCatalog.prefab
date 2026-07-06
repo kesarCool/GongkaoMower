@@ -297,3 +297,93 @@ MonoBehaviour:
     maxHp: 1000
     damage: 20
     rewardKillCount: 3
+  - id: 33011
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33012
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33021
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33022
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33031
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33032
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33041
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33042
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33051
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3
+  - id: 33052
+    enemyName: "\u6218\u573A\u8001\u5175"
+    prefab: {fileID: 9000609663849151995, guid: 87660f3a8eaac8c4d8b877079af6abe7, type: 3}
+    sprite: {fileID: 0}
+    bulletPrefab: {fileID: 0}
+    moveSpeed: 1.5
+    maxHp: 1000
+    damage: 20
+    rewardKillCount: 3

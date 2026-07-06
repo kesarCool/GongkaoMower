@@ -29,16 +29,16 @@ MonoBehaviour:
   - 2
   damageByLevel:
   - 2
-  - 2.25
   - 2.5
-  - 2.75
   - 3
+  - 3.5
+  - 4
   aoeRadiusByLevel:
   - 1.2
   - 1.35
   - 1.5
-  - 1.65
-  - 1.85
+  - 1.75
+  - 2
   arcHeightByLevel:
   - 1
   - 1.1

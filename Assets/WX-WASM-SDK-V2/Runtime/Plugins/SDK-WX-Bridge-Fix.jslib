@@ -120,6 +120,14 @@ var WXBridgeFixLibrary = {
     stringToUTF8(res || "{}", buffer, bufferSize);
     return buffer;
   },
+
+  // ── 分享图配置：传入 JSON 字符串数组（如 '["id1","id2","id3"]'）──
+  SetShareImageIds: function (idsJsonPtr) {
+    var idsJson = UTF8ToString(idsJsonPtr);
+    if (typeof window.SetShareImageIds === 'function') {
+      window.SetShareImageIds(idsJson);
+    }
+  },
 };
 
 mergeInto(LibraryManager.library, WXBridgeFixLibrary);
