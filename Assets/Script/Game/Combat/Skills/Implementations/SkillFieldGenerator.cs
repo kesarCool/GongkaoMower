@@ -68,7 +68,7 @@ public class SkillFieldGenerator : SkillBase
     {
         _isBreakthrough = stage > 0;
         if (_isBreakthrough)
-            Debug.Log($"[罡气护体] Legend 突破 stage={stage} → 金色");
+            GameLog.Info($"[罡气护体] Legend 突破 stage={stage} → 金色");
         RefreshVisual();
     }
 
@@ -77,7 +77,7 @@ public class SkillFieldGenerator : SkillBase
     {
         base.OnLevelUp();
         if (Level >= 5)
-            Debug.Log($"[罡气护体] 五级羁绊突破 Lv.{Level} → 金色");
+            GameLog.Info($"[罡气护体] 五级羁绊突破 Lv.{Level} → 金色");
     }
 
     public override void OnEquip(SkillContext ctx)

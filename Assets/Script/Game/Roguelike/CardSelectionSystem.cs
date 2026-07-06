@@ -75,7 +75,6 @@ public class CardSelectionSystem : MonoBehaviour
         if (_playerSkills.AllSlotsFullAndMaxLevel)
         {
             GameLog.Info("[CardTrace] CardSelectionSystem: All skills maxed, skip");
-            Debug.Log("[CardSelectionSystem] All skills maxed, skipping");
             return;
         }
 
@@ -83,7 +82,7 @@ public class CardSelectionSystem : MonoBehaviour
         {
             GameLog.Info("[CardTrace] CardSelectionSystem: already selecting, queued");
             _pendingRequests.Enqueue(new CardSelectionRequest());
-            Debug.Log($"[CardSelectionSystem] Queued request, pending={_pendingRequests.Count}");
+            GameLog.Info($"[CardSelectionSystem] Queued request, pending={_pendingRequests.Count}");
             return;
         }
 
@@ -204,7 +203,7 @@ public class CardSelectionSystem : MonoBehaviour
 
         if (_currentCards == null || _currentCards.Count < 3)
         {
-            Debug.Log("[CardSelectionSystem] 排除后不足 3 张，清排除重抽");
+            GameLog.Info("[CardSelectionSystem] 排除后不足 3 张，清排除重抽");
             _excludedSkills.Clear();
             _currentCards = DrawFromPoolInternal(levelId, null);
         }
@@ -240,12 +239,12 @@ public class CardSelectionSystem : MonoBehaviour
     {
         if (_remainingAdRefresh <= 0) return;
 
-        Debug.Log("[CardSelectionSystem] 请求广告刷新…");
+        GameLog.Info("[CardSelectionSystem] 请求广告刷新…");
         WeChatRewardedAdProvider.Instance.RequestReviveAd(success =>
         {
             if (success)
             {
-                Debug.Log("[CardSelectionSystem] 广告完成，刷新卡牌");
+                GameLog.Info("[CardSelectionSystem] 广告完成，刷新卡牌");
                 OnRefreshRequested(); // 内部扣减 _remainingAdRefresh 并重抽
             }
             else
@@ -291,7 +290,7 @@ public class CardSelectionSystem : MonoBehaviour
             bool added = isPassive
                 ? _playerSkills.TryAddPassive(card.skillId)
                 : _playerSkills.TryAddSkill(card.skillId);
-            Debug.Log($"[CardSelectionSystem] New {(isPassive ? "passive" : "skill")} {card.skillId}, added={added}");
+            GameLog.Info($"[CardSelectionSystem] New {(isPassive ? "passive" : "skill")} {card.skillId}, added={added}");
         }
         else
         {
@@ -299,7 +298,7 @@ public class CardSelectionSystem : MonoBehaviour
             bool leveled = isPassive
                 ? _playerSkills.TryLevelUpPassive(card.skillId)
                 : _playerSkills.TryLevelUp(card.skillId);
-            Debug.Log($"[CardSelectionSystem] Upgrade {(isPassive ? "passive" : "skill")} {card.skillId} to Lv.{card.targetLevel}, success={leveled}");
+            GameLog.Info($"[CardSelectionSystem] Upgrade {(isPassive ? "passive" : "skill")} {card.skillId} to Lv.{card.targetLevel}, success={leveled}");
         }
     }
 

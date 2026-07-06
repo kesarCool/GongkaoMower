@@ -60,7 +60,6 @@ public class RoguelikeCardManager : MonoBehaviour
         if (ps.AllSlotsFullAndMaxLevel)
         {
             GameLog.Info("[CardTrace] RoguelikeCardManager: All skills maxed, skip");
-            Debug.Log("[RoguelikeCardManager] All skills maxed, skip");
             return;
         }
 

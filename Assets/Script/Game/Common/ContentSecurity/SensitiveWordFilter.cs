@@ -80,7 +80,7 @@ public class SensitiveWordFilter
         _localLoaded = true;
 
         Resources.UnloadAsset(asset);
-        Debug.Log($"{LogTag} 本地词库加载完成：{wordCount} 词, {charCount} 字");
+        GameLog.Info($"{LogTag} 本地词库加载完成：{wordCount} 词, {charCount} 字");
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ public class SensitiveWordFilter
                 if (parts.Length == 2 && int.TryParse(parts[0], out int id) && int.TryParse(parts[1], out int val))
                     _remoteCache[id] = val == 1;
             }
-            Debug.Log($"{LogTag} 远程缓存恢复：{_remoteCache.Count} 条");
+            GameLog.Info($"{LogTag} 远程缓存恢复：{_remoteCache.Count} 条");
         }
         catch (Exception e)
         {
@@ -177,7 +177,7 @@ public class SensitiveWordFilter
     private static void LogBlock(int lexiconId, string text, string reason)
     {
         var preview = text.Length > 20 ? text.Substring(0, 20) + "..." : text;
-        Debug.Log($"{LogTag} 拦截 lexiconId={lexiconId} text={preview} reason={reason}");
+        GameLog.Info($"{LogTag} 拦截 lexiconId={lexiconId} text={preview} reason={reason}");
     }
 
     /// <summary>
@@ -187,7 +187,7 @@ public class SensitiveWordFilter
     public IEnumerator BackgroundCheckAll(Action<int, int, string> progressCallback = null)
     {
 #if UNITY_EDITOR || !WEIXINMINIGAME
-        Debug.Log($"{LogTag} 非微信环境，跳过后台 msgSecCheck");
+        GameLog.Info($"{LogTag} 非微信环境，跳过后台 msgSecCheck");
         yield break;
 #else
         if (_remoteCheckRunning) yield break;
@@ -219,12 +219,12 @@ public class SensitiveWordFilter
         int total = toCheck.Count;
         if (total == 0)
         {
-            Debug.Log($"{LogTag} 后台检测：所有词条已在缓存中，跳过");
+            GameLog.Info($"{LogTag} 后台检测：所有词条已在缓存中，跳过");
             _remoteCheckRunning = false;
             yield break;
         }
 
-        Debug.Log($"{LogTag} 后台检测开始：待检测 {total} 条");
+        GameLog.Info($"{LogTag} 后台检测开始：待检测 {total} 条");
         progressCallback?.Invoke(0, total, $"内容安全检查 0/{total}");
 
         // 初始化 msgSecCheck 桥接
@@ -296,7 +296,7 @@ public class SensitiveWordFilter
 
         progressCallback?.Invoke(total, total,
             $"安全检查完成: 通过{passed}, 拦截{flagged}, 错误{errors}");
-        Debug.Log($"{LogTag} 后台检测完成：total={total} pass={passed} flag={flagged} err={errors}");
+        GameLog.Info($"{LogTag} 后台检测完成：total={total} pass={passed} flag={flagged} err={errors}");
 #endif
     }
 

@@ -45,11 +45,11 @@ public class HomeTabBar : MonoBehaviour
     /// <summary>按 ID 切换到指定页签。</summary>
     public void SwitchTo(string tabId)
     {
-        Debug.Log($"[HomeTabBar] SwitchTo(\"{tabId}\"), 当前=\"{_activeTabId}\"");
+        GameLog.Info($"[HomeTabBar] SwitchTo(\"{tabId}\"), 当前=\"{_activeTabId}\"");
 
         if (_activeTabId == tabId)
         {
-            Debug.Log($"[HomeTabBar] \"{tabId}\" 已是当前页签，跳过");
+            GameLog.Info($"[HomeTabBar] \"{tabId}\" 已是当前页签，跳过");
             return;
         }
 
@@ -106,7 +106,7 @@ public class HomeTabBar : MonoBehaviour
     {
         string pn = entry.prefab ? entry.prefab.name : "null";
         string svn = entry.sceneView ? entry.sceneView.name : "null";
-        Debug.Log($"[HomeTabBar] CreateTab: tabId=\"{entry.tabId}\", mode={entry.mode}, prefab={pn}, sceneView={svn}");
+        GameLog.Info($"[HomeTabBar] CreateTab: tabId=\"{entry.tabId}\", mode={entry.mode}, prefab={pn}, sceneView={svn}");
         if (viewContainer == null) { Debug.LogError("[HomeTabBar] viewContainer 未绑定！"); return new TabRuntime(); }
         var rt = new TabRuntime();
 
@@ -117,7 +117,7 @@ public class HomeTabBar : MonoBehaviour
             if (sr) StretchToFill(sr);
             entry.sceneView.SetActive(false);
             rt.sceneView = entry.sceneView;
-            Debug.Log($"[HomeTabBar] SceneView \"{entry.sceneView.name}\" 已移入 viewContainer");
+            GameLog.Info($"[HomeTabBar] SceneView \"{entry.sceneView.name}\" 已移入 viewContainer");
         }
         else if (entry.mode == TabMountMode.UIPanelPrefab && entry.prefab)
         {
@@ -128,7 +128,7 @@ public class HomeTabBar : MonoBehaviour
             rt.uiPanel = go.GetComponent<UIPanelBase>();
             if (rt.uiPanel)
             {
-                Debug.Log($"[HomeTabBar] UIPanel \"{entry.prefab.name}\" Instantiate 成功, 调 OnOpen(null)");
+                GameLog.Info($"[HomeTabBar] UIPanel \"{entry.prefab.name}\" Instantiate 成功, 调 OnOpen(null)");
                 rt.uiPanel.OnOpen(null);
             }
             else
@@ -145,7 +145,7 @@ public class HomeTabBar : MonoBehaviour
             rt.homeTabView = go.GetComponent<HomeTabViewBase>();
             if (rt.homeTabView)
             {
-                Debug.Log($"[HomeTabBar] TabView \"{entry.prefab.name}\" Instantiate 成功, 调 OnTabInit()");
+                GameLog.Info($"[HomeTabBar] TabView \"{entry.prefab.name}\" Instantiate 成功, 调 OnTabInit()");
                 rt.homeTabView.OnTabInit();
             }
             else
@@ -180,7 +180,7 @@ public class HomeTabBar : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[HomeTabBar] Start: {tabs.Count} 个页签, viewContainer={(viewContainer != null ? viewContainer.name : "null")}");
+        GameLog.Info($"[HomeTabBar] Start: {tabs.Count} 个页签, viewContainer={(viewContainer != null ? viewContainer.name : "null")}");
 
         // 绑定按钮点击事件
         foreach (var entry in tabs)
@@ -194,11 +194,11 @@ public class HomeTabBar : MonoBehaviour
             string capturedId = entry.tabId; // 闭包变量捕获
             entry.button.onClick.AddListener(() =>
             {
-                Debug.Log($"[HomeTabBar] 按钮点击: tabId=\"{capturedId}\"");
+                GameLog.Info($"[HomeTabBar] 按钮点击: tabId=\"{capturedId}\"");
                 UiClickSound.Play();
                 SwitchTo(capturedId);
             });
-            Debug.Log($"[HomeTabBar] 已绑定按钮: tabId=\"{entry.tabId}\", button={entry.button.name}");
+            GameLog.Info($"[HomeTabBar] 已绑定按钮: tabId=\"{entry.tabId}\", button={entry.button.name}");
         }
 
         // 初始刷新红点角标（先强制重算确保数据源就绪）

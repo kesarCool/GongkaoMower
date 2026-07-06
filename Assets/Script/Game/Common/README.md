@@ -297,3 +297,44 @@ GetDef(id) → def.CreateRuntimeSkill(_bindings)   // 内含 ApplyStats Lv.1；�
 - **弹窗**：新模态是否继承 `UIPanelBase` 并通过 `UIManager` 打开？局外壳是否落在 **`Shell/UI/`**？是否误把业务逻辑写进 `UI/Framework/`？
 - **TMP 中文**：新 UI 预制体是否使用 **msyh SDF**，或确认会经 `UIManager.Open` / `ShowConfirm` 触发 `ApplyToHierarchy`？动态创建的 TMP 是否补了字体应用？
 - **错误码**：新增玩家可见失败是否已在 `c错误码c.xls` 加行，且 `GameErrorCodes` 有对应常量？
+- **日志**：新增 `Debug.Log` 是否应改为 `GameLog.Info`？正式包仅 Warning/Error 可见（见 **9**）。
+
+---
+
+## 9. 日志规范（`GameLog`）
+
+### 9.1 统一入口
+
+**禁止**在业务代码中直接使用 `Debug.Log`。所有 Info 级别日志必须走 `GameLog.Info`：
+
+```csharp
+// ❌ 禁止
+Debug.Log("[SpawnerWaves] TriggerWaves()");
+
+// ✅ 正确
+GameLog.Info("[SpawnerWaves] TriggerWaves()");
+```
+
+| 方法 | 级别 | 微信正式包 | Editor |
+|------|------|-----------|--------|
+| `GameLog.Info(msg)` | Info | ❌ 屏蔽 | ✅ 输出 |
+| `GameLog.Warning(msg)` | Warning | ✅ 输出 | ✅ 输出 |
+| `GameLog.Error(msg)` | Error | ✅ 输出 | ✅ 输出 |
+
+### 9.2 开关机制
+
+- **`GameLog.EnableInfo`**（默认 `true`）：`AppBootstrap.Awake` 中检测 `Application.platform == RuntimePlatform.WebGLPlayer` 时设为 `false`，屏蔽所有 `GameLog.Info` 输出。
+- **`Debug.unityLogger.filterLogType`**：Editor/Standalone 生效，微信 WebGL 下**无效**（微信 SDK 在 Emscripten 层拦截，所有日志均转 `console.log`），因此在微信包必须靠 `EnableInfo` 从源头掐。
+- `GameLog.Warning` / `GameLog.Error` **不受影响**，始终输出。
+
+### 9.3 写入行为
+
+- `Info` / `Warning` / `Error` 均写 Console（`Debug.Log` / `LogWarning` / `LogError`）。
+- **非 WebGL 平台**同时写文件 `game_debug.log`（`Application.dataPath/../`）。
+- **WebGL 平台**跳过文件 I/O（无文件系统）。
+
+### 9.4 审查清单
+
+- 新加日志是否用 `GameLog.Info` 而非 `Debug.Log`？
+- 是否误把 Warning/Error 级别写成 Info（导致正式包丢失）？
+- 本地调试完后是否清理了临时 `Debug.Log`？

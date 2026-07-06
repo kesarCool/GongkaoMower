@@ -20,7 +20,7 @@ public static class BattleChineseFontRuntime
 
         _loaded = Resources.Load<TMP_FontAsset>(DefaultResourcesPath);
         if (_loaded != null)
-            Debug.Log("[BattleChineseFontRuntime] 中文字体已加载: " + _loaded.name);
+            GameLog.Info("[BattleChineseFontRuntime] 中文字体已加载: " + _loaded.name);
         else
             Debug.LogWarning("[BattleChineseFontRuntime] 未找到: " + DefaultResourcesPath);
     }

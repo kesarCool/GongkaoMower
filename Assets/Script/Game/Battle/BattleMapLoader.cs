@@ -106,7 +106,7 @@ public sealed class BattleMapLoader : MonoBehaviour
         }
         else
         {
-            Debug.Log(
+            GameLog.Info(
                 $"[BattleMapLoader] levelId={levelId} 已加载地图 {loadedPath}，Ground={(_groundTilemap != null ? _groundTilemap.name : "null")}");
         }
     }

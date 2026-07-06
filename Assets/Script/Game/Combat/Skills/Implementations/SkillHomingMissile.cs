@@ -57,7 +57,7 @@ public class SkillHomingMissile : SkillBase
         salvoCount = _baseSalvoCount * 2;
         salvoInterval = 0f;
 
-        Debug.Log($"[SkillHomingMissile] Legend 全弹发射：salvo={salvoCount}, interval={salvoInterval}");
+        GameLog.Info($"[SkillHomingMissile] Legend 全弹发射：salvo={salvoCount}, interval={salvoInterval}");
     }
 
     public override void Tick(float deltaTime)

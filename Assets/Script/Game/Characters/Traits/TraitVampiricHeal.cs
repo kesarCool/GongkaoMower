@@ -60,7 +60,7 @@ public sealed class TraitVampiricHeal : TraitBehaviour
         pickup.Init(_health, _healPercent, _pickupDuration, () => _activePickups--);
 
         _activePickups++;
-        Debug.Log($"[VampiricHeal] 符咒掉落：pos={e.position}, active={_activePickups}/{_maxPickups}");
+        GameLog.Info($"[VampiricHeal] 符咒掉落：pos={e.position}, active={_activePickups}/{_maxPickups}");
     }
 }
 
@@ -105,7 +105,7 @@ internal sealed class TraitHealPickup : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         int heal = Mathf.RoundToInt(_health.MaxHp * _healPercent);
         if (_health != null) _health.Heal(heal);
-        Debug.Log($"[TraitHealPickup] 拾取符咒：+{heal} HP");
+        GameLog.Info($"[TraitHealPickup] 拾取符咒：+{heal} HP");
         Consume();
     }
 }

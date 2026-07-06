@@ -26,7 +26,7 @@ public sealed class TraitNanoRepair : TraitBehaviour
         _health = GetComponent<PlayerHealth>();
         var prefab = Resources.Load<GameObject>("VFX/TraitNanoRepair");
         if (prefab != null) { _vfxGo = Instantiate(prefab, transform); _vfxGo.transform.localPosition = Vector3.zero; _vfxGo.transform.localScale = Vector3.one; _vfxGo.SetActive(false); }
-        Debug.Log($"[NanoRepair] 已启动：healRate={_healPercentPerSec * 100f:F1}%/s, hpThreshold={_hpThreshold}, prefab={prefab?.name}");
+        GameLog.Info($"[NanoRepair] 已启动：healRate={_healPercentPerSec * 100f:F1}%/s, hpThreshold={_hpThreshold}, prefab={prefab?.name}");
     }
 
     private void Update()
@@ -59,6 +59,6 @@ public sealed class TraitNanoRepair : TraitBehaviour
         _timer = 0f;
 
         int heal = Mathf.RoundToInt(_health.MaxHp * _healPercentPerSec * _tickInterval);
-        if (heal > 0) { _health.Heal(heal); Debug.Log($"[NanoRepair] 回血 +{heal}, hp={_health.Hp}/{_health.MaxHp}"); }
+        if (heal > 0) { _health.Heal(heal); GameLog.Info($"[NanoRepair] 回血 +{heal}, hp={_health.Hp}/{_health.MaxHp}"); }
     }
 }

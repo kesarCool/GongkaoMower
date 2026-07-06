@@ -34,9 +34,23 @@ public class CameraFollow2D : MonoBehaviour
     [Tooltip("是否启用边界夹紧（建议开启，避免显示空白）。")]
     public bool clampToBounds = true;
 
+    [Header("Boss 波次镜头")]
+    [Tooltip("Boss 波次镜头拉远倍率（>1=拉远，1=不变）。")]
+    public float bossZoomMultiplier = 1.3f;
+    [Tooltip("镜头缩放过渡速度（值越大越快）。")]
+    public float zoomSpeed = 3f;
+
     private Camera _cam;
     private Vector3 _vel;
     private Vector3? _overrideTarget;
+    private float _defaultOrthoSize;
+    private float _targetOrthoSize;
+
+    /// <summary>进入/退出 Boss 波次时切换镜头缩放。</summary>
+    public void SetBossZoom(bool enterBoss)
+    {
+        _targetOrthoSize = enterBoss ? _defaultOrthoSize * bossZoomMultiplier : _defaultOrthoSize;
+    }
 
     /// <summary>Boss 击杀后镜头锁定在指定世界坐标，直到 <see cref="ClearOverride"/>。</summary>
     public void OverrideFollow(Vector3 worldPos) => _overrideTarget = worldPos;
@@ -56,12 +70,23 @@ public class CameraFollow2D : MonoBehaviour
     {
         _cam = GetComponent<Camera>();
         if (_cam == null) _cam = Camera.main;
+        if (_cam != null)
+        {
+            _defaultOrthoSize = _cam.orthographicSize;
+            _targetOrthoSize = _defaultOrthoSize;
+        }
     }
 
     private void LateUpdate()
     {
         if (target == null) TryFindTarget();
         if (_cam == null) return;
+
+        // Boss 镜头缩放
+        if (Mathf.Abs(_cam.orthographicSize - _targetOrthoSize) > 0.005f)
+        {
+            _cam.orthographicSize = Mathf.Lerp(_cam.orthographicSize, _targetOrthoSize, Time.unscaledDeltaTime * zoomSpeed);
+        }
 
         Vector3 desired;
         if (_overrideTarget.HasValue)

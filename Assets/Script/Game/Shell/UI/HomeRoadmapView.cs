@@ -53,15 +53,12 @@ public class HomeRoadmapView : MonoBehaviour
     private GameObject _activePopup;
     private readonly List<RoadmapNodeView> _nodes = new List<RoadmapNodeView>();
 
-    // [DEBUG] 需要日志时取消下行注释：
-    // private static void L(string msg) => DebugFileLog.Log(msg);
     private static void L(string msg) { }
 
     // ═══════════════ 生命周期 ═══════════════
 
     private IEnumerator Start()
     {
-        // DebugFileLog.Init("roadmap_debug.log");  // [DEBUG] 需要日志时取消注释
         L($"[R] Start BEGIN f={Time.frameCount}");
         if (_circleSprite == null) _circleSprite = GenerateCircleSprite(circleTexSize);
         if (_whitePixelSprite == null) _whitePixelSprite = GenerateWhitePixelSprite();

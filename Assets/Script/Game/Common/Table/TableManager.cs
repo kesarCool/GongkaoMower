@@ -95,7 +95,7 @@ public class TableManager : MonoSingleton<TableManager>
             mTypeTableDict.Add(mTypeList[i], tableData);    
         }
 
-        Debug.Log($"TableManager Init success, type count: {mTypeTableDict.Count}");
+        GameLog.Info($"TableManager Init success, type count: {mTypeTableDict.Count}");
     }
 
     private Dictionary<int, object> _loadTable(Type type)
@@ -161,7 +161,7 @@ public class TableManager : MonoSingleton<TableManager>
             if (type == typeof(LevelWave) && index < 2)
             {
                 var lw = fobj as ProtoTable.LevelWave;
-                Debug.Log($"[TableManager] LevelWave row[{index}]: ID={id}, levelId={lw.levelId}, wave={lw.wave}, dataLen={data.Length}");
+                GameLog.Info($"[TableManager] LevelWave row[{index}]: ID={id}, levelId={lw.levelId}, wave={lw.wave}, dataLen={data.Length}");
             }
 
             if (!table.ContainsKey(id))

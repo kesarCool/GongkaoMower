@@ -26,11 +26,11 @@ public static class GameErrorPresenter
 
         if (mode == ErrorCodeCatalog.DisplayNone)
         {
-            Debug.Log($"[ErrorCode:{errorCode}] {message}");
+            GameLog.Info($"[ErrorCode:{errorCode}] {message}");
             return;
         }
 
-        Debug.Log($"[ErrorCode:{errorCode}] display={mode} {message}");
+        GameLog.Info($"[ErrorCode:{errorCode}] display={mode} {message}");
 
         if (UIManager.Instance == null)
         {
@@ -47,7 +47,7 @@ public static class GameErrorPresenter
                 UIManager.Instance.ShowAlert(string.Empty, message, onDialogClosed);
                 break;
             default:
-                Debug.Log($"[ErrorCode:{errorCode}] 未知 CodeDisplay={mode}，{message}");
+                GameLog.Info($"[ErrorCode:{errorCode}] 未知 CodeDisplay={mode}，{message}");
                 break;
         }
 #else

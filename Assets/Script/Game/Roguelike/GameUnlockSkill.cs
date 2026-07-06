@@ -30,7 +30,7 @@ public class GameUnlockSkill : MonoBehaviour
         int currentLevel = BattleLevelContext.LevelId;
         if (currentLevel <= 0)
         {
-            Debug.Log("[GameUnlockSkill] 关卡 ID 无效，跳过。");
+            GameLog.Info("[GameUnlockSkill] 关卡 ID 无效，跳过。");
             yield break;
         }
 
@@ -91,7 +91,7 @@ public class GameUnlockSkill : MonoBehaviour
 
         if (unseen.Count == 0)
         {
-            Debug.Log($"[GameUnlockSkill] 关卡 {currentLevel} 没有待展示的新技能（家族过滤后）。");
+            GameLog.Info($"[GameUnlockSkill] 关卡 {currentLevel} 没有待展示的新技能（家族过滤后）。");
             yield break;
         }
 
@@ -178,7 +178,7 @@ public class GameUnlockSkill : MonoBehaviour
             {
                 if (!equippedFamilies.TryGetValue(family, out SkillId allowedId) || def.id != allowedId)
                 {
-                    Debug.Log($"[GameUnlockSkill] 过滤技能 {def.displayName}({def.id})：家族 {family} 已被 {allowedId} 占用");
+                    GameLog.Info($"[GameUnlockSkill] 过滤技能 {def.displayName}({def.id})：家族 {family} 已被 {allowedId} 占用");
                     unseen.RemoveAt(i);
                 }
             }

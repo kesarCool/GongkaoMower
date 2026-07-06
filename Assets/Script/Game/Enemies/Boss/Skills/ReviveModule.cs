@@ -121,7 +121,7 @@ public class ReviveModule : BossSkillModule
         // 无敌盾就位后才放开，允许正常的死亡/回收流程
         _eb.preventPoolDeath = false;
 
-        Debug.Log($"[ReviveModule] Boss '{boss.name}' 复活 ({_reviveCount}/{_maxRevives})，HP={newHp:F0}");
+        GameLog.Info($"[ReviveModule] Boss '{boss.name}' 复活 ({_reviveCount}/{_maxRevives})，HP={newHp:F0}");
     }
 
     // ══════════════════════════════════════════════
@@ -132,7 +132,7 @@ public class ReviveModule : BossSkillModule
     {
         if (!TrySpawnTextFragments())
         {
-            Debug.Log($"[ReviveModule] 文字碎片失败，回退方块碎片。Boss='{boss.name}'");
+            GameLog.Info($"[ReviveModule] 文字碎片失败，回退方块碎片。Boss='{boss.name}'");
             SpawnSquareFragments(center);
         }
     }
@@ -193,7 +193,7 @@ public class ReviveModule : BossSkillModule
             ? gradient.topLeft
             : tmp.color;
 
-        Debug.Log($"[ReviveModule] 文字碎片源: TMP='{tmp.name}' text='{tmp.text}' gradient={useGradient} faceColor={faceColor} outline={outlineW:F2} fontSize={fontSize} font={font?.name ?? "null"}");
+        GameLog.Info($"[ReviveModule] 文字碎片源: TMP='{tmp.name}' text='{tmp.text}' gradient={useGradient} faceColor={faceColor} outline={outlineW:F2} fontSize={fontSize} font={font?.name ?? "null"}");
 
         foreach (var (worldPos, ch) in chars)
         {
@@ -267,9 +267,9 @@ public class ReviveModule : BossSkillModule
             return null;
         }
 
-        Debug.Log($"[ReviveModule] Boss '{boss.name}' 找到 {allTmp.Length} 个 TMP:");
+        GameLog.Info($"[ReviveModule] Boss '{boss.name}' 找到 {allTmp.Length} 个 TMP:");
         foreach (var t in allTmp)
-            Debug.Log($"[ReviveModule]   TMP '{t.name}' text='{t.text}' color={t.color} enabled={t.enabled}");
+            GameLog.Info($"[ReviveModule]   TMP '{t.name}' text='{t.text}' color={t.color} enabled={t.enabled}");
 
         foreach (var t in allTmp)
         {

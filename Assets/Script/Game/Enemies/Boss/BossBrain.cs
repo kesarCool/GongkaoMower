@@ -120,7 +120,7 @@ public class BossBrain : MonoBehaviour
                 return;
             }
         }
-        Debug.Log($"[BossBrain] monsterId={monsterId} 表配置为空，回退 Inspector 配置");
+        GameLog.Info($"[BossBrain] monsterId={monsterId} 表配置为空，回退 Inspector 配置");
 #endif
         // Inspector 兜底（无需 Excel 配表）
         foreach (var entry in inspectorSkills)
@@ -138,7 +138,7 @@ public class BossBrain : MonoBehaviour
             mod.moduleType = type;
             mod.Init(rawParams, this);
             _modules.Add(mod);
-            Debug.Log($"[BossBrain] monsterId={mid} 加载技能: {type} interval={mod.interval}s cooldown={mod.cooldown}s params={rawParams}");
+            GameLog.Info($"[BossBrain] monsterId={mid} 加载技能: {type} interval={mod.interval}s cooldown={mod.cooldown}s params={rawParams}");
         }
         else Debug.LogWarning($"[BossBrain] monsterId={mid} 未知技能类型: {type}");
     }

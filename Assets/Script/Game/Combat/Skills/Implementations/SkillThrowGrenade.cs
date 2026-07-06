@@ -62,7 +62,7 @@ public class SkillThrowGrenade : SkillBase
         aoeRadius = _baseAoeRadius * 1.3f;
         damage = _baseDamage * 1.2f;
 
-        Debug.Log($"[SkillThrowGrenade] Legend 突破已应用：bounces={maxBounces}, aoe={aoeRadius:F1}, dmg={damage:F0}");
+        GameLog.Info($"[SkillThrowGrenade] Legend 突破已应用：bounces={maxBounces}, aoe={aoeRadius:F1}, dmg={damage:F0}");
     }
 
     public override void Tick(float deltaTime)

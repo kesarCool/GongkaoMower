@@ -82,7 +82,7 @@ public class SkillPassiveStat : SkillPassive
             newValue = Mathf.Clamp01(newValue);
 
         _setter(newValue);
-        Debug.Log($"[PassiveStat] {Id} Lv.{Level} {modType}: {_originalValue:0.##} → {newValue:0.##} (bonus={value:0.##})");
+        GameLog.Info($"[PassiveStat] {Id} Lv.{Level} {modType}: {_originalValue:0.##} → {newValue:0.##} (bonus={value:0.##})");
     }
 
     protected override void RemoveBonus()

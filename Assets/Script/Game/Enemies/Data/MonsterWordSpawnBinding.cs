@@ -26,7 +26,7 @@ public static class MonsterWordSpawnBinding
     private static void L(string msg)
     {
         if (LogVerbose)
-            Debug.Log($"{LogTag} {msg}");
+            GameLog.Info($"{LogTag} {msg}");
     }
 
     private static void W(string msg)

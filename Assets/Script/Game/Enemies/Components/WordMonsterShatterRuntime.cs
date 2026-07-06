@@ -160,14 +160,14 @@ public class WordMonsterShatterRuntime : MonoBehaviour
 
         // 每 3 秒汇总
         if (Time.frameCount % 180 == 0 && (_pending.Count > 0 || _activeFragments.Count > 0))
-            Debug.Log($"[Shatter] Status: active={_activeFragments.Count}/{maxActiveFragments} pending={_pending.Count} success={_spawnSuccessCount} fail={_spawnFailCount}");
+            GameLog.Info($"[Shatter] Status: active={_activeFragments.Count}/{maxActiveFragments} pending={_pending.Count} success={_spawnSuccessCount} fail={_spawnFailCount}");
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
         if (e.enemy == null)
         {
-            Debug.Log("[Shatter] OnEnemyDied: e.enemy is null, skip");
+            GameLog.Info("[Shatter] OnEnemyDied: e.enemy is null, skip");
             return;
         }
         bool isBoss = e.enemy.GetComponent<LastWaveBossMarker>() != null;
@@ -175,12 +175,12 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         var label = e.enemy.GetComponentInChildren<EnemyWordLabel>(true);
         if (label == null)
         {
-            Debug.Log($"[Shatter] OnEnemyDied: no EnemyWordLabel on '{e.enemy.name}' (type={e.enemy.GetType().Name}), skip");
+            GameLog.Info($"[Shatter] OnEnemyDied: no EnemyWordLabel on '{e.enemy.name}' (type={e.enemy.GetType().Name}), skip");
             return;
         }
         if (!label.TryGetWorldTextForShatter(out TextMeshPro src))
         {
-            Debug.Log($"[Shatter] OnEnemyDied: TryGetWorldTextForShatter false on '{e.enemy.name}', skip");
+            GameLog.Info($"[Shatter] OnEnemyDied: TryGetWorldTextForShatter false on '{e.enemy.name}', skip");
             return;
         }
 
@@ -188,7 +188,7 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         TMP_TextInfo textInfo = src.textInfo;
         if (textInfo == null || textInfo.characterCount == 0)
         {
-            Debug.Log($"[Shatter] OnEnemyDied: textInfo null or charCount=0 on '{e.enemy.name}', skip");
+            GameLog.Info($"[Shatter] OnEnemyDied: textInfo null or charCount=0 on '{e.enemy.name}', skip");
             return;
         }
 

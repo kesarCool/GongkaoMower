@@ -309,7 +309,7 @@ public class EnemyWordLabel : MonoBehaviour
         string s = text ?? string.Empty;
 
         if (LogVerbose)
-            Debug.Log($"{MonsterWordSpawnBinding.LogTag} SetWord on={gameObject.name} worldText={(worldText != null ? worldText.gameObject.name : "null")} uiText={(uiText != null ? uiText.gameObject.name : "null")} len={s.Length}");
+            GameLog.Info($"{MonsterWordSpawnBinding.LogTag} SetWord on={gameObject.name} worldText={(worldText != null ? worldText.gameObject.name : "null")} uiText={(uiText != null ? uiText.gameObject.name : "null")} len={s.Length}");
 
         if (worldText == null && uiText == null)
         {

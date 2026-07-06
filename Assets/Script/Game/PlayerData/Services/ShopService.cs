@@ -148,7 +148,7 @@ public static class ShopService
         svc.RecordShopPurchase(row.ID);
 
         string currencyLabel = isFree ? "免费" : isAd ? "广告" : isDiamond ? "钻石" : "金币";
-        Debug.Log($"[Shop] 购买成功: {row.ShopName} ×{count}, 消耗 {price} {currencyLabel}");
+        GameLog.Info($"[Shop] 购买成功: {row.ShopName} ×{count}, 消耗 {price} {currencyLabel}");
         return ShopPurchaseResult.Success;
     }
 

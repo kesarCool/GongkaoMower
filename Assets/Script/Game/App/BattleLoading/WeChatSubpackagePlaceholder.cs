@@ -82,13 +82,13 @@ public static class WeChatSubpackagePlaceholder
         else
             onProgress?.Invoke(1f);
 
-        Debug.Log("[WeChatSubpackagePlaceholder] Editor 跳过真实 wx.loadSubpackage，分包名=" + name);
+        GameLog.Info("[WeChatSubpackagePlaceholder] Editor 跳过真实 wx.loadSubpackage，分包名=" + name);
         onSuccess?.Invoke();
         yield break;
 #elif UNITY_WEBGL
         // 微信小游戏：分包由 game.json 配置，运行时自动加载（WX-WASM-SDK v2023.02 无需手动 LoadSubpackage）
         onProgress?.Invoke(1f);
-        Debug.Log("[WeChatSubpackagePlaceholder] WebGL 分包由微信运行时自动管理，分包名=" + name);
+        GameLog.Info("[WeChatSubpackagePlaceholder] WebGL 分包由微信运行时自动管理，分包名=" + name);
         onSuccess?.Invoke();
         yield break;
 #else

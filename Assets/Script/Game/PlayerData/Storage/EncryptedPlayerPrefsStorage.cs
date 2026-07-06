@@ -40,7 +40,7 @@ public sealed class EncryptedPlayerPrefsStorage : ISaveStorage
         //    明文 JSON 以 { 或 [ 开头，guest ID 以 guest_ 开头
         if (raw.Length > 0 && (raw[0] == '{' || raw[0] == '[' || raw.StartsWith("guest_")))
         {
-            Debug.Log($"[EncryptedStorage] 检测到旧版明文存档（key={key}），迁移为加密格式。");
+            GameLog.Info($"[EncryptedStorage] 检测到旧版明文存档（key={key}），迁移为加密格式。");
             json = raw;
             Save(key, json); // 立刻写回加密版本
             return true;

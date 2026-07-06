@@ -121,6 +121,18 @@ public class SpawnerWaves : MonoBehaviour
     /// <summary>中间波 Boss 已生成，等待 Boss 死亡事件以推进到下一波。</summary>
     private bool _waitingForBossKill;
 
+    private CameraFollow2D _cachedCameraFollow;
+
+    private CameraFollow2D CameraFollow
+    {
+        get
+        {
+            if (_cachedCameraFollow == null)
+                _cachedCameraFollow = FindObjectOfType<CameraFollow2D>();
+            return _cachedCameraFollow;
+        }
+    }
+
     /// <summary>当前关卡配置的爆兵总波数（按 wave 字段去重计数，排除 wave≤0 召唤波次）。</summary>
     public int GetConfiguredWaveCount()
     {
@@ -204,12 +216,12 @@ public class SpawnerWaves : MonoBehaviour
     private void Awake()
     {
         // 强制生命周期日志：用于确认脚本是否真的在运行（不受 debugLogs 开关影响）
-        Debug.Log($"[SpawnerWaves] Awake name={name} activeInHierarchy={gameObject.activeInHierarchy} enabled={enabled}");
+        GameLog.Info($"[SpawnerWaves] Awake name={name} activeInHierarchy={gameObject.activeInHierarchy} enabled={enabled}");
     }
 
     private void OnEnable()
     {
-        Debug.Log($"[SpawnerWaves] OnEnable name={name} autoTriggerWavesOnStart={autoTriggerWavesOnStart} delay={autoTriggerDelay} enableNormalSpawn={enableNormalSpawn}");
+        GameLog.Info($"[SpawnerWaves] OnEnable name={name} autoTriggerWavesOnStart={autoTriggerWavesOnStart} delay={autoTriggerDelay} enableNormalSpawn={enableNormalSpawn}");
 
         if (_normalRoutine == null)
             _normalRoutine = StartCoroutine(NormalLoop());
@@ -225,14 +237,14 @@ public class SpawnerWaves : MonoBehaviour
         // 再补一层保险：有些情况下脚本启用顺序/运行时实例替换会导致你以为勾了但没触发
         if (autoTriggerWavesOnStart && _autoRoutine == null)
         {
-            Debug.Log("[SpawnerWaves] Start: auto trigger scheduled.");
+            GameLog.Info("[SpawnerWaves] Start: auto trigger scheduled.");
             _autoRoutine = StartCoroutine(TriggerWavesAfterDelay());
         }
     }
 
     private void OnDisable()
     {
-        Debug.Log($"[SpawnerWaves] OnDisable name={name} (coroutines will stop)");
+        GameLog.Info($"[SpawnerWaves] OnDisable name={name} (coroutines will stop)");
         if (_normalRoutine != null) { StopCoroutine(_normalRoutine); _normalRoutine = null; }
         if (_waveRoutine != null) { StopCoroutine(_waveRoutine); _waveRoutine = null; }
         if (_autoRoutine != null) { StopCoroutine(_autoRoutine); _autoRoutine = null; }
@@ -257,10 +269,10 @@ public class SpawnerWaves : MonoBehaviour
     private IEnumerator TriggerWavesAfterDelay()
     {
         float d = Mathf.Max(0f, autoTriggerDelay);
-        Debug.Log($"[SpawnerWaves] Waiting {d}s before auto-trigger (realtime={useRealtimeForWaves}, timeScale={Time.timeScale}).");
+        GameLog.Info($"[SpawnerWaves] Waiting {d}s before auto-trigger (realtime={useRealtimeForWaves}, timeScale={Time.timeScale}).");
         if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(d);
         else yield return new WaitForSeconds(d);
-        Debug.Log($"[SpawnerWaves] Auto-trigger NOW name={name} activeInHierarchy={gameObject.activeInHierarchy} enabled={enabled}");
+        GameLog.Info($"[SpawnerWaves] Auto-trigger NOW name={name} activeInHierarchy={gameObject.activeInHierarchy} enabled={enabled}");
         _autoRoutine = null;
         TriggerWaves();
     }
@@ -272,7 +284,7 @@ public class SpawnerWaves : MonoBehaviour
     public void TriggerWaves()
     {
         if (_waveRoutine != null) return; // 避免重复触发叠加
-        Debug.Log("[SpawnerWaves] TriggerWaves()");
+        GameLog.Info("[SpawnerWaves] TriggerWaves()");
         _waveRoutine = StartCoroutine(WaveRoutine());
     }
 
@@ -288,7 +300,7 @@ public class SpawnerWaves : MonoBehaviour
             return;
         }
         if (debugLogs)
-            Debug.Log($"[SpawnerWaves] 召唤 wave={wave}：{group.Count} 条配置，共 {SumCap(group)} 只怪");
+            GameLog.Info($"[SpawnerWaves] 召唤 wave={wave}：{group.Count} 条配置，共 {SumCap(group)} 只怪");
         StartCoroutine(TableWaveGroupRoutine(group, 0, 0, false));
     }
 
@@ -309,7 +321,7 @@ public class SpawnerWaves : MonoBehaviour
         {
             tableWaves = BuildTableWavesForLevel(resolvedLevelId);
             if (debugLogs)
-                Debug.Log($"[SpawnerWaves] LevelWave 表 levelId={resolvedLevelId} 命中行数={tableWaves.Count}");
+                GameLog.Info($"[SpawnerWaves] LevelWave 表 levelId={resolvedLevelId} 命中行数={tableWaves.Count}");
         }
 
         bool useTable = tableWaves != null && tableWaves.Count > 0;
@@ -361,7 +373,7 @@ public class SpawnerWaves : MonoBehaviour
                 }
             }
             if (debugLogs && _reserveWaves.Count > 0)
-                Debug.Log($"[SpawnerWaves] 待召唤波次: {_reserveWaves.Count} 组（wave<=0），等待 SummonModule 触发");
+                GameLog.Info($"[SpawnerWaves] 待召唤波次: {_reserveWaves.Count} 组（wave<=0），等待 SummonModule 触发");
 
             // 按 wave 字段分组：同一 wave 的多个条目 → 并发刷怪
             var waveGroups = GroupByWave(activeWaves);
@@ -376,13 +388,17 @@ public class SpawnerWaves : MonoBehaviour
                 if (debugLogs)
                 {
                     foreach (var tw in group)
-                        Debug.Log($"[SpawnerWaves] wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster} (共{group.Count}条并发) isBoss={tw.isBoss}");
+                        GameLog.Info($"[SpawnerWaves] wave#{tw.wave} monsterId={tw.monsterId} cap={tw.totalMonster} (共{group.Count}条并发) isBoss={tw.isBoss}");
                 }
 
-                // ── 中间波 Boss 清场：Boss 进场前清除场上所有残余怪物 ──
-                if (isBossWave && !isLastWave)
+                // ── Boss 波次：镜头拉远 + 中间波清场 ──
+                if (isBossWave)
                 {
-                    ClearAllEnemyMonsters();
+                    if (CameraFollow != null)
+                        CameraFollow.SetBossZoom(true);
+
+                    if (!isLastWave)
+                        ClearAllEnemyMonsters();
                 }
 
                 PublishWaveChanged(this, w + 1, totalWaves);
@@ -393,16 +409,18 @@ public class SpawnerWaves : MonoBehaviour
                 if (isBossWave && !isLastWave)
                 {
                     if (debugLogs)
-                        Debug.Log($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已生成，等待 Boss 击杀……");
+                        GameLog.Info($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已生成，等待 Boss 击杀……");
                     _waitingForBossKill = true;
                     while (_waitingForBossKill)
                         yield return null;
-                    // Boss 被击杀，短暂停顿后继续
+                    // Boss 被击杀 → 恢复镜头，短暂停顿后继续下一波
+                    if (CameraFollow != null)
+                        CameraFollow.SetBossZoom(false);
                     float pause = Mathf.Max(0.3f, waveInterval * 0.5f);
                     if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(pause);
                     else yield return new WaitForSeconds(pause);
                     if (debugLogs)
-                        Debug.Log($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已击杀，推进到波 {w+2}。");
+                        GameLog.Info($"[SpawnerWaves] 波 {w+1}/{totalWaves} Boss 已击杀，推进到波 {w+2}。");
                 }
                 else if (w < totalWaves - 1)
                 {
@@ -421,7 +439,7 @@ public class SpawnerWaves : MonoBehaviour
                 int count = Mathf.Max(0, cfg.count);
                 float step = Mathf.Max(0f, cfg.spawnStep);
 
-                if (debugLogs) Debug.Log($"[SpawnerWaves] Wave {w + 1}/{total} '{cfg.name}' count={count} step={step}");
+                if (debugLogs) GameLog.Info($"[SpawnerWaves] Wave {w + 1}/{total} '{cfg.name}' count={count} step={step}");
 
                 PublishWaveChanged(this, w + 1, total);
                 WordMonsterWaveStyle.ApplyWaveStart(wordMonsterWaveTintMode, resolvedLevelId, w + 1);
@@ -452,7 +470,7 @@ public class SpawnerWaves : MonoBehaviour
                     }
                 }
 
-                if (debugLogs) Debug.Log($"[SpawnerWaves] Wave {w + 1} 完成，实际生成 {spawned}/{count}");
+                if (debugLogs) GameLog.Info($"[SpawnerWaves] Wave {w + 1} 完成，实际生成 {spawned}/{count}");
 
                 if (w < waves.Length - 1)
                 {
@@ -492,7 +510,7 @@ public class SpawnerWaves : MonoBehaviour
         if (pre > 0)
         {
             if (debugLogs)
-                Debug.Log($"[SpawnerWaves] 波 {displayIndex}/{displayTotal} 开场等待 timeStart={pre}s");
+                GameLog.Info($"[SpawnerWaves] 波 {displayIndex}/{displayTotal} 开场等待 timeStart={pre}s");
             if (useRealtimeForWaves) yield return new WaitForSecondsRealtime(pre);
             else yield return new WaitForSeconds(pre);
         }
@@ -548,7 +566,7 @@ public class SpawnerWaves : MonoBehaviour
         }
 
         if (debugLogs)
-            Debug.Log($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（表 wave={tw.wave}）结束：已刷 {spawned}/{cap}，窗长 {windowSec}s（0=不限）");
+            GameLog.Info($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（表 wave={tw.wave}）结束：已刷 {spawned}/{cap}，窗长 {windowSec}s（0=不限）");
     }
 
     /// <summary>
@@ -562,13 +580,13 @@ public class SpawnerWaves : MonoBehaviour
         if (tw.isBoss)
         {
             if (debugLogs)
-                Debug.Log($"[SpawnerWaves] Boss 波次警告 wave={tw.wave} displayIndex={displayIndex}");
+                GameLog.Info($"[SpawnerWaves] Boss 波次警告 wave={tw.wave} displayIndex={displayIndex}");
             coordinator.FlashWarning(bossWarningColor, warningPulseCount, warningDuration);
         }
         else if (tw.totalMonster >= waveWarningThreshold)
         {
             if (debugLogs)
-                Debug.Log($"[SpawnerWaves] 大批量波次警告 wave={tw.wave} totalMonster={tw.totalMonster} >= {waveWarningThreshold}");
+                GameLog.Info($"[SpawnerWaves] 大批量波次警告 wave={tw.wave} totalMonster={tw.totalMonster} >= {waveWarningThreshold}");
             coordinator.FlashWarning(waveWarningColor, warningPulseCount, warningDuration);
         }
     }
@@ -578,18 +596,18 @@ public class SpawnerWaves : MonoBehaviour
         var result = new List<TableWaveRuntime>();
         if (TableManager.Instance == null)
         {
-            Debug.Log("[SpawnerWaves] BuildTableWaves: TableManager.Instance is null");
+            GameLog.Info("[SpawnerWaves] BuildTableWaves: TableManager.Instance is null");
             return result;
         }
 
         var dict = TableManager.Instance.GetTable<LevelWave>();
         if (dict == null || dict.Count == 0)
         {
-            Debug.Log($"[SpawnerWaves] BuildTableWaves: dict empty. dictNull={dict == null} count={dict?.Count ?? 0}");
+            GameLog.Info($"[SpawnerWaves] BuildTableWaves: dict empty. dictNull={dict == null} count={dict?.Count ?? 0}");
             return result;
         }
 
-        Debug.Log($"[SpawnerWaves] BuildTableWaves: dict.Count={dict.Count}, targetLevelId={levelId}");
+        GameLog.Info($"[SpawnerWaves] BuildTableWaves: dict.Count={dict.Count}, targetLevelId={levelId}");
         foreach (var kv in dict)
         {
             if (kv.Value is LevelWave lw)
@@ -600,17 +618,17 @@ public class SpawnerWaves : MonoBehaviour
                 }
                 else if (result.Count == 0 && kv.Key < 100) // 仅在前几条且未命中时打印
                 {
-                    Debug.Log($"[SpawnerWaves]   miss: key={kv.Key}, lw.levelId={lw.levelId}, target={levelId}");
+                    GameLog.Info($"[SpawnerWaves]   miss: key={kv.Key}, lw.levelId={lw.levelId}, target={levelId}");
                 }
             }
             else
             {
-                Debug.Log($"[SpawnerWaves]   type mismatch: key={kv.Key}, type={kv.Value?.GetType().Name ?? "null"}");
+                GameLog.Info($"[SpawnerWaves]   type mismatch: key={kv.Key}, type={kv.Value?.GetType().Name ?? "null"}");
             }
         }
 
         result.Sort((a, b) => a.wave.CompareTo(b.wave));
-        Debug.Log($"[SpawnerWaves] BuildTableWaves: result.Count={result.Count}");
+        GameLog.Info($"[SpawnerWaves] BuildTableWaves: result.Count={result.Count}");
 
         return result;
     }
@@ -725,7 +743,7 @@ public class SpawnerWaves : MonoBehaviour
         }
 
         if (cleared > 0)
-            Debug.Log($"[SpawnerWaves] Boss 波次清场：已移除 {cleared} 只怪物。");
+            GameLog.Info($"[SpawnerWaves] Boss 波次清场：已移除 {cleared} 只怪物。");
     }
 
     /// <summary>常规刷怪（无 Excel 数据 → 攻血速走旧 Inspector 兜底）。</summary>
@@ -821,7 +839,7 @@ public class SpawnerWaves : MonoBehaviour
         }
 
         if (debugLogs)
-            Debug.Log($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（{entryCount}条并发）结束：已刷 {totalSpawned}/{totalCap}");
+            GameLog.Info($"[SpawnerWaves] 波 {displayIndex}/{displayTotal}（{entryCount}条并发）结束：已刷 {totalSpawned}/{totalCap}");
     }
 
     /// <summary>按 wave 字段分组，组内保持原排序。</summary>
@@ -852,7 +870,7 @@ public class SpawnerWaves : MonoBehaviour
             if (!SpawnLimiter.Instance.CanSpawn("Enemy", out var cfg))
             {
                 if (debugLogs && cfg != null && !cfg.recycleOldest)
-                    Debug.Log($"[SpawnerWaves] 达到怪物上限，暂不生成 enemyId={enemyId}");
+                    GameLog.Info($"[SpawnerWaves] 达到怪物上限，暂不生成 enemyId={enemyId}");
                 return null;
             }
         }

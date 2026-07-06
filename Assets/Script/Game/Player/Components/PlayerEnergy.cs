@@ -84,7 +84,7 @@ public class PlayerEnergy : MonoBehaviour
 
             if (energy < 0) energy = 0;
 
-            Debug.Log($"[PlayerEnergy] 触发选卡：第{_triggerCount}次，消耗能量={need}，剩余={energy}，下次需要={EnergyRequiredForNextCard}");
+            GameLog.Info($"[PlayerEnergy] 触发选卡：第{_triggerCount}次，消耗能量={need}，剩余={energy}，下次需要={EnergyRequiredForNextCard}");
             OnEnergyChanged.Invoke(energy);
             OnCardSelectionTriggered.Invoke(_triggerCount);
 

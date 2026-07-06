@@ -225,7 +225,7 @@ public sealed class PlayerProfileService
         }
 
         SetHeroLevel(characterId, currentLevel + 1);
-        Debug.Log($"[PlayerProfile] {characterId} 升级 {currentLevel} → {currentLevel + 1}，消耗金币 {cost}");
+        GameLog.Info($"[PlayerProfile] {characterId} 升级 {currentLevel} → {currentLevel + 1}，消耗金币 {cost}");
 
         // 成就系统：英雄升级事件
         EventBus.Publish(new HeroLevelUpEvent { characterId = characterId });
@@ -289,7 +289,7 @@ public sealed class PlayerProfileService
             {
                 int diff = fromItems - fromKeys;
                 AddFragments(def.characterId, diff);
-                Debug.Log($"[HealFragment] {def.displayName}：characterFragmentKeys {fromKeys} → {fromItems}（补齐 {diff} 片，来自 itemIds）");
+                GameLog.Info($"[HealFragment] {def.displayName}：characterFragmentKeys {fromKeys} → {fromItems}（补齐 {diff} 片，来自 itemIds）");
             }
         }
     }
@@ -316,7 +316,7 @@ public sealed class PlayerProfileService
         {
             if (def != null && def.fragmentItemId == itemId)
             {
-                Debug.Log($"[AddItem] 碎片路由: itemId={itemId} → {def.characterId} ({def.displayName})");
+                GameLog.Info($"[AddItem] 碎片路由: itemId={itemId} → {def.characterId} ({def.displayName})");
                 return def.characterId;
             }
         }
@@ -425,7 +425,7 @@ public sealed class PlayerProfileService
         }
 
         SetHeroStage(characterId, stage + 1);
-        Debug.Log($"[PlayerProfile] {characterId} 升阶 {stage} → {stage + 1}，消耗碎片 {cost}");
+        GameLog.Info($"[PlayerProfile] {characterId} 升阶 {stage} → {stage + 1}，消耗碎片 {cost}");
 
         // 成就系统：英雄升阶事件
         EventBus.Publish(new HeroStageUpEvent { characterId = characterId });

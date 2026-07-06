@@ -11,7 +11,7 @@ public sealed class WeChatRewardedAdProvider : IReviveAdProvider
 
     public void RequestReviveAd(Action<bool> onComplete)
     {
-        Debug.Log("[WeChatAd] 未接入广告（待开通流量主），模拟完成");
+        GameLog.Info("[WeChatAd] 未接入广告（待开通流量主），模拟完成");
         onComplete?.Invoke(true);
     }
 }

@@ -82,7 +82,7 @@ public class TouchLayer : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoi
         _activePointerId = eventData.pointerId;
         Vector2 pos = eventData.position;
         if (debugLogPositions)
-            Debug.Log($"[TouchLayer] Down id={eventData.pointerId} pos={pos}");
+            GameLog.Info($"[TouchLayer] Down id={eventData.pointerId} pos={pos}");
         OnTouchDown.Invoke(pos);
         OnTouchMove.Invoke(pos);
     }
@@ -103,7 +103,7 @@ public class TouchLayer : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoi
             if (moveLogInterval <= 0f || Time.unscaledTime >= _nextMoveLogTime)
             {
                 _nextMoveLogTime = Time.unscaledTime + Mathf.Max(0f, moveLogInterval);
-                Debug.Log($"[TouchLayer] Move id={eventData.pointerId} pos={eventData.position}");
+                GameLog.Info($"[TouchLayer] Move id={eventData.pointerId} pos={eventData.position}");
             }
         }
         OnTouchMove.Invoke(eventData.position);
@@ -121,7 +121,7 @@ public class TouchLayer : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoi
         if (eventData.pointerId != _activePointerId) return;
 
         if (debugLogPositions)
-            Debug.Log($"[TouchLayer] Up id={eventData.pointerId} pos={eventData.position}");
+            GameLog.Info($"[TouchLayer] Up id={eventData.pointerId} pos={eventData.position}");
         ForceRelease();
     }
 
@@ -134,7 +134,7 @@ public class TouchLayer : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoi
 
         _activePointerId = int.MinValue;
         if (debugLogPositions)
-            Debug.Log("[TouchLayer] Released");
+            GameLog.Info("[TouchLayer] Released");
         OnTouchUp.Invoke();
     }
 }

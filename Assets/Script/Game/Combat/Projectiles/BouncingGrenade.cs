@@ -218,7 +218,7 @@ internal sealed class ChainExplosionSpawner : MonoBehaviour
             Physics2D.queriesHitTriggers = prev;
         }
 
-        Debug.Log($"[余爆] dmg={_damage:F0} radius={_radius:F1} pos=({fxPos.x:F1},{fxPos.y:F1})");
+        GameLog.Info($"[余爆] dmg={_damage:F0} radius={_radius:F1} pos=({fxPos.x:F1},{fxPos.y:F1})");
         Destroy(gameObject);
     }
 }

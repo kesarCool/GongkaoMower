@@ -117,26 +117,26 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     {
         if (_battleEnded || _reviveFlowActive)
         {
-            Debug.Log($"[CardTrace] OnEnemyDied SKIP: battleEnded={_battleEnded} reviveFlow={_reviveFlowActive}");
+            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: battleEnded={_battleEnded} reviveFlow={_reviveFlowActive}");
             return;
         }
         if (e.enemy == null)
         {
-            Debug.Log("[CardTrace] OnEnemyDied SKIP: enemy is null");
+            GameLog.Info("[CardTrace] OnEnemyDied SKIP: enemy is null");
             return;
         }
 
         // 克隆体/分身不计入 Boss 击杀
         if (e.enemy.GetComponent<CloneMarker>() != null)
         {
-            Debug.Log($"[CardTrace] OnEnemyDied SKIP: CloneMarker on {e.enemy.name}");
+            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: CloneMarker on {e.enemy.name}");
             return;
         }
 
         var marker = e.enemy.GetComponent<LastWaveBossMarker>();
         if (marker == null)
         {
-            Debug.Log($"[CardTrace] OnEnemyDied SKIP: no LastWaveBossMarker on {e.enemy.name}");
+            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: no LastWaveBossMarker on {e.enemy.name}");
             return;
         }
 
@@ -144,7 +144,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         GameLog.Info($"[CardTrace] OnEnemyDied: isFinalBoss={marker.isFinalBoss} spawner={marker.spawner?.name ?? "NULL"} wasKilled={wasKilled} waveComplete={waveComplete} victory={victory}");
         if (!wasKilled)
         {
-            Debug.Log($"[CardTrace] OnEnemyDied SKIP: RegisterBossKill returned wasKilled=false (BossesAlive={BattleVictoryBossTracker.BossesAlive})");
+            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: RegisterBossKill returned wasKilled=false (BossesAlive={BattleVictoryBossTracker.BossesAlive})");
             return;
         }
 
@@ -378,7 +378,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         Vector2 resolved = WallStuckResolver.Resolve(center);
         playerTr.position = new Vector3(resolved.x, resolved.y, playerTr.position.z);
 
-        Debug.Log($"[Revive] 传送到地图中心 ({resolved.x:F1},{resolved.y:F1})");
+        GameLog.Info($"[Revive] 传送到地图中心 ({resolved.x:F1},{resolved.y:F1})");
     }
 
     /// <summary>复活无敌光罩：脉动金环 + 渐隐，duration 秒后自动解除无敌。</summary>
@@ -519,7 +519,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
                 drops[existingIdx] = new DropResult(pityItemId, drops[existingIdx].count + 1);
             else
                 drops.Add(new DropResult(pityItemId, 1));
-            Debug.Log($"[DropPity] 保底触发！关卡 {levelId}，强制掉落物品 {pityItemId}");
+            GameLog.Info($"[DropPity] 保底触发！关卡 {levelId}，强制掉落物品 {pityItemId}");
         }
 
         // 写入存档 + 构建展示列表
@@ -554,7 +554,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             if (firstClearPoolId > 0 && isFirstClear) tag += " + 首通奖励池";
             var sb = new System.Text.StringBuilder();
             foreach (var r in result) sb.Append($"{r.itemName}×{r.count} ");
-            Debug.Log($"[DropManager] 关卡 {levelId} 奖励（{tag}, starPool={starPoolId}, firstPool={firstClearPoolId}, stars={stars}）：{sb}");
+            GameLog.Info($"[DropManager] 关卡 {levelId} 奖励（{tag}, starPool={starPoolId}, firstPool={firstClearPoolId}, stars={stars}）：{sb}");
         }
 
         return result;
@@ -596,7 +596,7 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
             description = itemRow?.Description ?? "",
         });
 
-        Debug.Log($"[DropManager] 失败结算：完成 {completedWaves} 波，奖励 {gold} 金币（perWave={goldPerWave}）");
+        GameLog.Info($"[DropManager] 失败结算：完成 {completedWaves} 波，奖励 {gold} 金币（perWave={goldPerWave}）");
         return result;
     }
 

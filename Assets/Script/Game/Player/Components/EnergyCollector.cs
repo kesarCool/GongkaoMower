@@ -45,6 +45,6 @@ public class EnergyCollector : MonoBehaviour
         Physics2D.queriesHitTriggers = prev;
 
         if (collected > 0)
-            Debug.Log($"[EnergyCollector] 自动收集 {collected} 个能量");
+            GameLog.Info($"[EnergyCollector] 自动收集 {collected} 个能量");
     }
 }

@@ -226,7 +226,7 @@ public class UIManager : MonoBehaviour
         if (toastPanelPrefab == null)
         {
             Debug.LogWarning("[UIManager] toastPanelPrefab 未配置，Toast 降级为 Log：" + message);
-            Debug.Log("[Toast] " + message);
+            GameLog.Info("[Toast] " + message);
             return;
         }
 

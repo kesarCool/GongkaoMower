@@ -115,7 +115,7 @@ public class DynamicJoystick : MonoBehaviour
     public void OnTouchDown(Vector2 screenPos)
     {
         if (debugLogs)
-            Debug.Log($"[DynamicJoystick] OnTouchDown pos={screenPos} self={name} joystickRoot={(_joystickRoot == null ? "null" : _joystickRoot.name)} active={( _joystickRoot != null && _joystickRoot.gameObject.activeSelf)}");
+            GameLog.Info($"[DynamicJoystick] OnTouchDown pos={screenPos} self={name} joystickRoot={(_joystickRoot == null ? "null" : _joystickRoot.name)} active={( _joystickRoot != null && _joystickRoot.gameObject.activeSelf)}");
         BeginTouchSynthetic(screenPos);
     }
 
@@ -124,7 +124,7 @@ public class DynamicJoystick : MonoBehaviour
     /// </summary>
     public void OnTouchMove(Vector2 screenPos)
     {
-        if (debugLogs) Debug.Log($"[DynamicJoystick] OnTouchMove pos={screenPos}");
+        if (debugLogs) GameLog.Info($"[DynamicJoystick] OnTouchMove pos={screenPos}");
         UpdateTouchSynthetic(screenPos);
     }
 
@@ -133,7 +133,7 @@ public class DynamicJoystick : MonoBehaviour
     /// </summary>
     public void OnTouchUp()
     {
-        if (debugLogs) Debug.Log("[DynamicJoystick] OnTouchUp");
+        if (debugLogs) GameLog.Info("[DynamicJoystick] OnTouchUp");
         EndTouch();
     }
 
@@ -191,13 +191,13 @@ public class DynamicJoystick : MonoBehaviour
         {
             _joystickRoot = joystickPrefab;
             _joystickRoot.SetParent(parent, false);
-            if (debugLogs) Debug.Log("[DynamicJoystick] Using scene joystick instance (reuse, no Instantiate).");
+            if (debugLogs) GameLog.Info("[DynamicJoystick] Using scene joystick instance (reuse, no Instantiate).");
         }
         else if (joystickPrefab != null)
         {
             _joystickRoot = Instantiate(joystickPrefab, parent);
             _joystickRoot.name = joystickPrefab.name;
-            if (debugLogs) Debug.Log("[DynamicJoystick] Instantiated joystick prefab once.");
+            if (debugLogs) GameLog.Info("[DynamicJoystick] Instantiated joystick prefab once.");
         }
         else
         {
@@ -291,7 +291,7 @@ public class DynamicJoystick : MonoBehaviour
         if (debugLogs)
         {
             string cName = _canvas != null ? _canvas.name : "null";
-            Debug.Log($"[DynamicJoystick] UI ready. canvas={cName}, root={_joystickRoot.name}, outer={_outerRect.name}, inner={_innerRect.name}");
+            GameLog.Info($"[DynamicJoystick] UI ready. canvas={cName}, root={_joystickRoot.name}, outer={_outerRect.name}, inner={_innerRect.name}");
         }
     }
 
@@ -368,7 +368,7 @@ public class DynamicJoystick : MonoBehaviour
     {
         if (_joystickRoot == null)
         {
-            if (debugLogs) Debug.Log("[DynamicJoystick] BeginTouchSynthetic: joystickRoot is null, rebuilding UI.");
+            if (debugLogs) GameLog.Info("[DynamicJoystick] BeginTouchSynthetic: joystickRoot is null, rebuilding UI.");
             EnsureCanvas();
             BuildJoystickUI();
         }
@@ -447,7 +447,7 @@ public class DynamicJoystick : MonoBehaviour
             playerRigidbody.velocity = _currentInput * spd;
             if (debugLogs && Mathf.Abs(spd - _lastLoggedSpeed) > 0.01f)
             {
-                Debug.Log($"[DynamicJoystick] ApplyMovement MoveSpeed={spd:F1} vel={playerRigidbody.velocity.magnitude:F1}");
+                GameLog.Info($"[DynamicJoystick] ApplyMovement MoveSpeed={spd:F1} vel={playerRigidbody.velocity.magnitude:F1}");
                 _lastLoggedSpeed = spd;
             }
         }
@@ -473,7 +473,7 @@ public class DynamicJoystick : MonoBehaviour
     {
         if (_joystickRoot == null)
         {
-            if (debugLogs) Debug.Log($"[DynamicJoystick] ShowJoystickAtScreenPos: joystickRoot is null. self={name}");
+            if (debugLogs) GameLog.Info($"[DynamicJoystick] ShowJoystickAtScreenPos: joystickRoot is null. self={name}");
             return;
         }
 
@@ -498,7 +498,7 @@ public class DynamicJoystick : MonoBehaviour
         }
 
         if (debugLogs)
-            Debug.Log($"[DynamicJoystick] Show at screen={screenPos} local={_joystickRoot.anchoredPosition} active={_joystickRoot.gameObject.activeSelf}");
+            GameLog.Info($"[DynamicJoystick] Show at screen={screenPos} local={_joystickRoot.anchoredPosition} active={_joystickRoot.gameObject.activeSelf}");
     }
 
     /// <summary>
@@ -538,7 +538,7 @@ public class DynamicJoystick : MonoBehaviour
             _joystickRoot.gameObject.SetActive(false);
 
         if (debugLogs)
-            Debug.Log("[DynamicJoystick] Hide");
+            GameLog.Info("[DynamicJoystick] Hide");
     }
 
     private void ResetInnerToCenter()

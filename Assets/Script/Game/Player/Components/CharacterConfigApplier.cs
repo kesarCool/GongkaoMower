@@ -55,7 +55,7 @@ public class CharacterConfigApplier : MonoBehaviour
             return;
         }
 
-        Debug.Log($"[CharacterConfigApplier] 应用角色: {def.displayName} (id={def.characterId})");
+        GameLog.Info($"[CharacterConfigApplier] 应用角色: {def.displayName} (id={def.characterId})");
 
         // 1. 属性（通过 attributes 干净写入，不再用反射）
         var attr = def.attributes.ApplyMinimums();
@@ -76,16 +76,16 @@ public class CharacterConfigApplier : MonoBehaviour
             attr.pierceRate     += s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceRate");
             attr.pierceCount    += Mathf.RoundToInt(s.GetUpgradeMul(def.characterId, def.upgradeData, "pierceCount"));
             attr.penRate        += s.GetUpgradeMul(def.characterId, def.upgradeData, "penRate");
-            Debug.Log($"[CharacterConfigApplier] 升级倍率已应用：{def.characterId} Lv.{lv}");
+            GameLog.Info($"[CharacterConfigApplier] 升级倍率已应用：{def.characterId} Lv.{lv}");
         }
 
-        Debug.Log($"[CharacterConfigApplier] 属性讀取: raw=({def.attributes.moveSpeed:F1}) safe=({attr.moveSpeed:F1})");
+        GameLog.Info($"[CharacterConfigApplier] 属性讀取: raw=({def.attributes.moveSpeed:F1}) safe=({attr.moveSpeed:F1})");
         _playerHealth.SetMaxHp(attr.maxHp);
         _playerHealth.SetDefense(attr.defense);
         _playerHealth.ResetToFull();
         float prevSpeed = _playerController.moveSpeed;
         _playerController.moveSpeed = attr.moveSpeed;
-        Debug.Log($"[CharacterConfigApplier] moveSpeed: {prevSpeed:F1} → {_playerController.moveSpeed:F1}");
+        GameLog.Info($"[CharacterConfigApplier] moveSpeed: {prevSpeed:F1} → {_playerController.moveSpeed:F1}");
         _playerSkills.attackMultiplier = attr.attack;
         _playerSkills.critRate = attr.critRate;
         _playerSkills.critDamageMul = attr.critDamageMul;
@@ -175,7 +175,7 @@ public class CharacterConfigApplier : MonoBehaviour
         if (trait != null)
         {
             trait.Initialize(def.upgradeData.rareTraitParams);
-            Debug.Log($"[CharacterConfigApplier] Rare 特质已应用：{traitType}（stage={stage}）");
+            GameLog.Info($"[CharacterConfigApplier] Rare 特质已应用：{traitType}（stage={stage}）");
         }
     }
 
@@ -185,7 +185,7 @@ public class CharacterConfigApplier : MonoBehaviour
         int stage = PlayerProfileService.Instance.GetHeroStage(def.characterId);
         if (stage < 2)
         {
-            // Debug.Log($"[CharacterConfigApplier] Legend 突破跳过：stage={stage}，需 stage≥2");
+            // GameLog.Info($"[CharacterConfigApplier] Legend 突破跳过：stage={stage}，需 stage≥2");
             return;
         }
 
@@ -203,7 +203,7 @@ public class CharacterConfigApplier : MonoBehaviour
             {
                 skill.ApplyLegendBreakthrough(stage);
                 applied++;
-                // Debug.Log($"[CharacterConfigApplier] Legend 突破已注入：skill={id}（{skill.GetType().Name}）");
+                // GameLog.Info($"[CharacterConfigApplier] Legend 突破已注入：skill={id}（{skill.GetType().Name}）");
             }
         }
 
@@ -225,7 +225,7 @@ public class CharacterConfigApplier : MonoBehaviour
             if (autoSkill != null)
             {
                 autoSkill.bulletPrefab = def.defaultWeapon.bulletOverridePrefab;
-                Debug.Log($"[CharacterConfigApplier] AutoProjectile({id}) 子弹已覆盖为: {def.defaultWeapon.bulletOverridePrefab.name}");
+                GameLog.Info($"[CharacterConfigApplier] AutoProjectile({id}) 子弹已覆盖为: {def.defaultWeapon.bulletOverridePrefab.name}");
                 return;
             }
         }

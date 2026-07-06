@@ -89,7 +89,7 @@ public static class CharacterUnlockEvaluator
         AddUnlockedCharacter(data, def.characterId);
         PlayerProfileService.Instance.MarkDirtyAndSave();
 
-        Debug.Log($"[CharUnlock] 碎片解锁：{def.displayName}，消耗 {cost} 碎片");
+        GameLog.Info($"[CharUnlock] 碎片解锁：{def.displayName}，消耗 {cost} 碎片");
         return (true, cost);
     }
 

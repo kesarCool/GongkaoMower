@@ -92,7 +92,7 @@ public class DashModule : BossSkillModule
         if (_trail != null) _trail.emitting = false;
 
         float actualDist = Vector2.Distance(startPos, _rb.position);
-        Debug.Log($"[Dash] {actualDist:F1}/{_dashDistance:F1}{(wallBlocked ? " 撞墙" : "")}");
+        GameLog.Info($"[Dash] {actualDist:F1}/{_dashDistance:F1}{(wallBlocked ? " 撞墙" : "")}");
 
         yield return new WaitForSeconds(_recoveryTime);
 

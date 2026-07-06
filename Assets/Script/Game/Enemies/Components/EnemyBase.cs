@@ -183,14 +183,14 @@ public class EnemyBase : MonoBehaviour
         // 复活拦截：BossBrain 在 OnDied 中设 preventPoolDeath=true
         if (preventPoolDeath)
         {
-            Debug.Log($"[CardTrace] EnemyBase.Die: preventPoolDeath=true on {name}, HideForRevive (NO EnemyDiedEvent)");
+            GameLog.Info($"[CardTrace] EnemyBase.Die: preventPoolDeath=true on {name}, HideForRevive (NO EnemyDiedEvent)");
             HideForRevive();
             return;
         }
 
         bool hasBossMarker = GetComponent<LastWaveBossMarker>() != null;
         if (hasBossMarker)
-            Debug.Log($"[CardTrace] EnemyBase.Die: publishing EnemyDiedEvent for BOSS {name}");
+            GameLog.Info($"[CardTrace] EnemyBase.Die: publishing EnemyDiedEvent for BOSS {name}");
 
         // 通过事件发布"怪物死亡"，由 UI/掉落/统计等模块订阅处理
         int killReward = Mathf.Max(1, rewardKillCount);

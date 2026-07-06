@@ -93,7 +93,7 @@ public class AchievementService
         });
 #endif
 
-        Debug.Log($"[AchievementService] 加载 {_configRows.Count} 条成就配置行。");
+        GameLog.Info($"[AchievementService] 加载 {_configRows.Count} 条成就配置行。");
     }
 
     private void SubscribeEvents()
@@ -489,7 +489,7 @@ public class AchievementService
         // 通知 HUD 刷新货币显示
         EventBus.Publish(new PlayerDataChangedEvent());
 
-        Debug.Log($"[AchievementService] 领取成就 groupId={groupId} stage={stage} → itemId={rewardId} ×{rewardCount}");
+        GameLog.Info($"[AchievementService] 领取成就 groupId={groupId} stage={stage} → itemId={rewardId} ×{rewardCount}");
         return (true, rewardId, rewardCount);
     }
 

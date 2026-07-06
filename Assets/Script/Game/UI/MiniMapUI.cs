@@ -87,7 +87,7 @@ public class MiniMapUI : MonoBehaviour
 
     private void BuildUI()
     {
-        Debug.Log($"[MiniMap] BuildUI: panelSize={panelSize} mapResolution={mapResolution}");
+        GameLog.Info($"[MiniMap] BuildUI: panelSize={panelSize} mapResolution={mapResolution}");
 
         // 找 Canvas
         var canvas = GetComponentInParent<Canvas>();
@@ -130,7 +130,7 @@ public class MiniMapUI : MonoBehaviour
     {
         if (_tilemap == null) return;
 
-        Debug.Log($"[MiniMap] tilemap={_tilemap.name} bounds={_tilemap.cellBounds} worldMin={_mapWorldMin} worldSize={_mapWorldSize}");
+        GameLog.Info($"[MiniMap] tilemap={_tilemap.name} bounds={_tilemap.cellBounds} worldMin={_mapWorldMin} worldSize={_mapWorldSize}");
 
         // 删旧相机（如果 Inspector 改参数后重建）
         var oldCam = GameObject.Find("MiniMapCamera");

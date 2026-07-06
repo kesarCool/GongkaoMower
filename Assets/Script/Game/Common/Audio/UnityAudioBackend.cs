@@ -245,7 +245,7 @@ public sealed class UnityAudioBackend : IAudioBackend
                 // 记录响应信息，帮助排查 FMOD 无法创建 Sound 的原因
                 string respType = null;
                 try { respType = req.GetResponseHeader("Content-Type"); } catch { respType = null; }
-                Debug.Log($"[UnityAudioBackend] Download OK url={url} audioType={audioType} compressed={tryCompressed} downloadedBytes={req.downloadedBytes} contentType={respType}");
+                GameLog.Info($"[UnityAudioBackend] Download OK url={url} audioType={audioType} compressed={tryCompressed} downloadedBytes={req.downloadedBytes} contentType={respType}");
 
                 try
                 {

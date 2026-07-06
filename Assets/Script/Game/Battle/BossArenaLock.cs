@@ -106,7 +106,7 @@ public class BossArenaLock : MonoBehaviour
         // Boss 出生在围墙外时，拉入场内（避免 Boss 被自己的竞技场挡在外面）
         PullBossesIntoArena(l, r, b, t);
 
-        Debug.Log($"[BossArenaLock] 围墙生成 center={_arenaCenter} size={w}x{h}");
+        GameLog.Info($"[BossArenaLock] 围墙生成 center={_arenaCenter} size={w}x{h}");
     }
 
     /// <summary>把围墙范围外的 Boss 拽入竞技场，边缘 clamp（保留相对方位）。</summary>
@@ -131,7 +131,7 @@ public class BossArenaLock : MonoBehaviour
 
             WallStuckResolver.ResolveTransform(m.transform);
 
-            Debug.Log($"[BossArenaLock] Boss '{m.name}' ({pos.x:F1},{pos.y:F1}) → 拉入竞技场 ({x:F1},{y:F1})");
+            GameLog.Info($"[BossArenaLock] Boss '{m.name}' ({pos.x:F1},{pos.y:F1}) → 拉入竞技场 ({x:F1},{y:F1})");
         }
     }
 
@@ -158,7 +158,7 @@ public class BossArenaLock : MonoBehaviour
 
         if (!Mathf.Approximately(clampedX, _arenaCenter.x) || !Mathf.Approximately(clampedY, _arenaCenter.y))
         {
-            Debug.Log($"[BossArenaLock] 竞技场中心从 ({_arenaCenter.x:F1},{_arenaCenter.y:F1}) clamp 到 ({clampedX:F1},{clampedY:F1})，防止超出地图");
+            GameLog.Info($"[BossArenaLock] 竞技场中心从 ({_arenaCenter.x:F1},{_arenaCenter.y:F1}) clamp 到 ({clampedX:F1},{clampedY:F1})，防止超出地图");
             _arenaCenter = new Vector2(clampedX, clampedY);
         }
     }
@@ -210,6 +210,6 @@ public class BossArenaLock : MonoBehaviour
         if (_wallParent != null) Destroy(_wallParent);
         _wallParent = null;
 
-        Debug.Log("[BossArenaLock] 围墙拆除");
+        GameLog.Info("[BossArenaLock] 围墙拆除");
     }
 }

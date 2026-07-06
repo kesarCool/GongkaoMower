@@ -11,8 +11,16 @@ public static class GameLog
     private static bool _pathLogged;
     private static readonly object _lock = new object();
 
+    /// <summary>Info 级别日志开关：编译期决定，非 Editor 默认关闭。</summary>
+#if UNITY_EDITOR
+    public static bool EnableInfo = true;
+#else
+    public static bool EnableInfo = false;
+#endif
+
     public static void Info(string message)
     {
+        if (!EnableInfo) return;
         Write("INFO", message);
     }
 

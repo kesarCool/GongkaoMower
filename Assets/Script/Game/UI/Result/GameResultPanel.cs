@@ -365,11 +365,11 @@ public class GameResultPanel : UIPanelBase
 
         if (_vm == null || _vm.rewardItems == null || _vm.rewardItems.Count == 0)
         {
-            Debug.Log($"[GameResult] 无奖励物品展示（vm={_vm != null}, items={_vm?.rewardItems?.Count ?? -1}）");
+            GameLog.Info($"[GameResult] 无奖励物品展示（vm={_vm != null}, items={_vm?.rewardItems?.Count ?? -1}）");
             return;
         }
 
-        Debug.Log($"[GameResult] 开始生成 {_vm.rewardItems.Count} 个奖励 ItemCell...");
+        GameLog.Info($"[GameResult] 开始生成 {_vm.rewardItems.Count} 个奖励 ItemCell...");
 
         foreach (var entry in _vm.rewardItems)
         {
@@ -386,7 +386,7 @@ public class GameResultPanel : UIPanelBase
             if (!string.IsNullOrEmpty(entry.iconPath))
                 icon = Resources.Load<Sprite>(entry.iconPath);
 
-            Debug.Log($"[GameResult] ItemCell.Bind: id={entry.itemId} name={entry.itemName} count={entry.count} grade={entry.grade} icon={icon != null} desc={entry.description}");
+            GameLog.Info($"[GameResult] ItemCell.Bind: id={entry.itemId} name={entry.itemName} count={entry.count} grade={entry.grade} icon={icon != null} desc={entry.description}");
             cell.Bind(icon, entry.itemName, entry.count, entry.grade, entry.description ?? "");
         }
     }

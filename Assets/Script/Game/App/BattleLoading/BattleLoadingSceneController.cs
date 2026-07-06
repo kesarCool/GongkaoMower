@@ -140,7 +140,7 @@ public class BattleLoadingSceneController : MonoBehaviour
     {
         if (statusText != null)
             statusText.text = msg;
-        Debug.Log("[BattleLoading] " + msg);
+        GameLog.Info("[BattleLoading] " + msg);
     }
 
     private void SetProgress(float p)
