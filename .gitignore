@@ -8,6 +8,27 @@
 /[Uu]ser[Ss]ettings/
 /MemoryCaptures/
 
+# Visual Studio / Rider (generated)
+*.csproj
+*.sln
+*.slnx
+.vs/
+.vsconfig
+
+# VSCode (generated — 如果 .vscode/ 里有自定义配置想提交，删掉这行)
+.vscode/
+
+# Unity autogen temp
+log.txt
+charset.txt
+texture_report.txt
+*_report.txt
+
+# Misc temp (root only)
+/*.png
+/*.zip
+/*.unitypackage
+
 # NuGet / manual dependency extract at repo root (not Unity Assets)
 /_bc_extract/
 /_npoi_extract/
