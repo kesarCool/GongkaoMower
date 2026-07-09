@@ -19,7 +19,7 @@ public class CharacterSelectionPanel : UIPanelBase
     [SerializeField] private CharacterSelectionElement cellPrefab;
 
     [Header("详情")]
-    [SerializeField] private UnityEngine.UI.Image detailPortrait;
+    [SerializeField] private Image detailPortrait;
     [SerializeField] private TextMeshProUGUI detailNameText;
     [SerializeField] private TextMeshProUGUI detailLevelText;
     [SerializeField] private Image detailSkillIcon;
@@ -33,6 +33,14 @@ public class CharacterSelectionPanel : UIPanelBase
     [Tooltip("属性行容器（挂 VerticalLayoutGroup）。")]
     [SerializeField] private Transform attrRowsContainer;
 
+    [Header("视图切换")]
+    [SerializeField] private Toggle statsTabToggle;
+    [SerializeField] private Toggle skillTabToggle;
+    [Tooltip("属性视图容器（属性行 + 升级/升阶按钮）。")]
+    [SerializeField] private GameObject statsView;
+    [Tooltip("技能视图容器（技能图标/描述 + 升阶技能描述）。")]
+    [SerializeField] private GameObject skillView;
+
     [Header("升级操作")]
     [SerializeField] private TextMeshProUGUI upgradeCostText;
     [SerializeField] private Button upgradeButton;
@@ -40,7 +48,7 @@ public class CharacterSelectionPanel : UIPanelBase
 
     [Header("升阶操作")]
     [Tooltip("升阶面板（含碎片消耗 + 升阶按钮），与升级按钮互斥。")]
-    [SerializeField] private GameObject promotePanel;
+   // [SerializeField] private GameObject promotePanel;
     [SerializeField] private TextMeshProUGUI promoteFragmentCostText;
     [SerializeField] private Button promoteButton;
     [SerializeField] private GameObject promoteRedPoint; // 碎片+等级足够时显示
@@ -53,7 +61,6 @@ public class CharacterSelectionPanel : UIPanelBase
 
     [Header("按钮")]
     [SerializeField] private Button confirmButton;
-    [SerializeField] private TextMeshProUGUI confirmButtonLabel;
     [SerializeField] private Button startGameButton;
     [SerializeField] private Button closeButton;
 
@@ -66,6 +73,7 @@ public class CharacterSelectionPanel : UIPanelBase
     private readonly List<UpgradeAttrRow> _attrRows = new List<UpgradeAttrRow>();
     private bool _upgradeCooldown;
     private Coroutine _upgradeCooldownRoutine;
+    private bool _isStatsView = true;
 
     public override void OnOpen(object payload)
     {
@@ -117,6 +125,19 @@ public class CharacterSelectionPanel : UIPanelBase
         if (promoteButton != null)
             promoteButton.onClick.AddListener(OnPromoteClicked);
 
+        // 视图切换 Toggle
+        if (statsTabToggle != null)
+            statsTabToggle.onValueChanged.AddListener(OnStatsTabToggled);
+        if (skillTabToggle != null)
+            skillTabToggle.onValueChanged.AddListener(OnSkillTabToggled);
+        // 默认切到属性视图
+        if (statsTabToggle != null && statsTabToggle.isOn)
+            SwitchToView(isStats: true);
+        else if (skillTabToggle != null && skillTabToggle.isOn)
+            SwitchToView(isStats: false);
+        else
+            SwitchToView(isStats: true);
+
         PopulateList();
         AutoSelectDefault();
     }
@@ -131,6 +152,8 @@ public class CharacterSelectionPanel : UIPanelBase
         if (startGameButton != null) startGameButton.onClick.RemoveListener(OnStartGameClicked);
         if (upgradeButton != null) upgradeButton.onClick.RemoveListener(OnUpgradeClicked);
         if (promoteButton != null) promoteButton.onClick.RemoveListener(OnPromoteClicked);
+        if (statsTabToggle != null) statsTabToggle.onValueChanged.RemoveListener(OnStatsTabToggled);
+        if (skillTabToggle != null) skillTabToggle.onValueChanged.RemoveListener(OnSkillTabToggled);
         ClearCells();
         ClearAttrRows();
     }
@@ -252,7 +275,7 @@ public class CharacterSelectionPanel : UIPanelBase
                             UIManager.Instance.ShowToast($"「{def.displayName}」已解锁！", 2f);
                             PopulateList();
                             // 自动选中刚解锁的角色
-                            AutoSelectUnlocked(def.characterId);
+                            SelectCellByCharId(def.characterId);
                         }
                         else
                         {
@@ -282,19 +305,6 @@ public class CharacterSelectionPanel : UIPanelBase
             if (_cells[i].CharacterDef?.characterId == charId)
             {
                 SelectCell(i, isEquipped: charId == _equippedCharId);
-                return;
-            }
-        }
-    }
-
-    /// <summary>碎片解锁后自动选中刚解锁的角色。</summary>
-    private void AutoSelectUnlocked(string charId)
-    {
-        for (int i = 0; i < _cells.Count; i++)
-        {
-            if (_cells[i].CharacterDef != null && _cells[i].CharacterDef.characterId == charId)
-            {
-                SelectCell(i, isEquipped: false);
                 return;
             }
         }
@@ -384,10 +394,10 @@ public class CharacterSelectionPanel : UIPanelBase
             }
         }
 
-        // 升级 or 升阶（互斥）
+        // 属性Tab → 升级；技能Tab → 升阶
         bool atLevelCap = isMax;
-        bool showPromote = data != null && atLevelCap && canPromote;
-        bool showUpgrade = data != null && !atLevelCap;
+        bool showUpgrade = data != null && !atLevelCap && _isStatsView;
+        bool showPromote = data != null && canPromote && !_isStatsView;
 
         // 升级消耗 + 按钮
         if (upgradeCostText != null)
@@ -432,8 +442,8 @@ public class CharacterSelectionPanel : UIPanelBase
             promoteLegendDescText.gameObject.SetActive(!string.IsNullOrEmpty(data.legendBreakthroughDescription));
         }
 
-        // 升阶面板 + 按钮（仅在达到等级上限且可升阶时显示）
-        if (promotePanel != null) promotePanel.SetActive(showPromote);
+        // 升阶面板 + 按钮（技能 Tab 可见，不满足条件时灰显）
+      //  if (promotePanel != null) promotePanel.SetActive(showPromote);
         if (promoteFragmentCostText != null && showPromote)
         {
             int needFrags = stage == 0 ? data.rareFragmentCost : data.legendFragmentCost;
@@ -475,6 +485,34 @@ public class CharacterSelectionPanel : UIPanelBase
             confirmButton.gameObject.SetActive(!isEquipped);
         if (startGameButton != null)
             startGameButton.gameObject.SetActive(isEquipped);
+    }
+
+    // ── 视图切换 ──────────────────────────────────────
+
+    private void OnStatsTabToggled(bool isOn)
+    {
+        if (isOn) SwitchToView(isStats: true);
+    }
+
+    private void OnSkillTabToggled(bool isOn)
+    {
+        if (isOn) SwitchToView(isStats: false);
+    }
+
+    private void SwitchToView(bool isStats)
+    {
+        _isStatsView = isStats;
+        if (statsView != null) statsView.SetActive(isStats);
+        if (skillView != null) skillView.SetActive(!isStats);
+        // 切换后刷新详情，让 ShowDetail 按 _isStatsView 决定升级/升阶显隐
+        RefreshCurrentDetail();
+    }
+
+    private void RefreshCurrentDetail()
+    {
+        if (string.IsNullOrEmpty(_selectedCharId) || characterCatalog == null) return;
+        var def = characterCatalog.Get(_selectedCharId);
+        if (def != null) ShowDetail(def);
     }
 
     private void OnStartGameClicked()

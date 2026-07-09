@@ -202,7 +202,7 @@ public class CardSelectionPanel : UIPanelBase
         if (_freeRefreshCount > 0)
         {
             if (refreshCountText != null)
-                refreshCountText.text = $"刷新({_freeRefreshCount})";
+                refreshCountText.text = $"刷    新"; //({_freeRefreshCount})
             if (refreshButton != null)
                 refreshButton.gameObject.SetActive(true);
         }
