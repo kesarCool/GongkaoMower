@@ -103,7 +103,8 @@ public class LexiconPreviewPanel : UIPanelBase
     private void OnCloseClicked()
     {
         UiClickSound.PlayClose();
-        if (UIManager.Instance != null)
+        // 仅在弹窗模式下关闭（Tab 模式下 closeButton 不绑，但此方法不会被调用）
+        if (UIManager.Instance != null && UIManager.Instance.TryGetInstance(out LexiconPreviewPanel _))
             UIManager.Instance.CloseTop();
     }
 

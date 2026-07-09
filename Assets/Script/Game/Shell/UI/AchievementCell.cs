@@ -7,8 +7,11 @@ using UnityEngine.UI;
 /// </summary>
 public class AchievementCell : MonoBehaviour
 {
-    private static readonly Color32 ColorNormal = new Color32(0x15, 0x4A, 0x7D, 0xFF);
-    private static readonly Color32 ColorClaimed = new Color32(0x9D, 0x9D, 0x9D, 0xFF);
+    [Header("背景色")]
+    [Tooltip("默认进度背景色。")]
+    [SerializeField] private Color colorNormal = new Color32(0x00, 0x88, 0xD9, 0xFF);
+    [Tooltip("已领取背景色。")]
+    [SerializeField] private Color colorClaimed = new Color32(0x9D, 0x9D, 0x9D, 0xFF);
 
     [Header("背景")]
     [SerializeField] private Image bgImage;
@@ -45,7 +48,7 @@ public class AchievementCell : MonoBehaviour
 
         // 背景色
         if (bgImage != null)
-            bgImage.color = claimed ? ColorClaimed : ColorNormal;
+            bgImage.color = claimed ? colorClaimed : colorNormal;
 
         // 描述
         if (textDescription != null)

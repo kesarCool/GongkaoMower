@@ -263,7 +263,7 @@ public class HomeRoadmapView : MonoBehaviour
         rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot = new Vector2(0.5f, 0f);
         rt.anchoredPosition = new Vector2(cx, y);
-        rt.sizeDelta = new Vector2(cw * 0.7f, 2f);
+        rt.sizeDelta = new Vector2(cw * 0.7f, 3f);
         go.GetComponent<Image>().color = color;
         go.GetComponent<Image>().raycastTarget = false;
 
@@ -375,16 +375,16 @@ public class HomeRoadmapView : MonoBehaviour
         var ir = inn.GetComponent<RectTransform>();
         ir.anchorMin = new Vector2(0.04f, 0.04f); ir.anchorMax = new Vector2(0.96f, 0.96f); ir.sizeDelta = Vector2.zero;
 
-        Pop(ir, ChapterLevelDisplay.FormatLevelName(node.LevelId), popupTitleFontSize, Color.white, new Vector2(0, 90));
+        Pop(ir, ChapterLevelDisplay.FormatLevelName(node.LevelId), popupTitleFontSize, Color.white, new Vector2(0, 100));
         int earned = prog != null ? Mathf.Clamp(prog.stars, 0, 3) : 0;
         string starStr = earned > 0 ? new string('★', earned) + new string('☆', 3 - earned) : new string('☆', 3);
         Pop(ir, starStr, popupStarFontSize, new Color(1, 0.82f, 0.15f), new Vector2(0, 35));
         string tm = prog?.bestTimeSec > 0 ? $"最佳时间：{Mathf.FloorToInt(prog.bestTimeSec / 60):00}:{Mathf.FloorToInt(prog.bestTimeSec % 60):00}" : "最佳时间：--:--";
         string kl = prog != null ? $"最佳击杀：{prog.bestKills}" : "最佳击杀：--";
-        Pop(ir, tm, popupDetailFontSize, new Color(0.65f, 0.65f, 0.7f), new Vector2(-90, -20));
-        Pop(ir, kl, popupDetailFontSize, new Color(0.65f, 0.65f, 0.7f), new Vector2(90, -20));
+        Pop(ir, tm, popupDetailFontSize, new Color(0.65f, 0.65f, 0.7f), new Vector2(-105, -20));
+        Pop(ir, kl, popupDetailFontSize, new Color(0.65f, 0.65f, 0.7f), new Vector2(105, -20));
 
-        var btn = Mk("Btn", ir, popupButtonSize, new Vector2(0, -80), new Color(0.22f, 0.48f, 0.85f));
+        var btn = Mk("Btn", ir, popupButtonSize, new Vector2(0, -100), new Color(0.22f, 0.48f, 0.85f));
         btn.AddComponent<Button>();
         var bl = new GameObject("Lbl", typeof(RectTransform), typeof(TextMeshProUGUI));
         bl.transform.SetParent(btn.transform, false);

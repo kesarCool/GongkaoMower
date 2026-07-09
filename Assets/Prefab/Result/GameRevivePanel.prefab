@@ -334,7 +334,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.49019608}
+  m_Color: {r: 0.101960786, g: 0.101960786, b: 0.101960786, a: 0.78431374}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -365,8 +365,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   backgroundBlocker: {fileID: 287845476752872036}
   countdownSeconds: 10
-  shareTitle: "\u6551\u6211\u590D\u6D3B\uFF01"
-  shareImageUrlId: VdGe7bObQEi2LakmeNWT1g==
 --- !u!1 &287845477304226573
 GameObject:
   m_ObjectHideFlags: 0

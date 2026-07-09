@@ -114,7 +114,9 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
     private void OnCloseClicked()
     {
         UiClickSound.PlayClose();
-        UIManager.Instance.CloseTop();
+        // 仅在弹窗模式下关闭（Tab 模式下 closeButton 不绑）
+        if (UIManager.Instance != null && UIManager.Instance.TryGetInstance(out AchievementPanel _))
+            UIManager.Instance.CloseTop();
     }
 
     // ── LoopScrollPrefabSource ──

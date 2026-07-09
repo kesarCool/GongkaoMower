@@ -61,7 +61,15 @@ public class GameResultPanel : UIPanelBase
     [SerializeField] private Transform scrollViewRewardContent;
 
     [Header("星级展示")]
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image star1;
+    [SerializeField] private Image star2;
+    [SerializeField] private Image star3;
+    [Tooltip("星星 Sprite（共用一张图，颜色区分亮暗）。")]
+    [SerializeField] private Sprite starSprite;
+    [Tooltip("已获得星星颜色。")]
+    [SerializeField] private Color starActiveColor = new Color(1f, 0.82f, 0.15f, 1f);
+    [Tooltip("未获得星星颜色。")]
+    [SerializeField] private Color starDimColor = new Color(0.15f, 0.15f, 0.15f, 1f);
 
     [Header("金币展示（可选：汇总行，与 ScrollViewReward 互斥时留空其一）")]
     [SerializeField] private TextMeshProUGUI goldEarnedText;
@@ -256,21 +264,11 @@ public class GameResultPanel : UIPanelBase
             _textTime.text = $"时长：{mm:00}:{ss:00}";
         }
 
-        if (starText != null)
-        {
-            if (win && _vm.stars > 0)
-            {
-                int s = Mathf.Clamp(_vm.stars, 1, 3);
-                BattleChineseFontRuntime.EnsureLoaded();
-                BattleChineseFontRuntime.ApplyToTMP(starText);
-                starText.text = new string('★', s) + new string('☆', 3 - s);
-                starText.gameObject.SetActive(true);
-            }
-            else
-            {
-                starText.gameObject.SetActive(false);
-            }
-        }
+        // ── 星级（图片：已获亮色 / 未获暗色，失败不显示）──
+        int earned = win ? Mathf.Clamp(_vm.stars, 0, 3) : -1;
+        ApplyStarImage(star1, 0, earned);
+        ApplyStarImage(star2, 1, earned);
+        ApplyStarImage(star3, 2, earned);
 
         if (_textKillNum != null)
             _textKillNum.text = $"击杀数量：{_vm.killCount}";
@@ -342,6 +340,20 @@ public class GameResultPanel : UIPanelBase
         int levelId = SelectedLevelContext.LevelId;
         string mapName = ChapterLevelDisplay.ResolveMapName(levelId);
         _textLevel.text = ChapterLevelDisplay.FormatLevelLabel(levelId, mapName);
+    }
+
+    /// <summary>设置单颗星星图片：index < earned → 亮色，否则暗色；earned < 0 → 隐藏全部。</summary>
+    private void ApplyStarImage(Image star, int index, int earned)
+    {
+        if (star == null) return;
+        if (earned < 0)
+        {
+            star.gameObject.SetActive(false);
+            return;
+        }
+        star.gameObject.SetActive(true);
+        if (starSprite != null) star.sprite = starSprite;
+        star.color = index < earned ? starActiveColor : starDimColor;
     }
 
     private void BuildRewardItems()

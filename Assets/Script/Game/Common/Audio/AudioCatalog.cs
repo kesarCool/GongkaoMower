@@ -47,6 +47,7 @@ public sealed class AudioCatalog : ScriptableObject
     {
         public Entry uiClick = new Entry { id = AudioId.UiClick, group = AudioLoadGroup.Common };
         public Entry uiClose = new Entry { id = AudioId.UiClose, group = AudioLoadGroup.Common };
+        public Entry uiSwitch = new Entry { id = AudioId.UiSwitch, group = AudioLoadGroup.Common };
     }
 
     [Serializable]
@@ -133,6 +134,7 @@ public sealed class AudioCatalog : ScriptableObject
         {
             if (common.uiClick != null) { common.uiClick.id = AudioId.UiClick; common.uiClick.group = AudioLoadGroup.Common; }
             if (common.uiClose != null) { common.uiClose.id = AudioId.UiClose; common.uiClose.group = AudioLoadGroup.Common; }
+            if (common.uiSwitch != null) { common.uiSwitch.id = AudioId.UiSwitch; common.uiSwitch.group = AudioLoadGroup.Common; }
         }
 
         if (combat != null)
@@ -166,6 +168,7 @@ public sealed class AudioCatalog : ScriptableObject
         {
             if (common.uiClick != null) yield return common.uiClick;
             if (common.uiClose != null) yield return common.uiClose;
+            if (common.uiSwitch != null) yield return common.uiSwitch;
         }
 
         if (combat != null)

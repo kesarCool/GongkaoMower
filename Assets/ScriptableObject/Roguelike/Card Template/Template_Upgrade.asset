@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   background: {fileID: 21300000, guid: 26b2e9dfca9d1df439b1f2511f8689a6, type: 3}
   labelText: "\u5347\u7EA7\u5361"
-  labelColor: {r: 1, g: 0.702765, b: 0, a: 1}
+  labelColor: {r: 1, g: 0.6745098, b: 0.16078432, a: 1}

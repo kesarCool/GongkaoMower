@@ -30,6 +30,9 @@ public class HomeTabBar : MonoBehaviour
     /// <summary>当前活跃页签 ID。</summary>
     public string ActiveTabId => _activeTabId;
 
+    /// <summary>页签切换事件（参数为新 tabId）。</summary>
+    public event System.Action<string> OnTabChanged;
+
     /// <summary>外部数据刷新——转发给当前活跃视图。</summary>
     public void RefreshActive()
     {
@@ -100,6 +103,8 @@ public class HomeTabBar : MonoBehaviour
 
         // 按钮高亮
         RefreshButtonStates();
+
+        OnTabChanged?.Invoke(tabId);
     }
 
     private TabRuntime CreateTab(TabEntry entry)
@@ -167,8 +172,27 @@ public class HomeTabBar : MonoBehaviour
     {
         foreach (var entry in tabs)
         {
-            if (entry.button != null)
-                entry.button.interactable = entry.tabId != _activeTabId;
+            if (entry.button == null) continue;
+
+            bool isActive = entry.tabId == _activeTabId;
+            entry.button.interactable = !isActive;
+
+            // 选中态放大（未配置时默认 1.1 倍）
+            float scale = entry.selectedScale > 0.01f ? entry.selectedScale : 1.1f;
+            entry.button.transform.localScale = isActive
+                ? new Vector3(scale, scale, 1f)
+                : Vector3.one;
+
+            // 切换底图
+            Sprite targetSprite = isActive ? entry.activeSprite : entry.inactiveSprite;
+            if (targetSprite != null)
+            {
+                var img = entry.button.targetGraphic as Image;
+                if (img == null)
+                    img = entry.button.GetComponent<Image>();
+                if (img != null)
+                    img.sprite = targetSprite;
+            }
         }
     }
 
@@ -191,11 +215,16 @@ public class HomeTabBar : MonoBehaviour
                 continue;
             }
 
+            // 禁用态不透明白底（选中态由代码换 Sprite，不靠透明度区分）
+            var colors = entry.button.colors;
+            colors.disabledColor = Color.white;
+            entry.button.colors = colors;
+
             string capturedId = entry.tabId; // 闭包变量捕获
             entry.button.onClick.AddListener(() =>
             {
                 GameLog.Info($"[HomeTabBar] 按钮点击: tabId=\"{capturedId}\"");
-                UiClickSound.Play();
+                UiClickSound.PlaySwitch();
                 SwitchTo(capturedId);
             });
             GameLog.Info($"[HomeTabBar] 已绑定按钮: tabId=\"{entry.tabId}\", button={entry.button.name}");
@@ -265,6 +294,13 @@ public class HomeTabBar : MonoBehaviour
 
         [Tooltip("Prefab 模式：拖 Prefab 资源（UIPanelBase 或 HomeTabViewBase 子类）。")]
         public GameObject prefab;
+
+        [Tooltip("选中态底图。")]
+        public Sprite activeSprite;
+        [Tooltip("非选中态底图。")]
+        public Sprite inactiveSprite;
+        [Tooltip("选中态放大倍率（默认 1.1）。")]
+        public float selectedScale;
 
         [Tooltip("红点角标组件（挂载在按钮子物体上，可为空）。")]
         public RedDotBadge badge;

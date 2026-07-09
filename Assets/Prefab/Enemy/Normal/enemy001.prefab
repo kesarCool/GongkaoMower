@@ -334,7 +334,7 @@ MonoBehaviour:
   perEnemyMicroHueJitter: 0.02
   randomizeStereoHue: 1
   stereoHueShift: 0.07
-  outlineWidthRange: {x: 0.075, y: 0.25}
+  outlineWidthRange: {x: 0.075, y: 0.2}
   outlineColor: {r: 0.039215688, g: 0.019607844, b: 0.14117648, a: 0.94}
   stereoUseVertexGradient: 1
   gradientTopBrighten: 0.2

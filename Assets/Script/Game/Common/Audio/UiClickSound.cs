@@ -4,4 +4,6 @@ public static class UiClickSound
     public static void Play() => AudioService.Ensure().PlayUiClick();
 
     public static void PlayClose() => AudioService.Ensure().PlayUiClose();
+
+    public static void PlaySwitch() => AudioService.Ensure().PlayUiSwitch();
 }

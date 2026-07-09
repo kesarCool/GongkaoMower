@@ -495,7 +495,7 @@ public class CharacterSelectionPanel : UIPanelBase
         // 当前进度最新的未解锁关卡
         ChapterLevelNavigation.TryGetMaxUnlockedLevel(out int chapterId, out int levelId);
         string levelLabel = ChapterLevelDisplay.FormatLevelName(levelId);
-        string msg = $"是否选择 <b><color=#FFD700><size=+16>「{charName}」</size></color></b> \n进入「{levelLabel}」？";
+        string msg = $"是否选择 <b><color=#FF5100><size=+16>「{charName}」</size></color></b> \n进入「{levelLabel}」？";
 
         UIManager.Instance.ShowConfirm("开始游戏", msg, confirmed =>
         {

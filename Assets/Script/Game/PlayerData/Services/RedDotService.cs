@@ -52,7 +52,7 @@ public class RedDotService
     private void BuildTree()
     {
         // 叶子节点定义（路径即层级）
-        AddLeaf("battle/achievement", ComputeAchievementCount);
+        AddLeaf("achievement", ComputeAchievementCount);
         AddLeaf("character",         ComputeCharacterCount);
         AddLeaf("shop",              ComputeShopCount);
     }

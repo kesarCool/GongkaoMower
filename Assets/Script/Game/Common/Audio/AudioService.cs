@@ -101,6 +101,8 @@ public sealed class AudioService : MonoBehaviour
 
     public void PlayUiClose() => Play(AudioId.UiClose);
 
+    public void PlayUiSwitch() => Play(AudioId.UiSwitch);
+
     public void Play(AudioId id)
     {
         if (id == AudioId.None || catalog == null || _backend == null)

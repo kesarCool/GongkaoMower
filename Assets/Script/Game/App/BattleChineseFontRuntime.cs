@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public static class BattleChineseFontRuntime
 {
-    public const string DefaultResourcesPath = "Fonts/msyh SDF";
+    public const string DefaultResourcesPath = "Fonts/msyh SDF";//unifont_t-17.0
 
     private static TMP_FontAsset _loaded;
 

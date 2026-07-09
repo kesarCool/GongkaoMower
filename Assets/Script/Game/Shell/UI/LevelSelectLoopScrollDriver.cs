@@ -85,7 +85,13 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
 
         _loop.totalCount = _rows.Count;
         _loop.RefillCells();
-        _loop.verticalNormalizedPosition = 1f;
+
+        // 定位到当前进度关卡
+        int currentIdx = FindCurrentLevelIndex();
+        if (currentIdx >= 0)
+            _loop.ScrollToCell(currentIdx, 300f);
+        else
+            _loop.verticalNormalizedPosition = 1f;
     }
 
     public GameObject GetObject(int index)
@@ -153,5 +159,18 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
         }
 
         transform.GetComponent<LevelSelectLevelRowCell>()?.Bind(row);
+    }
+
+    /// <summary>在行列表中查找当前进度关卡的下标。</summary>
+    private int FindCurrentLevelIndex()
+    {
+        if (!ChapterLevelNavigation.TryGetMaxUnlockedLevel(out _, out int levelId))
+            return -1;
+        for (int i = 0; i < _rows.Count; i++)
+        {
+            if (_rows[i].Kind == LevelSelectRowKind.Level && _rows[i].levelId == levelId)
+                return i;
+        }
+        return -1;
     }
 }

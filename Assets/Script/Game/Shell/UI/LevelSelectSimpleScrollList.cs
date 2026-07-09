@@ -73,8 +73,45 @@ public class LevelSelectSimpleScrollList : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(content);
         Canvas.ForceUpdateCanvases();
 
-        if (scrollRect != null)
+        // 定位到当前进度关卡
+        ScrollToCurrentLevel(content);
+    }
+
+    private void ScrollToCurrentLevel(RectTransform content)
+    {
+        if (scrollRect == null || content.childCount == 0) return;
+
+        ChapterLevelNavigation.TryGetMaxUnlockedLevel(out _, out int currentLv);
+
+        // 找到当前关卡所在 child 的 index
+        int targetIdx = -1;
+        for (int i = 0; i < content.childCount; i++)
+        {
+            var cell = content.GetChild(i).GetComponent<LevelSelectLevelRowCell>();
+            if (cell != null && cell.LevelId == currentLv)
+            {
+                targetIdx = i;
+                break;
+            }
+        }
+
+        if (targetIdx < 0)
+        {
             scrollRect.verticalNormalizedPosition = 1f;
+            return;
+        }
+
+        // 计算目标 child 在 content 中的归一化位置（0=底, 1=顶）
+        float contentHeight = content.rect.height;
+        float viewportHeight = scrollRect.viewport != null ? scrollRect.viewport.rect.height : contentHeight;
+        if (contentHeight <= viewportHeight)
+        {
+            scrollRect.verticalNormalizedPosition = 1f;
+            return;
+        }
+
+        float childRatio = (float)targetIdx / (content.childCount - 1);
+        scrollRect.verticalNormalizedPosition = 1f - childRatio;
     }
 
     private RectTransform ResolveContent()

@@ -15,7 +15,9 @@ public class RoadmapNodeView : MonoBehaviour
 {
     [Header("引用")]
     [SerializeField] private Image circleBg;
-    [SerializeField] private TextMeshProUGUI starText;
+    [SerializeField] private Image star1;
+    [SerializeField] private Image star2;
+    [SerializeField] private Image star3;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Button clickButton;
     [SerializeField] private GameObject heroIndicator;
@@ -32,7 +34,14 @@ public class RoadmapNodeView : MonoBehaviour
     [SerializeField] private Color unlockedBgColor = new Color(0.92f, 0.92f, 0.92f, 1f);
     [SerializeField] private Color lockedBgColor = new Color(0.28f, 0.28f, 0.3f, 1f);
     [SerializeField] private Color lockedTextColor = new Color(0.45f, 0.45f, 0.5f, 1f);
-    [SerializeField] private Color starTextColor = Color.yellow;
+
+    [Header("星级")]
+    [Tooltip("星星 Sprite（共用一张图，颜色区分亮暗）。")]
+    [SerializeField] private Sprite starSprite;
+    [Tooltip("已获得星星颜色。")]
+    [SerializeField] private Color starActiveColor = new Color(1f, 0.82f, 0.15f, 1f);
+    [Tooltip("未获得星星颜色。")]
+    [SerializeField] private Color starDimColor = new Color(0.15f, 0.15f, 0.15f, 1f);
 
     [Header("缩放")]
     [SerializeField] private float clearedScale = 1.08f;
@@ -134,24 +143,11 @@ public class RoadmapNodeView : MonoBehaviour
             }
         }
 
-        // ── 星级（★ 已获得 / ☆ 未获得，始终显示 3 颗）──
-        if (starText != null)
-        {
-            if (cleared && stars > 0)
-            {
-                int earned = Mathf.Clamp(stars, 1, 3);
-                int unearned = 3 - earned;
-                starText.text = new string('★', earned) + new string('☆', unearned);
-                starText.color = starTextColor;
-                starText.gameObject.SetActive(true);
-                BattleChineseFontRuntime.EnsureLoaded();
-                BattleChineseFontRuntime.ApplyToTMP(starText);
-            }
-            else
-            {
-                starText.gameObject.SetActive(false);
-            }
-        }
+        // ── 星级（图片：已获亮色 / 未获暗色，未通关不显示）──
+        int earned = cleared ? Mathf.Clamp(stars, 0, 3) : -1;
+        ApplyStarImage(star1, 0, earned);
+        ApplyStarImage(star2, 1, earned);
+        ApplyStarImage(star3, 2, earned);
 
         // ── 关卡名 ──
         if (nameText != null)
@@ -185,6 +181,20 @@ public class RoadmapNodeView : MonoBehaviour
         // ── 记录弹跳基准 ──
         if (heroIndicator != null && heroIndicator.activeSelf)
             _bounceBaseY = heroIndicator.transform.localPosition.y;
+    }
+
+    /// <summary>设置单颗星星图片：index < earned → 亮色，否则暗色；earned < 0 → 隐藏全部。</summary>
+    private void ApplyStarImage(Image star, int index, int earned)
+    {
+        if (star == null) return;
+        if (earned < 0)
+        {
+            star.gameObject.SetActive(false);
+            return;
+        }
+        star.gameObject.SetActive(true);
+        if (starSprite != null) star.sprite = starSprite;
+        star.color = index < earned ? starActiveColor : starDimColor;
     }
 
     private void Update()

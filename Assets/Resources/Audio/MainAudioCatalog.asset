@@ -31,6 +31,15 @@ MonoBehaviour:
       pitchVariation: 0
       pitchOffset: 0
       volumeVariation: 0
+    uiSwitch:
+      id: 3
+      relativePath: Audio/Common/switch-b.ogg
+      group: 0
+      volume: 1
+      minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
   combat:
     enemyHit:
       id: 10

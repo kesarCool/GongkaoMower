@@ -23,15 +23,12 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("为 true 时打开选关使用 ModalDefault（会参与暂停栈）；大厅一般有动画则建议 false 使用 NonPausingModal）。")]
     [SerializeField] private bool pauseWhenLevelSelectOpen;
 
-    [Header("词汇预览（可选）")]
-    [Tooltip("打开词汇表预览弹窗（ThemePackId / CategoryTag 页签）。")]
-    [SerializeField] private Button openLexiconPreviewButton;
-
-    [Tooltip("为 true 时打开词汇预览使用 ModalDefault。")]
-    [SerializeField] private bool pauseWhenLexiconPreviewOpen;
-
     [Header("背包（可选）")]
     [SerializeField] private Button openBackpackButton;
+
+    [Header("主界面按钮组")]
+    [Tooltip("Home 主界面下的按钮容器节点（开始游戏/选关/背包/设置等）。Tab 切换到 battle 时显示，其余隐藏。")]
+    [SerializeField] private GameObject homeButtonGroup;
 
     [Header("开始游戏")]
     [Tooltip("点击直接进入当前最新解锁关卡。")]
@@ -41,17 +38,9 @@ public class HomeHubController : MonoBehaviour
     [Tooltip("打开设置弹窗的按钮（右上角齿轮）。")]
     [SerializeField] private Button openSettingsButton;
 
-    [Header("成就")]
-    [Tooltip("打开成就面板的按钮。")]
-    [SerializeField] private Button openAchievementButton;
-
     [Header("数据")]
     [Tooltip("角色目录（供 RedDotService 等使用，非 Resources 路径）。")]
     [SerializeField] private CharacterCatalog characterCatalog;
-
-    [Header("红点角标")]
-    [Tooltip("成就按钮的红点角标。")]
-    [SerializeField] private RedDotBadge achievementBadge;
 
     [Header("货币 HUD")]
     [Tooltip("金币数量文本（TMP）。")]
@@ -74,16 +63,16 @@ public class HomeHubController : MonoBehaviour
             startGameButton.onClick.AddListener(OnStartGameClicked);
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.AddListener(OpenLevelSelect);
-        if (openLexiconPreviewButton != null)
-            openLexiconPreviewButton.onClick.AddListener(OpenLexiconPreview);
         if (openBackpackButton != null)
             openBackpackButton.onClick.AddListener(OpenBackpack);
         if (openSettingsButton != null)
             openSettingsButton.onClick.AddListener(OpenSettings);
-        if (openAchievementButton != null)
-            openAchievementButton.onClick.AddListener(OpenAchievement);
 
         // 战斗/角色切换按钮由 HomeTabBar 管理（Inspector 中拖入 HomeTabBar.tabs[i].button）
+
+        // 主界面按钮显隐跟随页签切换
+        if (homeTabBar != null)
+            homeTabBar.OnTabChanged += OnHomeTabChanged;
 
         // 注入 CharacterCatalog（不在 Resources 下），并触发首次红点重算
         if (characterCatalog != null)
@@ -95,9 +84,6 @@ public class HomeHubController : MonoBehaviour
 
         RefreshCurrencyHud();
 
-        if (achievementBadge != null)
-            achievementBadge.Refresh();
-
         EventBus.Subscribe<PlayerDataChangedEvent>(OnPlayerDataChanged, owner: this);
     }
 
@@ -105,23 +91,28 @@ public class HomeHubController : MonoBehaviour
     {
         EventBus.Unsubscribe<PlayerDataChangedEvent>(OnPlayerDataChanged);
 
+        if (homeTabBar != null)
+            homeTabBar.OnTabChanged -= OnHomeTabChanged;
+
         if (startGameButton != null)
             startGameButton.onClick.RemoveListener(OnStartGameClicked);
         if (openLevelSelectButton != null)
             openLevelSelectButton.onClick.RemoveListener(OpenLevelSelect);
-        if (openLexiconPreviewButton != null)
-            openLexiconPreviewButton.onClick.RemoveListener(OpenLexiconPreview);
         if (openBackpackButton != null)
             openBackpackButton.onClick.RemoveListener(OpenBackpack);
         if (openSettingsButton != null)
             openSettingsButton.onClick.RemoveListener(OpenSettings);
-        if (openAchievementButton != null)
-            openAchievementButton.onClick.RemoveListener(OpenAchievement);
     }
 
     private void OnPlayerDataChanged(PlayerDataChangedEvent _)
     {
         RefreshCurrencyHud();
+    }
+
+    private void OnHomeTabChanged(string tabId)
+    {
+        if (homeButtonGroup != null)
+            homeButtonGroup.SetActive(tabId == "battle");
     }
 
     /// <summary>供其它入口（页签等）复用：先表后弹窗。</summary>
@@ -167,39 +158,12 @@ public class HomeHubController : MonoBehaviour
         UIManager.Instance.Open<SettingsPanel>(null, UiOpenOptions.NonPausingModal);
     }
 
-    /// <summary>打开成就面板（模态弹窗）。</summary>
-    public void OpenAchievement()
-    {
-        UiClickSound.Play();
-        if (TableManager.Instance != null)
-            TableManager.Instance.Init();
-        if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
-        UIManager.Instance.Open<AchievementPanel>(null, UiOpenOptions.NonPausingModal);
-    }
-
     /// <summary>打开背包面板（模态弹窗）。</summary>
     public void OpenBackpack()
     {
         UiClickSound.Play();
         if (UIManager.Instance == null) { GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing); return; }
         UIManager.Instance.Open<BackPackPanel>(null, UiOpenOptions.NonPausingModal);
-    }
-
-    /// <summary>打开词汇预览（模态弹窗）：先 <see cref="TableManager.Init"/> 再弹窗。</summary>
-    public void OpenLexiconPreview()
-    {
-        UiClickSound.Play();
-        if (TableManager.Instance != null)
-            TableManager.Instance.Init();
-
-        if (UIManager.Instance == null)
-        {
-            GameErrorPresenter.Show(GameErrorCodes.UiManagerMissing);
-            return;
-        }
-
-        var opt = pauseWhenLexiconPreviewOpen ? UiOpenOptions.ModalDefault : UiOpenOptions.NonPausingModal;
-        UIManager.Instance.Open<LexiconPreviewPanel>(null, opt);
     }
 
     /// <summary>刷新顶部货币 HUD + 路线图 + 当前活跃页签。</summary>

@@ -11,7 +11,19 @@ public class LevelSelectLevelRowCell : MonoBehaviour
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private Button clickButton;
 
+    [Header("背景")]
+    [SerializeField] private Image background;
+    [Tooltip("已解锁时背景颜色。")]
+    [SerializeField] private Color unlockedColor = Color.white;
+    [Tooltip("未解锁时背景颜色。")]
+    [SerializeField] private Color lockedColor = new Color(0.5f, 0.5f, 0.5f, 1f);
+
+    [Header("星级")]
+    [SerializeField] private TextMeshProUGUI starText;
+
     private LevelSelectFlatRow _row;
+
+    public int LevelId => _row.levelId;
 
     private void Reset()
     {
@@ -45,6 +57,9 @@ public class LevelSelectLevelRowCell : MonoBehaviour
         if (clickButton != null)
             clickButton.interactable = unlocked;
 
+        if (background != null)
+            background.color = unlocked ? unlockedColor : lockedColor;
+
         if (titleText != null)
         {
             BattleChineseFontRuntime.EnsureLoaded();
@@ -58,15 +73,21 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
             if (!unlocked)
                 name += "（未解锁）";
-            else if (PlayerProfileService.Instance.TryGetProgress(row.levelId, out var prog) && prog.cleared)
-            {
-                int earned = Mathf.Clamp(prog.stars, 0, 3);
-                int unearned = 3 - earned;
-                if (earned > 0 || unearned > 0)
-                    name += " " + new string('★', earned) + new string('☆', unearned);
-            }
 
             titleText.text = name;
+        }
+
+        if (starText != null)
+        {
+            if (unlocked && PlayerProfileService.Instance.TryGetProgress(row.levelId, out var prog) && prog.cleared)
+            {
+                int earned = Mathf.Clamp(prog.stars, 0, 3);
+                starText.text = new string('★', earned) + new string('☆', 3 - earned);
+            }
+            else
+            {
+                starText.text = "";
+            }
         }
     }
 
