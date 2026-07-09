@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6352621640756780726}
   - component: {fileID: 5436299911328478655}
   - component: {fileID: 7159611400771264401}
+  - component: {fileID: 697086865051502822}
   m_Layer: 0
   m_Name: Image
   m_TagString: Untagged
@@ -76,6 +77,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &697086865051502822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169171776821190774}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1994fef54d0c4ca46b15fa29bbf4ea02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBreath: 1
+  breathAmplitude: 0.03
+  breathSpeed: 2.1
+  enableFloat: 1
+  floatAmplitude: 3
+  floatSpeed: 2.5
+  bounceScale: 0.08
+  bounceDuration: 0.15
 --- !u!1 &329660430205502623
 GameObject:
   m_ObjectHideFlags: 0
@@ -1854,6 +1875,7 @@ MonoBehaviour:
   listContent: {fileID: 7252301114608374715}
   cellPrefab: {fileID: 5421896005991371021, guid: 7cf0658ae66d2c14dad50a9365f05fd0, type: 3}
   detailPortrait: {fileID: 7159611400771264401}
+  portraitAnim: {fileID: 697086865051502822}
   detailNameText: {fileID: 1477685781794362353}
   detailLevelText: {fileID: 6335005438806544506}
   detailSkillIcon: {fileID: 7068944687247878403}

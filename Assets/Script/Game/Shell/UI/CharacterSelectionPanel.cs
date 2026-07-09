@@ -20,6 +20,8 @@ public class CharacterSelectionPanel : UIPanelBase
 
     [Header("详情")]
     [SerializeField] private Image detailPortrait;
+    [Tooltip("立绘待机微动组件（挂 detailPortrait 同物体）。")]
+    [SerializeField] private IdleBreathAnim portraitAnim;
     [SerializeField] private TextMeshProUGUI detailNameText;
     [SerializeField] private TextMeshProUGUI detailLevelText;
     [SerializeField] private Image detailSkillIcon;
@@ -146,7 +148,6 @@ public class CharacterSelectionPanel : UIPanelBase
     {
         if (_upgradeCooldownRoutine != null) { StopCoroutine(_upgradeCooldownRoutine); _upgradeCooldownRoutine = null; }
         _upgradeCooldown = false;
-
         if (closeButton != null) closeButton.onClick.RemoveListener(OnCloseClicked);
         if (confirmButton != null) confirmButton.onClick.RemoveListener(OnConfirmClicked);
         if (startGameButton != null) startGameButton.onClick.RemoveListener(OnStartGameClicked);
@@ -325,6 +326,9 @@ public class CharacterSelectionPanel : UIPanelBase
 
         // 已上阵→显示开始游戏，未上阵→显示换将上阵
         RefreshButtons(def.characterId == _equippedCharId);
+
+        // 切角色弹入动画
+        portraitAnim?.PlayBounce();
     }
 
     // ── 详情 ──────────────────────────────────────────
