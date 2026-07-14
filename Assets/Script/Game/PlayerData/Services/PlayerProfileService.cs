@@ -668,8 +668,11 @@ public sealed class PlayerProfileService
             "已写入篡改数据。\n\n关掉此窗口后重新进入 Play Mode，应看到「存档数据异常」错误提示。", "确定");
     }
 
-    [UnityEditor.MenuItem("Tools/发放物品/金币+1万", false, 503)]
-    private static void GrantGold10k() { Instance.LoadOrCreate(); Instance.AddItem(1, 10000); ShowGrantResult(1, 10000); }
+    [UnityEditor.MenuItem("Tools/发放物品/自定义发放...", false, 503)]
+    private static void GrantCustomItem()
+    {
+        GrantItemWindow.ShowWindow();
+    }
 #endif
 
     // ═══════════════ 商店购买记录 ═══════════════
@@ -758,28 +761,51 @@ public sealed class PlayerProfileService
         UnityEditor.EditorUtility.DisplayDialog("完成", "商店购买记录已全部清空", "确定");
     }
 
-    [UnityEditor.MenuItem("Tools/发放物品/金币+10万", false, 504)]
-    private static void GrantGold100k() { Instance.LoadOrCreate(); Instance.AddItem(1, 100000); ShowGrantResult(1, 100000); }
-
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（弹仔）", false, 505)]
-    private static void GrantFragmentPistol() { Instance.LoadOrCreate(); Instance.AddFragments("character_01", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 弹仔碎片\n总计：{Instance.GetFragmentCount("character_01")} 片", "确定"); }
-
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（刃娃）", false, 506)]
-    private static void GrantFragmentSword() { Instance.LoadOrCreate(); Instance.AddFragments("character_02", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 刃娃碎片\n总计：{Instance.GetFragmentCount("character_02")} 片", "确定"); }
-
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（爆爆）", false, 507)]
-    private static void GrantFragmentPanda() { Instance.LoadOrCreate(); Instance.AddFragments("character_03", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 爆爆碎片\n总计：{Instance.GetFragmentCount("character_03")} 片", "确定"); }
-
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（符仔）", false, 508)]
-    private static void GrantFragmentTaoist() { Instance.LoadOrCreate(); Instance.AddFragments("character_04", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 符仔碎片\n总计：{Instance.GetFragmentCount("character_04")} 片", "确定"); }
-
-    [UnityEditor.MenuItem("Tools/发放物品/英雄碎片+20（追风）", false, 509)]
-    private static void GrantFragmentIronMan() { Instance.LoadOrCreate(); Instance.AddFragments("character_05", 20); UnityEditor.EditorUtility.DisplayDialog("完成", $"+20 追风碎片\n总计：{Instance.GetFragmentCount("character_05")} 片", "确定"); }
-
-    private static void ShowGrantResult(int itemId, int count)
+    private class GrantItemWindow : UnityEditor.EditorWindow
     {
-        UnityEditor.EditorUtility.DisplayDialog("发放完成",
-            $"+{FormatGold(count)} 金币（ID={itemId}）\n当前余额：{FormatGold(Instance.Gold)}", "确定");
+        private string _itemIdInput = "";
+        private string _countInput = "1";
+
+        public static void ShowWindow()
+        {
+            var window = GetWindow<GrantItemWindow>(true, "自定义发放物品", true);
+            window.minSize = new Vector2(280, 110);
+            window.maxSize = new Vector2(400, 130);
+            window.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("物品 ID", GUILayout.Width(55));
+            _itemIdInput = GUILayout.TextField(_itemIdInput);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("数量", GUILayout.Width(55));
+            _countInput = GUILayout.TextField(_countInput);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(10);
+
+            int itemId = 0;
+            int count = 0;
+            bool canConfirm = int.TryParse(_itemIdInput, out itemId) && itemId > 0
+                           && int.TryParse(_countInput, out count) && count > 0;
+
+            UnityEditor.EditorGUI.BeginDisabledGroup(!canConfirm);
+            if (GUILayout.Button("发放"))
+            {
+                Instance.LoadOrCreate();
+                Instance.AddItem(itemId, count);
+                UnityEditor.EditorUtility.DisplayDialog("完成",
+                    $"已发放 {count} 个物品（ID={itemId}）", "确定");
+                Close();
+            }
+            UnityEditor.EditorGUI.EndDisabledGroup();
+        }
     }
 #endif
 }

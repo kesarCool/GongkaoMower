@@ -28,13 +28,30 @@ public class CardView : MonoBehaviour
     [Header("动画（可选）")]
     public Animator animator;
 
+    [Header("点击反馈")]
+    [Tooltip("选中后目标缩放（1.12=放大12%）。")]
+    [SerializeField] private float clickTargetScale = 1.12f;
+    [Tooltip("动画持续时间（秒）。")]
+    [SerializeField] private float clickAnimDuration = 0.3f;
+    [Tooltip("未选中卡片淡出时间（秒）。")]
+    [SerializeField] private float fadeOutDuration = 0.2f;
+    [Tooltip("CanvasGroup（用于淡出），未赋值则自动 GetOrAdd。")]
+    [SerializeField] private CanvasGroup canvasGroup;
+
     private Action _onClick;
+    private Coroutine _clickBounceRoutine;
+    private Color _restBgColor;
+    private bool _restColorCached;
     private readonly List<SkillSlotCell> _bondedCells = new List<SkillSlotCell>(4);
 
     private void Awake()
     {
         if (clickButton == null)
             clickButton = GetComponent<Button>();
+        if (canvasGroup == null)
+            canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         if (descText != null)
         {
@@ -48,6 +65,9 @@ public class CardView : MonoBehaviour
         _onClick = onClick;
         StopClickPropagationFromDecorations();
         WireButton();
+
+        // 重置上轮选卡残留状态
+        ResetClickFeedbackState();
 
         if (data == null) return;
 
@@ -187,7 +207,15 @@ public class CardView : MonoBehaviour
     {
         foreach (var c in _bondedCells)
             c.SetHighlight(false);
+        if (_clickBounceRoutine != null) { StopCoroutine(_clickBounceRoutine); _clickBounceRoutine = null; }
+        ResetClickFeedbackState();
         gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        if (_clickBounceRoutine != null) { StopCoroutine(_clickBounceRoutine); _clickBounceRoutine = null; }
+        ResetClickFeedbackState();
     }
 
     private string GetLevelUpPreview(CardDeck.DrawResult data)
@@ -210,7 +238,72 @@ public class CardView : MonoBehaviour
         UiClickSound.Play();
         if (animator != null)
             animator.SetTrigger("Selected");
+
+        // 防止点击穿透 / 双击（所有卡按钮一次性锁定）
+        var allCards = GetSiblingCardViews();
+        foreach (var cv in allCards)
+        {
+            if (cv.clickButton != null) cv.clickButton.interactable = false;
+        }
+        if (_clickBounceRoutine != null) return;
+
+        _clickBounceRoutine = StartCoroutine(ClickFeedbackThenConfirm(allCards));
+    }
+
+    /// <summary>选中卡放大+亮白；其余卡淡出。动画结束后触发回调。</summary>
+    private System.Collections.IEnumerator ClickFeedbackThenConfirm(CardView[] siblings)
+    {
+        // 选中卡背景直接设纯白
+        if (background != null)
+        {
+            if (!_restColorCached) { _restBgColor = background.color; _restColorCached = true; }
+            background.color = Color.white;
+        }
+
+        const float stepRate = 60f;
+        float stepTime = 1f / stepRate;
+        float elapsed = 0f;
+
+        while (elapsed < clickAnimDuration)
+        {
+            yield return new WaitForSecondsRealtime(stepTime);
+            elapsed += stepTime;
+
+            float t = Mathf.Clamp01(elapsed / clickAnimDuration);
+
+            // 选中卡：平滑放大到目标倍率
+            float s = Mathf.Lerp(1f, clickTargetScale, t);
+            transform.localScale = new Vector3(s, s, 1f);
+
+            // 其余卡：淡出
+            float fadeT = Mathf.Clamp01(elapsed / fadeOutDuration);
+            float targetAlpha = 1f - fadeT;
+            foreach (var cv in siblings)
+            {
+                if (cv == this) continue;
+                if (cv.canvasGroup != null)
+                    cv.canvasGroup.alpha = targetAlpha;
+            }
+        }
+
+        GameLog.Info($"[CardView] ClickFeedback END — invoking callback");
+        _clickBounceRoutine = null;
         _onClick?.Invoke();
+    }
+
+    private CardView[] GetSiblingCardViews()
+    {
+        if (transform.parent == null) return new CardView[] { this };
+        return transform.parent.GetComponentsInChildren<CardView>();
+    }
+
+    private void ResetClickFeedbackState()
+    {
+        transform.localScale = Vector3.one;
+        if (canvasGroup != null) canvasGroup.alpha = 1f;
+        if (clickButton != null) clickButton.interactable = true;
+        if (background != null && _restColorCached)
+            background.color = _restBgColor;
     }
 
     private void StopClickPropagationFromDecorations()

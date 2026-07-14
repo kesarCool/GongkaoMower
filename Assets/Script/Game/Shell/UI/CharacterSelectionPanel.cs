@@ -495,12 +495,12 @@ public class CharacterSelectionPanel : UIPanelBase
 
     private void OnStatsTabToggled(bool isOn)
     {
-        if (isOn) SwitchToView(isStats: true);
+        if (isOn) { UiClickSound.PlaySwitch(); SwitchToView(isStats: true); }
     }
 
     private void OnSkillTabToggled(bool isOn)
     {
-        if (isOn) SwitchToView(isStats: false);
+        if (isOn) { UiClickSound.PlaySwitch(); SwitchToView(isStats: false); }
     }
 
     private void SwitchToView(bool isStats)
@@ -633,6 +633,7 @@ public class CharacterSelectionPanel : UIPanelBase
     {
         if (_upgradeCooldown) return;
         if (string.IsNullOrEmpty(_selectedCharId)) return;
+        UiClickSound.Play();
         var def = characterCatalog?.Get(_selectedCharId);
         if (def?.upgradeData == null) return;
 
@@ -694,6 +695,7 @@ public class CharacterSelectionPanel : UIPanelBase
         if (string.IsNullOrEmpty(_selectedCharId)) return;
         var def = characterCatalog?.Get(_selectedCharId);
         if (def?.upgradeData == null) return;
+        UiClickSound.Play();
 
         var svc = PlayerProfileService.Instance;
         bool ok = svc.PromoteStage(_selectedCharId, def.upgradeData);
