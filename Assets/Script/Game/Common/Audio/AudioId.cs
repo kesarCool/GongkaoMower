@@ -6,6 +6,7 @@ public enum AudioId
     UiClick = 1,
     UiClose = 2,
     UiSwitch = 3,
+    WheelTick = 4,
 
     EnemyHit = 10,
     EnemyDie = 11,

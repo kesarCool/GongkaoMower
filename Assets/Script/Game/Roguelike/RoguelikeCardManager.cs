@@ -15,6 +15,8 @@ public class RoguelikeCardManager : MonoBehaviour
 
     [Header("场景引用（可自动查找）")]
     [SerializeField] private CardSelectionSystem cardSelectionSystem;
+    [Tooltip("Boss 击杀转盘控制器（Boss 触发时优先走转盘，而非选卡面板）")]
+    [SerializeField] private BossWheelController bossWheelController;
 
     // 无卡组时占位：按槽位轮询升级
     private int _placeholderCursor;
@@ -63,11 +65,28 @@ public class RoguelikeCardManager : MonoBehaviour
             return;
         }
 
+        // Boss 击杀 → 转盘抽卡（新增）
+        if (e.triggerCount == -1)
+        {
+            if (bossWheelController == null)
+                bossWheelController = FindObjectOfType<BossWheelController>(true);
+
+            if (bossWheelController != null)
+            {
+                GameLog.Info("[CardTrace] RoguelikeCardManager: Boss trigger → BossWheelController");
+                bossWheelController.StartWheel();
+                return;
+            }
+
+            // 回退：无 BossWheelController 时走旧选卡面板
+            GameLog.Warning("[CardTrace] RoguelikeCardManager: Boss trigger 但无 BossWheelController，回退 CardSelectionSystem");
+        }
+
+        // 能量触发 → 原选卡流程（不变）
         if (cardSelectionSystem == null)
             cardSelectionSystem = FindObjectOfType<CardSelectionSystem>(true);
 
         GameLog.Info($"[CardTrace] RoguelikeCardManager: cardSelectionSystem={cardSelectionSystem?.name ?? "NULL"}");
-        // 有选卡 UI 流程：交给 CardSelectionSystem
         if (cardSelectionSystem != null)
         {
             cardSelectionSystem.IsBossTrigger = e.triggerCount == -1;

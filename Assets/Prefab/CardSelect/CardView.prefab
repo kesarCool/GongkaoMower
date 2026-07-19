@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5640050606495385975}
   - component: {fileID: 180077561925767492}
   - component: {fileID: 8251474063036185336}
+  - component: {fileID: 716255451331844841}
   m_Layer: 0
   m_Name: CardView
   m_TagString: Untagged
@@ -67,6 +68,10 @@ MonoBehaviour:
   bondedGroup: {fileID: 3278281673503548960}
   bondedIconPrefab: {fileID: 3364021356325836369}
   animator: {fileID: 0}
+  clickTargetScale: 1.12
+  clickAnimDuration: 0.2
+  fadeOutDuration: 0.1
+  canvasGroup: {fileID: 716255451331844841}
 --- !u!114 &8251474063036185336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,6 +116,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!225 &716255451331844841
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376540042973410836}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1799683203810389617
 GameObject:
   m_ObjectHideFlags: 0

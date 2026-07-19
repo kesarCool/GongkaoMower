@@ -40,6 +40,15 @@ MonoBehaviour:
       pitchVariation: 0
       pitchOffset: 0
       volumeVariation: 0
+    wheelTick:
+      id: 4
+      relativePath: Audio/Common/click-a.ogg
+      group: 0
+      volume: 0.1
+      minInterval: 0
+      pitchVariation: 0
+      pitchOffset: 0
+      volumeVariation: 0
   combat:
     enemyHit:
       id: 10
