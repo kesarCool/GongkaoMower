@@ -31,6 +31,43 @@
 
 > 在《御剑三国》做 UI 系统的时候踩过这个坑。选角面板里，角色头像组件在 `onLoad` 里从全局数据管理器拿角色属性数据，但全局数据管理器的 `start` 比它晚，拿了个 null。后来定了规范——所有组件自己的数据初始化放 `onLoad`，跨组件的依赖初始化放 `start`，因为 Cocos 保证同帧内所有 `onLoad` 跑完才跑 `start`。
 
+#### Q1 延伸：Update 和 FixedUpdate 的区别
+
+**Unity 独有，Cocos Creator 没有 FixedUpdate**：Creator 没有独立物理时钟，`update(dt)` 直接带 deltaTime 参数。
+
+**核心差异**：Update 跟着渲染帧走，FixedUpdate 跟着物理时钟走。两者频率没有固定关系。
+
+```
+时间轴：  0.0   0.02  0.04   0.06  0.08
+
+30FPS 下：
+Update      x     x     x      x     x       ← 每 0.033s 一次
+
+FixedUpdate x  x  x  x  x  x  x  x  x  x     ← fixedDeltaTime=0.02s，每秒固定 50 次
+
+15FPS（掉帧）：
+Update      x           x            x        ← 变稀疏了
+
+FixedUpdate x  x  x  x  x  x  x  x  x  x     ← 频率不变，还是 50 次
+```
+
+**为什么需要两条时间线**：物理计算对步长一致性要求极高——同样的力在不同步长下算出的轨迹不一样。碰撞检测以固定间隔执行，步长变了会漏碰撞。FixedUpdate 保证物理步长恒定，帧率怎么波动都不影响物理结果。
+
+**什么放哪里**：
+
+| Update | FixedUpdate |
+|---|---|
+| 输入采集（按键/触摸） | 碰撞检测（`OnTriggerEnter` 等） |
+| 移动（`transform.Translate`） | 刚体力（`AddForce` / `velocity`） |
+| 相机跟随 | 自定义确定性 Tick |
+| UI 刷新、计时器显示 | 帧同步逻辑驱动 |
+
+**常见坑**：
+
+- **FixedUpdate 里读 Input**：帧率低时一帧内 FixedUpdate 可能连续跑两三次，每次都读到同一个按键 → 玩家戳一下技能发了三发。正确做法：Update 里 `Input.GetKeyDown` → 设标记位，FixedUpdate 里读标记位。
+- **高速运动物体放 Update 碰撞会穿透**：子弹快 → Update 帧间越过了敌人 → 碰撞没触发。解法：高速物体走 `Rigidbody.MovePosition`（连续碰撞检测）或直接用 `Raycast`。
+- **文字割草机的做法**：锁了 30FPS + `fixedDeltaTime = 1/30s`，渲染帧跟物理步同步，避免两条时间线不一致导致的碰撞漏帧。
+
 ---
 
 ## Q2：@ccclass / @property / @executeInEditMode 装饰器
