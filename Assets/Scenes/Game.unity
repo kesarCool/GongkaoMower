@@ -478,11 +478,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   skillCatalog: {fileID: 11400000, guid: 9d0bd947eb4540d479be3c7bce060432, type: 2}
+  wheelSlotCount: 16
   activeWeight: 3
   passiveWeight: 1
   win1Weight: 0.3
   win2Weight: 0.5
   win3Weight: 0.2
+  debugTriggerKey: 286
 --- !u!1001 &2111837758
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -556,6 +558,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
+--- !u!1 &2111837759 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5132926002176552893, guid: 9fefc67ae96226f489bef5a84175c322, type: 3}
+  m_PrefabInstance: {fileID: 2111837758}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2111837760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2111837759}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1994fef54d0c4ca46b15fa29bbf4ea02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBreath: 1
+  breathAmplitude: 0.02
+  breathSpeed: 2.1
+  enableFloat: 1
+  floatAmplitude: 0.05
+  floatSpeed: 2.5
+  bounceScale: 0.08
+  bounceDuration: 0.15
 --- !u!1 &484875254094281222
 GameObject:
   m_ObjectHideFlags: 0

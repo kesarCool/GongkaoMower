@@ -24,6 +24,7 @@ public class SkillAutoProjectile : SkillBase
     public float burstLaunchSpeed = 10f;
     public bool burstTargetSingleEnemy;
     public float burstTargetSingleRange = 10f;
+    public bool burstFullScreenPenetration;
 
     private float _timer;
     protected float _burstTimer;
@@ -239,6 +240,12 @@ public class SkillAutoProjectile : SkillBase
                     pierce, isCrit, pRate, isPenetration,
                     burstOrbitDuration, burstOrbitRadius, startAngle, _ctx.player,
                     aimTarget.HasValue, aimTarget.GetValueOrDefault());
+
+                if (burstFullScreenPenetration)
+                {
+                    bb.FullScreenPenetration = true;
+                    bb.lifetime = 10f; // 安全兜底（直线飞行 1~3s 必出屏）
+                }
             }
             else
             {

@@ -55,6 +55,12 @@ public class CharacterSelectionPanel : UIPanelBase
     [SerializeField] private Button promoteButton;
     [SerializeField] private GameObject promoteRedPoint; // 碎片+等级足够时显示
 
+    [Header("Toggle 红点")]
+    [Tooltip("\"基础属性\" Tab 上的红点——当前选中角色可升级时显示。")]
+    [SerializeField] private GameObject statsToggleBadge;
+    [Tooltip("\"技能\" Tab 上的红点——当前选中角色可升阶时显示。")]
+    [SerializeField] private GameObject skillToggleBadge;
+
     [Header("升阶技能描述")]
     [Tooltip("一阶 Rare 技能描述文本。")]
     [SerializeField] private TextMeshProUGUI promoteRareDescText;
@@ -464,6 +470,12 @@ public class CharacterSelectionPanel : UIPanelBase
         }
         if (promoteRedPoint != null)
             promoteRedPoint.SetActive(showPromote && svc.CanPromoteStage(def.characterId, data, out _, out _));
+
+        // Toggle 红点（不受当前视图影响，始终评估引导用户切 Tab）
+        if (statsToggleBadge != null)
+            statsToggleBadge.SetActive(CharacterRedDotEvaluator.CanUpgrade(def));
+        if (skillToggleBadge != null)
+            skillToggleBadge.SetActive(CharacterRedDotEvaluator.CanPromote(def));
     }
 
     // ── 按钮 ──────────────────────────────────────────

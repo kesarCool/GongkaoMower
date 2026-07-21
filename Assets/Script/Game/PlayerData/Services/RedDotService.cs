@@ -211,29 +211,10 @@ public class RedDotService
         var catalog = LoadCharacterCatalog();
         if (catalog == null) return 0;
 
-        var svc = PlayerProfileService.Instance;
         int count = 0;
         for (int i = 0; i < catalog.characters.Count; i++)
         {
-            var def = catalog.characters[i];
-            if (def == null) continue;
-
-            // 1. 碎片解锁
-            if (CharacterUnlockEvaluator.CanFragmentUnlock(def)) { count++; continue; }
-
-            if (!CharacterUnlockEvaluator.IsUnlocked(def)) continue;
-
-            // 2. 可升级（等级未满 + 金币够）
-            int lv = svc.GetHeroLevel(def.characterId);
-            int maxLv = svc.GetEffectiveMaxLevel(def.characterId, def.upgradeData);
-            if (lv < maxLv && def.upgradeData != null)
-            {
-                int cost = def.upgradeData.GetCostForLevel(lv + 1);
-                if (svc.CanAffordGold(cost)) { count++; continue; }
-            }
-
-            // 3. 可升阶
-            if (svc.CanPromoteStage(def.characterId, def.upgradeData, out _, out _))
+            if (catalog.characters[i] != null && CharacterRedDotEvaluator.HasPendingAction(catalog.characters[i]))
                 count++;
         }
         return count;

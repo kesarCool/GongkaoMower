@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 弹道突破弹丸：可选择旋转环绕阶段后再直线飞出。
 /// <para>orbitDuration &gt; 0 时先生成在角色周围旋转，到时间后沿当前切线方向飞出；orbitDuration = 0 时直接飞出。</para>
+/// <para>FullScreenPenetration = true 时：穿透所有敌人不回收，飞出屏幕边界才释放。</para>
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class AutoProjectileBurstBullet : PlayerBullet
@@ -16,6 +17,13 @@ public class AutoProjectileBurstBullet : PlayerBullet
     private bool _inOrbit;
     private bool _overrideFlyDir;
     private Vector2 _overrideTarget;
+
+    /// <summary>全屏穿透模式：穿透所有敌人，仅飞出屏幕时才回收。</summary>
+    public bool FullScreenPenetration { get; set; }
+
+    private Camera _cachedCamera;
+    private const float ScreenMargin = 1.5f;
+    private const float FullScreenMaxLifetime = 10f;
 
     protected override void OnEnable()
     {
@@ -64,6 +72,11 @@ public class AutoProjectileBurstBullet : PlayerBullet
         if (!_inOrbit)
         {
             _rb.velocity = _dir * speed;
+
+            // 全屏穿透：每帧检测是否飞出屏幕边界
+            if (FullScreenPenetration && IsOffScreen())
+                Release();
+
             return;
         }
 
@@ -112,5 +125,35 @@ public class AutoProjectileBurstBullet : PlayerBullet
 
         float rot = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         _rb.MoveRotation(rot);
+    }
+
+    /// <summary>全屏穿透模式：撞敌不回收。</summary>
+    protected override void OnHitEnemy(Collider2D other)
+    {
+        if (FullScreenPenetration)
+            return;
+        base.OnHitEnemy(other);
+    }
+
+    /// <summary>全屏穿透模式：撞墙不回收（兜底，wallMask=0 时不会触发）。</summary>
+    protected override void OnHitWall(Collision2D collision)
+    {
+        if (FullScreenPenetration)
+            return;
+        base.OnHitWall(collision);
+    }
+
+    /// <summary>是否超出屏幕边界（含余量）。Camera.main 不可用时返回 false 兜底。</summary>
+    private bool IsOffScreen()
+    {
+        if (_cachedCamera == null)
+        {
+            _cachedCamera = Camera.main;
+            if (_cachedCamera == null) return false;
+        }
+
+        Vector3 vp = _cachedCamera.WorldToViewportPoint(transform.position);
+        return vp.x < -ScreenMargin || vp.x > 1f + ScreenMargin
+            || vp.y < -ScreenMargin || vp.y > 1f + ScreenMargin;
     }
 }

@@ -35,6 +35,8 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
     public bool burstTargetSingleEnemy = false;
     [Tooltip("单敌集火感知范围（世界单位）。")]
     public float burstTargetSingleRange = 10f;
+    [Tooltip("全屏穿透：爆发弹丸穿透所有敌人，仅飞出屏幕边界才回收。")]
+    public bool burstFullScreenPenetration;
 
     public float IntervalAt(int level) => intervalByLevel[Mathf.Clamp(level, 1, intervalByLevel.Length) - 1];
     public float DamageAt(int level) => damageByLevel[Mathf.Clamp(level, 1, damageByLevel.Length) - 1];
@@ -91,6 +93,7 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
         s.burstLaunchSpeed = burstLaunchSpeed > 0f ? burstLaunchSpeed : bulletSpeed;
         s.burstTargetSingleEnemy = burstTargetSingleEnemy;
         s.burstTargetSingleRange = burstTargetSingleRange;
+        s.burstFullScreenPenetration = burstFullScreenPenetration;
         s.burstEnabled = burstBulletPrefab != null;
         s.SetBurstMaxLevel(maxLevel);
         s.maxLevelPrefab = maxLevelPrefab;

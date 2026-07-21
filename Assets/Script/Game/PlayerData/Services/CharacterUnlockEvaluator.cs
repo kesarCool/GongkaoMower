@@ -164,4 +164,36 @@ public static class CharacterUnlockEvaluator
         if (cca != null && cca.characterCatalog != null) return cca.characterCatalog;
         return Resources.Load<CharacterCatalog>("Character/CharacterCatalog");
     }
+
+    /// <summary>
+    /// 迁移：遍历所有"通关解锁"类角色，若所需关卡已通关但角色未解锁则补解锁。
+    /// 用于处理关卡解锁配置变更（如 1-5 改为 1-2）后存量玩家自动获得角色。
+    /// 由 HomeHubController 在 Home 场景加载时调用一次。
+    /// </summary>
+    public static void HealCharacterUnlocks(CharacterCatalog catalog)
+    {
+        var data = PlayerProfileService.Instance.Data;
+        if (data == null || catalog == null) return;
+
+        int healed = 0;
+        foreach (var def in catalog.characters)
+        {
+            if (def == null || !def.locked) continue;
+            if (def.unlockLevelId <= 0) continue;
+            if (IsUnlocked(def)) continue;
+
+            if (PlayerProfileService.Instance.HasCleared(def.unlockLevelId))
+            {
+                AddUnlockedCharacter(data, def.characterId);
+                healed++;
+                GameLog.Info($"[CharUnlock] 迁移补解锁：{def.displayName}（关卡 {def.unlockLevelId} 已通关）");
+            }
+        }
+
+        if (healed > 0)
+        {
+            PlayerProfileService.Instance.MarkDirtyAndSave();
+            GameLog.Info($"[CharUnlock] 迁移完成，补解锁 {healed} 个角色");
+        }
+    }
 }

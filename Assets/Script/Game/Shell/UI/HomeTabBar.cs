@@ -43,6 +43,19 @@ public class HomeTabBar : MonoBehaviour
             rt.homeTabView.OnTabRefresh();
         else if (rt.uiPanel != null)
             rt.uiPanel.OnOpen(null); // 重新触发 OnOpen 做刷新
+
+        RefreshAllBadges();
+    }
+
+    /// <summary>强制刷新所有页签按钮的红点角标（兜底事件丢失的情况）。</summary>
+    private void RefreshAllBadges()
+    {
+        RedDotService.Instance.ForceRecompute();
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            if (tabs[i].badge != null)
+                tabs[i].badge.Refresh();
+        }
     }
 
     /// <summary>按 ID 切换到指定页签。</summary>
@@ -103,6 +116,9 @@ public class HomeTabBar : MonoBehaviour
 
         // 按钮高亮
         RefreshButtonStates();
+
+        // 红点：切换页签时强制刷新，兜底事件丢失
+        RefreshAllBadges();
 
         OnTabChanged?.Invoke(tabId);
     }
@@ -231,12 +247,7 @@ public class HomeTabBar : MonoBehaviour
         }
 
         // 初始刷新红点角标（先强制重算确保数据源就绪）
-        RedDotService.Instance.ForceRecompute();
-        for (int i = 0; i < tabs.Count; i++)
-        {
-            if (tabs[i].badge != null)
-                tabs[i].badge.Refresh();
-        }
+        RefreshAllBadges();
 
         // 默认页签
         string startTab = string.IsNullOrEmpty(defaultTabId) ? tabs[0].tabId : defaultTabId;

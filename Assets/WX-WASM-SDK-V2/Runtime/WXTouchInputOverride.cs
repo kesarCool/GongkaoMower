@@ -147,7 +147,7 @@ public class WXTouchInputOverride : BaseInput
             } 
 #if !UNITY_EDITOR
             Text text = selectedObject.GetComponent<Text>();
-            if (text != null) 
+            if (text != null)
             {
 #if PLATFORM_PLAYABLEADS
                 PlayableAdsInput.mobileKeyboardSupport = true;

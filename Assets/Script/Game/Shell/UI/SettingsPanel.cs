@@ -28,6 +28,11 @@ public class SettingsPanel : UIPanelBase
     [Header("按钮")]
     [SerializeField] private Button closeButton;
 
+    [Header("礼包码")]
+    [Tooltip("微信小游戏必须用 Unity 原生 InputField（非 TMP），否则 WeixinMiniGameInput 键盘不弹。")]
+    [SerializeField] private InputField giftCodeInput;
+    [SerializeField] private Button claimButton;
+
     public override void OnOpen(object payload)
     {
         BattleChineseFontRuntime.ApplyToHierarchy(transform);
@@ -54,6 +59,11 @@ public class SettingsPanel : UIPanelBase
 
         if (closeButton != null)
             closeButton.onClick.AddListener(OnCloseClicked);
+
+        // 礼包码
+        if (claimButton != null)
+            claimButton.onClick.AddListener(OnClaimClicked);
+        RefreshClaimState();
     }
 
     public override void OnClose()
@@ -66,6 +76,8 @@ public class SettingsPanel : UIPanelBase
             aboutButton.onClick.RemoveListener(OnAboutClicked);
         if (closeButton != null)
             closeButton.onClick.RemoveListener(OnCloseClicked);
+        if (claimButton != null)
+            claimButton.onClick.RemoveListener(OnClaimClicked);
     }
 
     private void OnBgmToggled(bool isOn)
@@ -102,5 +114,41 @@ public class SettingsPanel : UIPanelBase
     {
         UiClickSound.PlayClose();
         UIManager.Instance.CloseTop();
+    }
+
+    private void OnClaimClicked()
+    {
+        UiClickSound.Play();
+
+        string input = giftCodeInput != null ? giftCodeInput.text : string.Empty;
+        string error = GiftCodeService.TryRedeem(input);
+
+        if (error == null)
+        {
+            // 成功
+            UIManager.Instance.ShowToast("兑换成功！100钻石已到账");
+            if (giftCodeInput != null)
+                giftCodeInput.text = string.Empty;
+            RefreshClaimState();
+        }
+        else
+        {
+            UIManager.Instance.ShowToast(error);
+        }
+    }
+
+    /// <summary>根据今日是否已兑换刷新输入框和按钮的交互态。</summary>
+    private void RefreshClaimState()
+    {
+        bool canClaim = GiftCodeService.CanClaimToday;
+        if (giftCodeInput != null)
+            giftCodeInput.interactable = canClaim;
+        if (claimButton != null)
+        {
+            claimButton.interactable = canClaim;
+            var label = claimButton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (label != null)
+                label.text = canClaim ? "兑 换" : "今日已兑";
+        }
     }
 }

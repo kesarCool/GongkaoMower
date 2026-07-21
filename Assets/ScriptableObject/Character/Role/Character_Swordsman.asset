@@ -17,7 +17,7 @@ MonoBehaviour:
   portrait: {fileID: 21300000, guid: af5c8b5acd2f83d4d95d22018949a59f, type: 3}
   startingSkill: 8
   attributes:
-    attack: 35
+    attack: 40
     attackSpeedMul: 0.9
     maxHp: 80
     defense: 10
@@ -34,6 +34,6 @@ MonoBehaviour:
   boundSkills: 
   upgradeData: {fileID: 11400000, guid: 1b27f35e5100e464e81214c657b45a9c, type: 2}
   locked: 1
-  unlockLevelId: 105
+  unlockLevelId: 101
   unlockFragmentCount: 0
-  fragmentItemId: 0
+  fragmentItemId: 102

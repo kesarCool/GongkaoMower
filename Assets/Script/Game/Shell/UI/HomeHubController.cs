@@ -80,6 +80,7 @@ public class HomeHubController : MonoBehaviour
             RedDotService.Instance.SetCharacterCatalog(characterCatalog);
             // 修复历史数据：itemIds 有但 characterFragmentKeys 缺失的碎片同步
             PlayerProfileService.Instance.HealFragmentData(characterCatalog);
+            CharacterUnlockEvaluator.HealCharacterUnlocks(characterCatalog);
         }
 
         RefreshCurrencyHud();

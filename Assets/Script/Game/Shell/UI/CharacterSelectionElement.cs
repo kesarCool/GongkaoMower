@@ -24,6 +24,10 @@ public class CharacterSelectionElement : MonoBehaviour
     [SerializeField] private TextMeshProUGUI fragmentCountText;
     [SerializeField] private GameObject fragmentGroup;
 
+    [Header("红点")]
+    [Tooltip("红点根节点（纯红点无数字），有可解锁/可升级/可升阶时显示。")]
+    [SerializeField] private GameObject badgeRoot;
+
     public CharacterDefinition CharacterDef { get; private set; }
     public int Index { get; private set; }
 
@@ -144,6 +148,10 @@ public class CharacterSelectionElement : MonoBehaviour
         // 按钮保持可点击，未解锁时点击弹出提示
         if (clickButton != null)
             clickButton.interactable = true;
+
+        // 红点：可解锁 / 可升级 / 可升阶
+        if (badgeRoot != null)
+            badgeRoot.SetActive(CharacterRedDotEvaluator.HasPendingAction(def));
 
         // 选中高亮
         SetSelected(isSelected);

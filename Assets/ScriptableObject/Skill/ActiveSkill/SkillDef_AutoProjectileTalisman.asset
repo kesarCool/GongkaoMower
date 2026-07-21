@@ -17,7 +17,7 @@ MonoBehaviour:
   bondedPassiveId: 105
   maxLevelPrefab: {fileID: 1613592626320682331, guid: de1335e4efb603a42847d12bd36393a1, type: 3}
   displayName: "\u5929\u5E08\u7B26\u4EE4"
-  description: "\u5929\u5E08\u6555\u4EE4\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
+  description: "\u5929\u5E08\u6555\u4EE4\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\uFF0C\u7F81\u7ECA\u6280\u80FD\uFF0C\u7B26\u7B93\u7206\u53D1\uFF1B"
   icon: {fileID: 21300000, guid: bde8bb0daba412745a4f2c60b316c6c4, type: 3}
   levelDescriptions:
   - "\u9053\u6CD5\u7B26\u7B93\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
@@ -50,3 +50,4 @@ MonoBehaviour:
   burstLaunchSpeed: 0
   burstTargetSingleEnemy: 1
   burstTargetSingleRange: 10
+  burstFullScreenPenetration: 0
