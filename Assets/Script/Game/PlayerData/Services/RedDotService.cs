@@ -26,6 +26,7 @@ public class RedDotService
     private bool _inited;
     private CharacterCatalog _cachedCatalog;
     private DateTime _lastMidnightCheck = DateTime.MinValue;
+    private float _lastRecomputeTime;
 
     private RedDotService() { }
 
@@ -101,9 +102,17 @@ public class RedDotService
 
     // ── 计算 ──
 
+    /// <summary>重算最小间隔（秒），防止高频事件/切页签触发的连续全量计算。</summary>
+    private const float MinRecomputeInterval = 0.5f;
+
     private void RecomputeAndPublish()
     {
         if (_nodes.Count == 0) return;
+
+        // 节流：高频调用时跳过中间态，避免切换页签/连续事件触发全量重算
+        float now = Time.unscaledTime;
+        if (now - _lastRecomputeTime < MinRecomputeInterval) return;
+        _lastRecomputeTime = now;
 
         // 1. 叶子节点：调用 computeFunc
         foreach (var kv in _nodes)

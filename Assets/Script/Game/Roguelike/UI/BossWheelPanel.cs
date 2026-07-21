@@ -7,18 +7,25 @@ using TMPro;
 /// Boss 击杀转盘面板（UIPanelBase 子类）。
 ///
 /// 【UI 接线说明】
-/// 1. 16 个环形卡槽：wheelSlots[0..15]，每个挂 WheelSlotCell
-///    - Image icon / TMP_Text levelText / GameObject highlightMark
-///    - 极坐标排列：角度步长 = 360°/16 = 22.5°，i 从顶部顺时针
+/// 1. 槽位由运行时 Instantiate(slotPrefab, slotContainer) 动态创建，极坐标环形布局。
+///    - 数量 = BossWheelController.wheelSlotCount（默认 16）
+///    - 每个挂 WheelSlotCell：Image icon / TMP_Text levelText / GameObject highlightMark
 /// 2. spinButton + spinButtonText — 旋转按钮
 /// 3. skipAnimationToggle — 跳过动画开关（PlayerPrefs 持久化）
-/// 4. resultGroup + resultText + confirmButton — 结算弹窗
+/// 4. resultGroup + rewardCells + confirmButton — 结算弹窗
 /// </summary>
 public class BossWheelPanel : UIPanelBase
 {
     [Header("环形卡槽")]
-    [Tooltip("按顺时针排列的槽位（建议 16 个）")]
-    public WheelSlotCell[] wheelSlots;
+    [Tooltip("槽位预制体（运行时 Instantiate 到 slotContainer 下）。")]
+    [SerializeField] private WheelSlotCell slotPrefab;
+    [Tooltip("槽位父容器（极坐标圆心）。")]
+    [SerializeField] private RectTransform slotContainer;
+    [Tooltip("环形半径（像素/单位）。")]
+    [SerializeField] private float wheelRadius = 200f;
+
+    /// <summary>运行时创建的槽位数组。</summary>
+    private WheelSlotCell[] _wheelSlots;
 
     [Header("按钮")]
     public Button spinButton;
@@ -93,7 +100,7 @@ public class BossWheelPanel : UIPanelBase
         _hasSpun = false;
         _resultShown = false;
 
-        GameLog.Info($"[BossWheelPanel] slots={_slots?.Length ?? 0} winners=[{string.Join(",", _winningIndices ?? new int[0])}] wheelCount={wheelSlots?.Length ?? 0}");
+        GameLog.Info($"[BossWheelPanel] slots={_slots?.Length ?? 0} winners=[{string.Join(",", _winningIndices ?? new int[0])}]");
 
         BindSlots();
         ClearAllHighlights();
@@ -124,42 +131,70 @@ public class BossWheelPanel : UIPanelBase
             StopCoroutine(_spinRoutine);
             _spinRoutine = null;
         }
+        DestroyAllSlots();
         base.OnClose();
+    }
+
+    private void DestroyAllSlots()
+    {
+        if (_wheelSlots == null) return;
+        for (int i = 0; i < _wheelSlots.Length; i++)
+        {
+            if (_wheelSlots[i] != null)
+                Destroy(_wheelSlots[i].gameObject);
+        }
+        _wheelSlots = null;
     }
 
     private void BindSlots()
     {
-        if (wheelSlots == null || _slots == null)
+        if (slotPrefab == null || slotContainer == null || _slots == null)
         {
-            GameLog.Warning("[BossWheelPanel] BindSlots: null ref");
+            GameLog.Warning("[BossWheelPanel] BindSlots: slotPrefab/slotContainer/slots is null");
             return;
         }
 
-        int bound = 0;
-        for (int i = 0; i < wheelSlots.Length; i++)
-        {
-            if (wheelSlots[i] == null) continue;
+        // 清除上一轮的槽位
+        DestroyAllSlots();
 
-            if (i < _slots.Length)
-            {
-                wheelSlots[i].Bind(_slots[i]);
-                bound++;
-            }
-            else
-            {
-                wheelSlots[i].gameObject.SetActive(false);
-            }
+        int count = _slots.Length;
+        _wheelSlots = new WheelSlotCell[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            var cell = Instantiate(slotPrefab, slotContainer, false);
+            cell.Bind(_slots[i]);
+            _wheelSlots[i] = cell;
         }
-        GameLog.Info($"[BossWheelPanel] BindSlots: bound={bound}/{wheelSlots.Length}");
+
+        LayoutWheelSlots();
+        GameLog.Info($"[BossWheelPanel] BindSlots: created {count} slots");
+    }
+
+    /// <summary>极坐标环形布局：从 12 点钟顺时针排列。</summary>
+    private void LayoutWheelSlots()
+    {
+        if (_wheelSlots == null || _wheelSlots.Length == 0) return;
+
+        int n = _wheelSlots.Length;
+        float angleStep = 360f / n;
+
+        for (int i = 0; i < n; i++)
+        {
+            float angle = (90f + angleStep * i) * Mathf.Deg2Rad;
+            float x = Mathf.Cos(angle) * wheelRadius;
+            float y = Mathf.Sin(angle) * wheelRadius;
+            _wheelSlots[i].transform.localPosition = new Vector3(x, y, 0f);
+        }
     }
 
     private void ClearAllHighlights()
     {
-        if (wheelSlots == null) return;
-        for (int i = 0; i < wheelSlots.Length; i++)
+        if (_wheelSlots == null) return;
+        for (int i = 0; i < _wheelSlots.Length; i++)
         {
-            if (wheelSlots[i] != null)
-                wheelSlots[i].SetHighlight(false);
+            if (_wheelSlots[i] != null)
+                _wheelSlots[i].SetHighlight(false);
         }
     }
 
@@ -222,8 +257,8 @@ public class BossWheelPanel : UIPanelBase
         GameLog.Info($"[BossWheelPanel] SkipAndShowResult: {_winningIndices?.Length ?? 0} winners");
         foreach (var idx in _winningIndices)
         {
-            if (idx >= 0 && idx < wheelSlots.Length && wheelSlots[idx] != null)
-                wheelSlots[idx].SetHighlight(true);
+            if (idx >= 0 && idx < _wheelSlots.Length && _wheelSlots[idx] != null)
+                _wheelSlots[idx].SetHighlight(true);
         }
         ShowResult();
     }
@@ -236,7 +271,7 @@ public class BossWheelPanel : UIPanelBase
     {
         GameLog.Info("[BossWheelPanel] SpinRoutine start");
 
-        int n = wheelSlots?.Length ?? 0;
+        int n = _wheelSlots?.Length ?? 0;
         if (n == 0)
         {
             GameLog.Warning("[BossWheelPanel] SpinRoutine: no slots, skip");
@@ -248,7 +283,7 @@ public class BossWheelPanel : UIPanelBase
         var validIndices = new System.Collections.Generic.List<int>(n);
         for (int i = 0; i < n; i++)
         {
-            if (wheelSlots[i] != null && wheelSlots[i].gameObject.activeInHierarchy)
+            if (_wheelSlots[i] != null && _wheelSlots[i].gameObject.activeInHierarchy)
                 validIndices.Add(i);
         }
 
@@ -272,15 +307,15 @@ public class BossWheelPanel : UIPanelBase
         for (int i = 0; i < n; i++)
         {
             int idx = (startIdx + i) % n;
-            if (wheelSlots[idx] == null || !wheelSlots[idx].gameObject.activeInHierarchy)
+            if (_wheelSlots[idx] == null || !_wheelSlots[idx].gameObject.activeInHierarchy)
                 continue;
 
             // 关掉上一个高亮
-            if (prevIdx >= 0 && prevIdx < n && wheelSlots[prevIdx] != null)
-                wheelSlots[prevIdx].SetHighlight(false);
+            if (prevIdx >= 0 && prevIdx < n && _wheelSlots[prevIdx] != null)
+                _wheelSlots[prevIdx].SetHighlight(false);
 
             // 打开当前高亮
-            wheelSlots[idx].SetHighlight(true);
+            _wheelSlots[idx].SetHighlight(true);
             prevIdx = idx;
 
             AudioService.Ensure().Play(AudioId.WheelTick);
@@ -297,7 +332,7 @@ public class BossWheelPanel : UIPanelBase
             int targetIdx = _winningIndices[w];
             GameLog.Info($"[BossWheelPanel] Phase2: winner[{w}] → slot[{targetIdx}] prevIdx={prevIdx}");
 
-            if (targetIdx < 0 || targetIdx >= n || wheelSlots[targetIdx] == null)
+            if (targetIdx < 0 || targetIdx >= n || _wheelSlots[targetIdx] == null)
             {
                 GameLog.Warning($"[BossWheelPanel] Phase2: invalid targetIdx={targetIdx}");
                 continue;
@@ -311,14 +346,14 @@ public class BossWheelPanel : UIPanelBase
             for (int s = 0; s < totalSteps; s++)
             {
                 int nextIdx = (prevIdx + 1) % n;
-                while (wheelSlots[nextIdx] == null || !wheelSlots[nextIdx].gameObject.activeInHierarchy)
+                while (_wheelSlots[nextIdx] == null || !_wheelSlots[nextIdx].gameObject.activeInHierarchy)
                     nextIdx = (nextIdx + 1) % n;
 
                 // 只关非中奖的高亮
-                if (prevIdx >= 0 && prevIdx < n && wheelSlots[prevIdx] != null && !winnerSet.Contains(prevIdx))
-                    wheelSlots[prevIdx].SetHighlight(false);
+                if (prevIdx >= 0 && prevIdx < n && _wheelSlots[prevIdx] != null && !winnerSet.Contains(prevIdx))
+                    _wheelSlots[prevIdx].SetHighlight(false);
 
-                wheelSlots[nextIdx].SetHighlight(true);
+                _wheelSlots[nextIdx].SetHighlight(true);
                 prevIdx = nextIdx;
 
                 AudioService.Ensure().Play(AudioId.WheelTick);
@@ -329,10 +364,10 @@ public class BossWheelPanel : UIPanelBase
             // 最后一步落到目标（关掉当前非中奖高亮，开目标高亮并标记）
             if (prevIdx != targetIdx)
             {
-                if (prevIdx >= 0 && prevIdx < n && wheelSlots[prevIdx] != null && !winnerSet.Contains(prevIdx))
-                    wheelSlots[prevIdx].SetHighlight(false);
+                if (prevIdx >= 0 && prevIdx < n && _wheelSlots[prevIdx] != null && !winnerSet.Contains(prevIdx))
+                    _wheelSlots[prevIdx].SetHighlight(false);
 
-                wheelSlots[targetIdx].SetHighlight(true);
+                _wheelSlots[targetIdx].SetHighlight(true);
                 prevIdx = targetIdx;
                 yield return new WaitForSecondsRealtime(0.2f);
             }

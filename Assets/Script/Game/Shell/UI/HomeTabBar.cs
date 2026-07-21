@@ -117,9 +117,6 @@ public class HomeTabBar : MonoBehaviour
         // 按钮高亮
         RefreshButtonStates();
 
-        // 红点：切换页签时强制刷新，兜底事件丢失
-        RefreshAllBadges();
-
         OnTabChanged?.Invoke(tabId);
     }
 

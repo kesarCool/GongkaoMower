@@ -78,6 +78,10 @@ public class IdleBreathAnim : MonoBehaviour
     private void Update()
     {
         if (!IsAnimating) return;
+        if (!isActiveAndEnabled) return;
+
+        // 降频到 ~30fps：人眼看不出区别，减少一半 CPU 开销
+        if (Time.frameCount % 2 != 0) return;
 
         // ── 弹入动画 ──
         if (_bounceTimer > 0f)

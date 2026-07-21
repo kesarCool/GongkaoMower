@@ -43,6 +43,21 @@ public class CardView : MonoBehaviour
     private Color _restBgColor;
     private bool _restColorCached;
     private readonly List<SkillSlotCell> _bondedCells = new List<SkillSlotCell>(4);
+    /// <summary>缓存同父级下的兄弟 CardView，避免每次点击都 GetComponentsInChildren。</summary>
+    private CardView[] _cachedSiblings;
+
+    // 缓存 FindObjectOfType 结果，避免每张卡 Bind 时全场景扫描
+    private static PlayerSkills _cachedPlayerSkills;
+    private static CardSelectionPanel _cachedCardSelectionPanel;
+    private static bool _staticsCached;
+
+    private static void CacheStatics()
+    {
+        if (_staticsCached) return;
+        _cachedPlayerSkills = FindObjectOfType<PlayerSkills>();
+        _cachedCardSelectionPanel = FindObjectOfType<CardSelectionPanel>();
+        _staticsCached = true;
+    }
 
     private void Awake()
     {
@@ -111,7 +126,8 @@ public class CardView : MonoBehaviour
         bool isPassive = data.skillId.IsPassive();
         if (data.skillDef == null || !isPassive) { bondedGroup.gameObject.SetActive(false); return; }
 
-        var ps = FindObjectOfType<PlayerSkills>();
+        CacheStatics();
+        var ps = _cachedPlayerSkills;
         if (ps == null || ps.skillCatalog == null) { bondedGroup.gameObject.SetActive(false); return; }
 
         // 收集已装备主动技能家族：family → 已装备的 SkillId
@@ -162,7 +178,7 @@ public class CardView : MonoBehaviour
 
         // 触发闪烁：已上阵技能槽位 + 被动卡下羁绊图标（仅该被动未装备时才闪烁提醒）
         bool alreadyEquipped = ps.HasPassiveSkill(data.skillId);
-        var csp = FindObjectOfType<CardSelectionPanel>();
+        var csp = _cachedCardSelectionPanel;
         var matchedIds = new List<SkillId>(4);
         if (!alreadyEquipped)
         {
@@ -205,6 +221,7 @@ public class CardView : MonoBehaviour
 
     public void Hide()
     {
+        _cachedSiblings = null;
         foreach (var c in _bondedCells)
             c.SetHighlight(false);
         if (_clickBounceRoutine != null) { StopCoroutine(_clickBounceRoutine); _clickBounceRoutine = null; }
@@ -260,7 +277,7 @@ public class CardView : MonoBehaviour
             background.color = Color.white;
         }
 
-        const float stepRate = 60f;
+        const float stepRate = 30f;
         float stepTime = 1f / stepRate;
         float elapsed = 0f;
 
@@ -293,8 +310,10 @@ public class CardView : MonoBehaviour
 
     private CardView[] GetSiblingCardViews()
     {
+        if (_cachedSiblings != null) return _cachedSiblings;
         if (transform.parent == null) return new CardView[] { this };
-        return transform.parent.GetComponentsInChildren<CardView>();
+        _cachedSiblings = transform.parent.GetComponentsInChildren<CardView>();
+        return _cachedSiblings;
     }
 
     private void ResetClickFeedbackState()
