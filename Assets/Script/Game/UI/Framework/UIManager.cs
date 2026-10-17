@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -53,6 +54,9 @@ public class UIManager : MonoBehaviour
 
     /// <summary>主栈底 → 顶</summary>
     private readonly List<UIPanelBase> _stack = new List<UIPanelBase>(8);
+
+    /// <summary>活跃的过渡动画协程（panel → Coroutine）。</summary>
+    private readonly Dictionary<UIPanelBase, Coroutine> _transitions = new Dictionary<UIPanelBase, Coroutine>();
 
     private UiConfirmDialog _confirmInstance;
     private UiToastPanel _toastInstance;
@@ -112,13 +116,16 @@ public class UIManager : MonoBehaviour
         if (!respondToEscape) return;
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
+        // 动画播放中忽略返回键
+        var top = Top;
+        if (top != null && IsTransitioning(top)) return;
+
         if (_confirmInstance != null && _confirmInstance.gameObject.activeInHierarchy)
         {
             CloseConfirm();
             return;
         }
 
-        var top = Top;
         if (top != null && top.LastOptions.CloseOnBack)
         {
             UiClickSound.PlayClose();
@@ -164,7 +171,8 @@ public class UIManager : MonoBehaviour
         }
 
         int idx = _stack.IndexOf(panel);
-        if (idx >= 0)
+        bool isReopen = idx >= 0;
+        if (isReopen)
         {
             while (_stack.Count - 1 > idx)
                 PopTopInternal();
@@ -179,8 +187,25 @@ public class UIManager : MonoBehaviour
             panel.gameObject.SetActive(true);
         }
 
+        // 取消该面板上残留的过渡动画
+        CancelTransition(panel);
+
         ApplyOpenOptions(panel, options);
+
+        // 回退到栈内已有面板时不播动画；新入栈面板按子类配置播放入场动画
+        var openT = isReopen ? new PanelTransition(TransitionType.None, 0f) : panel.GetOpenTransition();
+        if (openT.type != TransitionType.None)
+        {
+            var cg = panel.TransitionCanvasGroup;
+            cg.alpha = 0f;
+            panel.transform.localScale = new Vector3(0.95f, 0.95f, 1f);
+        }
+
         panel.OnOpen(payload);
+
+        if (openT.type != TransitionType.None)
+            BeginTransition(panel, openT, isOpen: true, null);
+
         BattleChineseFontRuntime.EnsureLoaded();
         BattleChineseFontRuntime.ApplyToHierarchy(panel.transform);
         RefreshStackBackdrop();
@@ -188,20 +213,52 @@ public class UIManager : MonoBehaviour
         return panel;
     }
 
-    /// <summary>关闭主栈顶一层</summary>
+    /// <summary>关闭主栈顶一层（带动画过渡）。</summary>
     public void CloseTop()
     {
         if (_stack.Count == 0) return;
-        PopTopInternal();
-        RefreshStackBackdrop();
+
+        var top = Top;
+        var t = top.GetCloseTransition();
+
+        if (t.type == TransitionType.None)
+        {
+            PopTopInternal();
+            RefreshStackBackdrop();
+            RefreshStackSorting();
+            return;
+        }
+
+        // 带动画关闭：先退栈露出下层，当前面板留在上层播放关闭动画
+        CancelTransition(top);
+        ReleasePauseFor(top);
+        _stack.RemoveAt(_stack.Count - 1);
+
+        if (_stack.Count > 0)
+            _stack[_stack.Count - 1].gameObject.SetActive(true);
+        // 排序立即刷新，但遮罩推迟到动画结束——否则关闭最后一层时遮罩提前消失
         RefreshStackSorting();
+
+        BeginTransition(top, t, isOpen: false, () =>
+        {
+            top.OnClose();
+            top.gameObject.SetActive(false);
+            RefreshStackBackdrop();
+        });
     }
 
-    /// <summary>关闭主栈全部</summary>
+    /// <summary>关闭主栈全部（无动画，立即清理）。</summary>
     public void CloseAllStack()
     {
         while (_stack.Count > 0)
-            PopTopInternal();
+        {
+            var panel = _stack[_stack.Count - 1];
+            CancelTransition(panel);
+            ReleasePauseFor(panel);
+            panel.OnClose();
+            panel.gameObject.SetActive(false);
+            _stack.RemoveAt(_stack.Count - 1);
+        }
         RefreshStackBackdrop();
     }
 
@@ -492,5 +549,60 @@ public class UIManager : MonoBehaviour
         var cv = _confirmInstance.GetComponent<Canvas>();
         if (cv != null && cv.overrideSorting)
             cv.sortingOrder = overlaySortingBase;
+    }
+
+    // ── 过渡动画 ──
+
+    private bool IsTransitioning(UIPanelBase panel)
+    {
+        return panel != null && _transitions.ContainsKey(panel);
+    }
+
+    private void CancelTransition(UIPanelBase panel)
+    {
+        if (!_transitions.TryGetValue(panel, out var c) || c == null) return;
+        StopCoroutine(c);
+        _transitions.Remove(panel);
+    }
+
+    private void BeginTransition(UIPanelBase panel, PanelTransition t, bool isOpen, Action onComplete)
+    {
+        CancelTransition(panel);
+        var c = StartCoroutine(TransitionRoutine(panel, t, isOpen, onComplete));
+        _transitions[panel] = c;
+    }
+
+    private IEnumerator TransitionRoutine(UIPanelBase panel, PanelTransition t, bool isOpen, Action onComplete)
+    {
+        var cg = panel.TransitionCanvasGroup;
+        float from = isOpen ? 0f : 1f;
+        float to = isOpen ? 1f : 0f;
+        float scaleFrom = isOpen ? 0.95f : 1f;
+        float scaleTo = isOpen ? 1f : 0.95f;
+        float elapsed = 0f;
+
+        while (elapsed < t.duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float p = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / t.duration));
+
+            if (t.type == TransitionType.Fade || t.type == TransitionType.FadeAndScale)
+                cg.alpha = Mathf.Lerp(from, to, p);
+
+            if (t.type == TransitionType.Scale || t.type == TransitionType.FadeAndScale)
+            {
+                float s = Mathf.Lerp(scaleFrom, scaleTo, p);
+                panel.transform.localScale = new Vector3(s, s, 1f);
+            }
+
+            yield return null;
+        }
+
+        // 确保终态
+        cg.alpha = to;
+        panel.transform.localScale = new Vector3(scaleTo, scaleTo, 1f);
+
+        _transitions.Remove(panel);
+        onComplete?.Invoke();
     }
 }
