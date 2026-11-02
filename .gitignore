@@ -55,3 +55,10 @@ node_modules/
 
 # WeChat SDK generated export data and backups
 /TextToolDatas/
+
+# Local collaboration files, art output, personal docs and sites
+/.claude/
+/ArtOutput/
+/claude-howto/
+/docs/
+/sites/
