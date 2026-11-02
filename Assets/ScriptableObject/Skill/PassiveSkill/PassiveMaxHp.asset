@@ -14,15 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 101
   maxLevel: 5
-  displayName: "钢筋铁骨"
-  description: "血量上限提升，站场更持久。"
+  bondedPassiveId: 0
+  maxLevelPrefab: {fileID: 0}
+  displayName: "\u94A2\u7B4B\u94C1\u9AA8"
+  description: "\u8840\u91CF\u4E0A\u9650\u63D0\u5347\uFF0C\u7AD9\u573A\u66F4\u6301\u4E45\u3002"
   icon: {fileID: 21300000, guid: 2fda950eae2386840a78138beea858f4, type: 3}
-  levelDescriptions:
-  - "血量上限 +20%"
-  - "血量上限 +24%"
-  - "血量上限 +28%"
-  - "血量上限 +33%"
-  - "血量上限 +40%"
+  levelDescriptions: []
   modType: 1
   bonusByLevel:
   - 0.2

@@ -1,20 +1,20 @@
 using System;
 
 /// <summary>
-/// 看广告复活接口；接入微信/穿山甲时实现本接口并注入 <see cref="GameRevivePanelPayload"/>。
+/// 复活奖励接口；保留广告接入契约，当前默认实现使用分享返回奖励。
 /// </summary>
 public interface IReviveAdProvider
 {
     void RequestReviveAd(Action<bool> onComplete);
 }
 
-/// <summary>占位：不播广告，直接视为成功（便于联调与 Editor）。</summary>
+/// <summary>兼容旧注入入口，统一进入平台 Provider；开发环境模拟由 WXShareHelper 控制。</summary>
 public sealed class DefaultReviveAdProvider : IReviveAdProvider
 {
     public static readonly DefaultReviveAdProvider Instance = new DefaultReviveAdProvider();
 
     public void RequestReviveAd(Action<bool> onComplete)
     {
-        onComplete?.Invoke(true);
+        WeChatRewardedAdProvider.Instance.RequestReviveAd(onComplete);
     }
 }

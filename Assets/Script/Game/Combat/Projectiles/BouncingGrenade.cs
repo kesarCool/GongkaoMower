@@ -77,7 +77,7 @@ public class BouncingGrenade : GrenadeProjectile
         Vector2 center = transform.position;
         ApplyAoeDamage(center);
         var fxPos = new Vector3(center.x, center.y, -0.1f);
-        CombatVfxSpawner.TryPlayPooled(_explosionFxPrefab, fxPos, Quaternion.identity);
+        CombatVfxSpawner.TryPlayPooled(_explosionFxPrefab, fxPos, Quaternion.identity, _lastAoeRadius);
 
         // Legend 余爆：0.3s 后在同位置生成二次小范围爆炸
         if (chainExplosion)
@@ -201,7 +201,7 @@ internal sealed class ChainExplosionSpawner : MonoBehaviour
         var fxPos = new Vector3(center.x + Random.Range(-0.8f, 0.8f), center.y + Random.Range(-0.6f, 0.6f), -0.1f);
 
         // 二次 VFX：池化播放 + 偏移位置区别于主爆
-        CombatVfxSpawner.TryPlayPooled(_fxPrefab, fxPos, Quaternion.identity);
+        CombatVfxSpawner.TryPlayPooled(_fxPrefab, fxPos, Quaternion.identity, _radius);
 
         // AOE 伤害
         if (!string.IsNullOrEmpty(_enemyTag))

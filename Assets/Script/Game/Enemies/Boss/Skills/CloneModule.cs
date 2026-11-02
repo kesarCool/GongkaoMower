@@ -17,6 +17,11 @@ public class CloneModule : BossSkillModule
     private string _inheritSkillsRaw;
     private List<GameObject> _clones = new List<GameObject>();
     private EnemyBase _trackedBossEb;
+    private BossClonePresentation _presentation;
+    private Coroutine _routine;
+    private bool _disposed;
+    private int _generation;
+    public int TrackedCloneCount => _clones.FindAll(c => c != null).Count;
 
     public override void Init(string rawParams, BossBrain owner)
     {
@@ -34,6 +39,8 @@ public class CloneModule : BossSkillModule
         _inheritSkillsRaw = ParseInheritSkills(rawParams);
 
         CacheSprites();
+        _presentation = owner.GetComponentInChildren<BossClonePresentation>(true);
+        if (_presentation != null) _presentation.EnableOwnerBadge();
 
         // 主身死亡 → 所有分身一并销毁
         _trackedBossEb = owner.GetComponent<EnemyBase>();
@@ -44,15 +51,33 @@ public class CloneModule : BossSkillModule
     /// <summary>主身死亡回调：真死（非复活假死）时销毁所有分身。</summary>
     private void OnMainBossDied()
     {
-        if (_trackedBossEb != null && _trackedBossEb.preventPoolDeath) return; // 复活假死
-
+        // Revive may be a later OnDied listener. Resolve it after all listeners have run;
+        // a real pool return is handled synchronously by BossBrain.OnDisable.
+        if (brain != null && brain.gameObject.activeInHierarchy) brain.StartCoroutine(ResolveOwnerDeath());
+    }
+    private IEnumerator ResolveOwnerDeath()
+    {
+        yield return null;
+        if (_trackedBossEb != null && _trackedBossEb.preventPoolDeath) yield break;
+        ClearClones();
+    }
+    private void ClearClones()
+    {
         for (int i = _clones.Count - 1; i >= 0; i--)
-        {
             if (_clones[i] != null)
-                Object.Destroy(_clones[i]);
-        }
+            {
+                var marker = _clones[i].GetComponent<CloneMarker>();
+                if (marker != null) marker.Despawn(false); else Object.Destroy(_clones[i]);
+            }
         _clones.Clear();
-
+    }
+    public void OnOwnerDisposed()
+    {
+        if (_disposed) return; _disposed = true; _generation++;
+        if (_routine != null && brain != null) brain.StopCoroutine(_routine);
+        _routine = null; ClearClones();
+        SetSpritesFlash(false);
+        if (_presentation != null) _presentation.DisableOwnerBadge();
         if (_trackedBossEb != null)
         {
             _trackedBossEb.OnDied.RemoveListener(OnMainBossDied);
@@ -63,22 +88,34 @@ public class CloneModule : BossSkillModule
     public override bool CanTrigger()
     {
         // 克隆体不能再分身
-        if (boss.GetComponent<CloneMarker>() != null) return false;
+        if (_disposed || boss == null || boss.GetComponent<CloneMarker>() != null) return false;
         return base.CanTrigger();
     }
 
     public override void Execute()
     {
+        if (_disposed || boss == null || boss.GetComponent<CloneMarker>() != null) return;
         ResetCooldown();
-        brain.StartCoroutine(CloneRoutine());
+        _routine = brain.StartCoroutine(CloneRoutine());
     }
 
     private IEnumerator CloneRoutine()
     {
         brain.IsBusy = true;
-        SetSpritesFlash(true, new Color(0.6f, 0.85f, 1f, 1f)); // 淡蓝——和护盾/复活区分
+        int generation = _generation;
+        if (_presentation != null) _presentation.BeginCharge(_chargeTime);
+        SetSpritesFlash(true, new Color(1f, .4f, .18f, 1f));
         yield return new WaitForSeconds(_chargeTime);
         SetSpritesFlash(false);
+
+        if (_disposed || generation != _generation || boss == null || !boss.gameObject.activeInHierarchy ||
+            (_trackedBossEb != null && _trackedBossEb.Hp <= 0))
+        {
+            if (_presentation != null) _presentation.CancelCharge();
+            if (brain != null) brain.IsBusy = false;
+            yield break;
+        }
+        if (_presentation != null) _presentation.ReleaseCharge();
 
         EnemyBase originEb = boss.GetComponent<EnemyBase>();
         float cloneMaxHp = originEb != null ? originEb.MaxHp * _hpPercent : 10f;
@@ -101,31 +138,14 @@ public class CloneModule : BossSkillModule
             Vector3 spawnPos = boss.position + new Vector3(offset.x, offset.y, 0f);
 
             GameObject clone = Object.Instantiate(boss.gameObject, spawnPos, boss.rotation);
-
-            var cloneBrain = clone.GetComponent<BossBrain>();
-            if (cloneBrain != null)
-            {
-                if (keepTypes.Count > 0)
-                {
-                    // 保留指定技能模块
-                    cloneBrain.RemoveAllModulesExcept(keepTypes);
-                }
-                else
-                {
-                    // 无继承技能 → 摧毁 BossBrain，克隆体是纯白板
-                    Object.Destroy(cloneBrain);
-                }
-
-                // 始终剥离复活：分身不应复活（RemoveAllModulesExcept 只清列表，监听已在 Start 时挂上）
-                if (cloneBrain != null)
-                    cloneBrain.RemoveModulesOfType("revive");
-            }
+            clone.SetActive(false);
+            var marker = clone.GetComponent<CloneMarker>();
+            if (marker == null) marker = clone.AddComponent<CloneMarker>();
+            marker.Configure(originEb, keepTypes, _lifetime);
 
             // 移除护盾（如有，克隆体的 ResistShield 需要重新由 ResistModule 触发）
             var cloneShield = clone.GetComponent<ResistShield>();
             if (cloneShield != null) Object.Destroy(cloneShield);
-
-            clone.AddComponent<CloneMarker>();
 
             // 移除 Boss 标记：克隆体不是 Boss，死亡不应触发胜利/推进波次
             var cloneBossMarker = clone.GetComponent<LastWaveBossMarker>();
@@ -136,9 +156,10 @@ public class CloneModule : BossSkillModule
             {
                 eb.ApplyTableStats(0, Mathf.CeilToInt(cloneMaxHp), 0);
                 eb.ResetForPool();
+                eb.addKillToGameLayer = false;
             }
 
-            // 半透明
+            // Legacy Sprite fallback; the new presenter applies opacity to actual TMP too.
             var sprites = clone.GetComponentsInChildren<SpriteRenderer>();
             foreach (var sr in sprites)
             {
@@ -148,15 +169,16 @@ public class CloneModule : BossSkillModule
             }
 
             _clones.Add(clone);
-            Object.Destroy(clone, _lifetime);
+            clone.SetActive(true);
         }
 
         if (brain != null) brain.IsBusy = false;
+        _routine = null;
     }
 
     private HashSet<string> BuildInheritSet()
     {
-        var set = new HashSet<string>();
+        var set = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
         string raw = _inheritSkillsRaw?.Trim();
         if (string.IsNullOrEmpty(raw)) return set;
 
@@ -176,7 +198,7 @@ public class CloneModule : BossSkillModule
         foreach (var t in tokens)
         {
             string trimmed = t.Trim();
-            if (!string.IsNullOrEmpty(trimmed) && trimmed != "clone" && trimmed != "revive")
+            if (!string.IsNullOrEmpty(trimmed) && !string.Equals(trimmed,"clone",System.StringComparison.OrdinalIgnoreCase) && !string.Equals(trimmed,"revive",System.StringComparison.OrdinalIgnoreCase))
                 set.Add(trimmed);
         }
         return set;

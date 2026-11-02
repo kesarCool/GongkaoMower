@@ -40,22 +40,25 @@ public static class ErrorCodeCatalog
         if (_byCode != null)
             return;
 
-        _byCode = new Dictionary<string, ErrorCodeTable>(StringComparer.OrdinalIgnoreCase);
+        // 表未就绪时不得发布空缓存（否则整个会话错误码查询失效且无自愈路径）：
+        // GetTable 缺表时返回空字典而非 null，须用 Count 判定；留空让下次 TryGet 重试。
         if (TableManager.Instance == null)
             return;
 
         var dict = TableManager.Instance.GetTable<ErrorCodeTable>();
-        if (dict == null)
+        if (dict == null || dict.Count == 0)
             return;
 
+        var cache = new Dictionary<string, ErrorCodeTable>(StringComparer.OrdinalIgnoreCase);
         foreach (var kv in dict)
         {
             if (!(kv.Value is ErrorCodeTable entry))
                 continue;
             if (string.IsNullOrEmpty(entry.ErrorCode))
                 continue;
-            _byCode[entry.ErrorCode] = entry;
+            cache[entry.ErrorCode] = entry;
         }
+        _byCode = cache;
     }
 #else
     public static bool TryGet(string errorCode, out object row)

@@ -15,6 +15,7 @@ public class BladeBurstModule : BossSkillModule
 
     private GameObject _bladePrefab;
     private Rigidbody2D _rb;
+    private BossBladeBurstPresentation _presentation;
 
     public override void Init(string rawParams, BossBrain owner)
     {
@@ -31,7 +32,9 @@ public class BladeBurstModule : BossSkillModule
         _rb = boss.GetComponent<Rigidbody2D>();
         CacheSprites();
 
-        _bladePrefab = brain.FindPrefab("StraightBullet");
+        _presentation = brain.GetComponentInChildren<BossBladeBurstPresentation>(true);
+        _bladePrefab = brain.FindPrefab("BladeBurstBullet");
+        if (_bladePrefab == null) _bladePrefab = brain.FindPrefab("StraightBullet");
         if (_bladePrefab == null) _bladePrefab = brain.FindPrefab("HomingBullet");
     }
 
@@ -44,9 +47,23 @@ public class BladeBurstModule : BossSkillModule
     private IEnumerator BurstRoutine()
     {
         brain.IsBusy = true;
-        SetSpritesFlash(true, new Color(0.5f, 0.85f, 1f, 1f));
+        bool presented = _presentation != null;
+        int token = 0;
+        if (presented) { _presentation.BeginCharge(_bladeCount, _chargeTime); token = _presentation.ChargeToken; }
+        SetSpritesFlash(true, presented ? new Color(1f, .35f, .12f, 1f) : new Color(0.5f, 0.85f, 1f, 1f));
         yield return new WaitForSeconds(_chargeTime);
         SetSpritesFlash(false);
+
+        var enemy = boss != null ? boss.GetComponent<EnemyBase>() : null;
+        if (brain == null || boss == null || !boss.gameObject.activeInHierarchy || (enemy != null && enemy.Hp <= 0f) ||
+            (presented && (_presentation == null || _presentation.ChargeToken != token)))
+        {
+            if (_presentation != null) _presentation.Cancel();
+            if (brain != null) brain.IsBusy = false;
+            yield break;
+        }
+
+        if (presented) _presentation.Commit(_rb.position);
 
         float dmg = ResolveDamage(_damage, 25f);
         float lifetm = _bladeRange / Mathf.Max(0.1f, _bladeSpeed);

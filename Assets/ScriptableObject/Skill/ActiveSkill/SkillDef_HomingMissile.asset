@@ -25,7 +25,7 @@ MonoBehaviour:
   missileSpeed: 8
   turnRate: 180
   missileLifetime: 4
-  explosionFxPrefab: {fileID: 4513392073522607518, guid: bcbf1e0effe93024a83566f844e2d07e, type: 3}
+  explosionFxPrefab: {fileID: 3838352096616094897, guid: 18551488e41a4974e99c8ff429fb9549, type: 3}
   maxRange: 10
   salvoInterval: 0.2
   cooldownByLevel:

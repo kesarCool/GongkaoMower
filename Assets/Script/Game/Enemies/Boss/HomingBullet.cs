@@ -10,11 +10,13 @@ public class HomingBullet : BossBullet
     public float turnRate = 120f;
 
     private Transform _target;
+    private BossBladeProjectilePresentation _presentation;
 
     protected override void OnEnable()
     {
         base.OnEnable();
         _target = null;
+        _presentation = GetComponent<BossBladeProjectilePresentation>();
     }
 
     public override void Launch(Vector2 direction, float overrideSpeed, float overrideDamage, float overrideLifetime)
@@ -27,7 +29,10 @@ public class HomingBullet : BossBullet
 
     protected override void FixedUpdate()
     {
+        if (_presentation != null && lifetime > 0f && _elapsed + Time.fixedDeltaTime >= lifetime)
+            _presentation.PlayDissolve(_rb.position);
         base.FixedUpdate();
+        if (!gameObject.activeInHierarchy) return;
 
         if (_target == null)
         {
@@ -49,5 +54,19 @@ public class HomingBullet : BossBullet
 
         float rot = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         _rb.MoveRotation(rot);
+    }
+
+    protected override void OnTriggerEnter2D(Collider2D other)
+    {
+        if (_presentation != null && other.CompareTag(targetTag))
+            _presentation.PlayDissolve(other.ClosestPoint(transform.position));
+        base.OnTriggerEnter2D(other);
+    }
+
+    protected override void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (_presentation != null && wallMask.value != 0 && (wallMask.value & (1 << collision.gameObject.layer)) != 0)
+            _presentation.PlayDissolve(transform.position);
+        base.OnCollisionEnter2D(collision);
     }
 }

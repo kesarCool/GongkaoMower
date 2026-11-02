@@ -54,6 +54,7 @@ public class GamePausePanel : UIPanelBase
             sfxToggle.onValueChanged.AddListener(OnSfxToggled);
         }
         RefreshSfxLabel();
+        GetComponent<BattlePanelPresentation>()?.Present();
     }
 
     public override void OnClose()
@@ -68,8 +69,7 @@ public class GamePausePanel : UIPanelBase
     {
         if (skillListParent == null || skillRowPrefab == null) return;
 
-        for (int i = skillListParent.childCount - 1; i >= 0; i--)
-            Destroy(skillListParent.GetChild(i).gameObject);
+        BattlePanelPresentation.Clear(skillListParent);
 
         if (_playerSkills == null) return;
 
@@ -104,8 +104,7 @@ public class GamePausePanel : UIPanelBase
     {
         if (passiveSkillListParent == null || passiveSkillRowPrefab == null) return;
 
-        for (int i = passiveSkillListParent.childCount - 1; i >= 0; i--)
-            Destroy(passiveSkillListParent.GetChild(i).gameObject);
+        BattlePanelPresentation.Clear(passiveSkillListParent);
 
         if (_playerSkills == null) return;
 
@@ -168,12 +167,12 @@ public class GamePausePanel : UIPanelBase
     private void RefreshBgmLabel()
     {
         if (bgmLabel != null)
-            bgmLabel.text = AudioService.Instance.BgmMute ? "音乐关" : "音乐开";
+            bgmLabel.text = "背景音乐";
     }
 
     private void RefreshSfxLabel()
     {
         if (sfxLabel != null)
-            sfxLabel.text = AudioService.Instance.SfxMute ? "音效关" : "音效开";
+            sfxLabel.text = "游戏音效";
     }
 }

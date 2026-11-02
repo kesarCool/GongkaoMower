@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7f7733bbad9dbc42942d74961de36aa, type: 3}
   m_Name: Template_PassiveSkill
   m_EditorClassIdentifier: 
-  background: {fileID: 21300000, guid: cd1f3f0bddb906b48a3e1652e04cfe3b, type: 3}
-  labelText: "\u589E\u76CA\u5361"
-  labelColor: {r: 0, g: 0.64511585, b: 1, a: 1}
+  background: {fileID: 21300000, guid: cd3cea2dc5a31be4cadc7546fdc68519, type: 3}
+  labelText: "\u88AB\u52A8"
+  labelColor: {r: 0.19215687, g: 0.36862746, b: 0.48235294, a: 1}

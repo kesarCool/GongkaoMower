@@ -109,7 +109,7 @@ public class RoadmapNodeView : MonoBehaviour
     }
 
     public void Bind(int levelId, int chapterId, bool unlocked, bool cleared, int stars,
-        string mapName, bool isCurrent, Sprite heroSprite, System.Action<RoadmapNodeView> onClick)
+        string stageName, bool isCurrent, Sprite heroSprite, System.Action<RoadmapNodeView> onClick)
     {
         LevelId = levelId;
         ChapterId = chapterId;
@@ -154,7 +154,7 @@ public class RoadmapNodeView : MonoBehaviour
         {
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(nameText);
-            string label = !string.IsNullOrEmpty(mapName) ? mapName : $"关{levelId % 100}";
+            string label = ChapterLevelDisplay.FormatLevelName(levelId, stageName);
             nameText.text = label;
             nameText.color = !unlocked && !cleared ? lockedTextColor : Color.white;
         }

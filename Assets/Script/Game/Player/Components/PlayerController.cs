@@ -23,7 +23,17 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D _rb;
     private DynamicJoystick _joystick;
     private Vector3 _lastPosition;
+    private CharacterAppearance _appearance;
     private const float FacingEpsilon = 0.001f;
+    public bool IsArenaEntryLocked { get; private set; }
+    public bool HasMovementInput => hasTarget || (_joystick != null && _joystick.JoystickActive);
+
+    public void SetArenaEntryLocked(bool locked)
+    {
+        IsArenaEntryLocked = locked;
+        ResetMovementAfterTeleport();
+        if (_rb != null) _rb.velocity = Vector2.zero;
+    }
 
     private void Awake()
     {
@@ -33,6 +43,7 @@ public class PlayerController : MonoBehaviour
         attackTimer = 0f;
         _rb = GetComponent<Rigidbody2D>();
         _lastPosition = transform.position;
+        _appearance = GetComponent<CharacterAppearance>();
 
         if (bodyRenderer == null)
         {
@@ -46,8 +57,23 @@ public class PlayerController : MonoBehaviour
 
     private GameObject _cachedNearestEnemy;
 
+    /// <summary>Discard the old click destination after revival or Boss arena entry.</summary>
+    public void ResetMovementAfterTeleport()
+    {
+        targetPos = transform.position;
+        hasTarget = false;
+        _lastPosition = transform.position;
+    }
+
     private void Update()
     {
+        if (IsArenaEntryLocked) return;
+        if (TutorialDirector.BlocksGameplayInput)
+        {
+            hasTarget = false;
+            if (_rb != null) _rb.velocity = Vector2.zero;
+            return;
+        }
         HandleInput();
         MoveToTarget();
 
@@ -84,6 +110,7 @@ public class PlayerController : MonoBehaviour
 
     private void SetMoveTarget(Vector3 screenPos)
     {
+        if (TutorialDirector.BlocksGameplayPointer(screenPos)) return;
         if (mainCam == null) mainCam = Camera.main;
         if (mainCam == null) return;
 
@@ -146,19 +173,25 @@ public class PlayerController : MonoBehaviour
         if (bodyRenderer == null) return;
 
         GameObject enemy = _cachedNearestEnemy;
+        Vector2 movement = transform.position - _lastPosition;
+        _lastPosition = transform.position;
+        if (_appearance != null && _appearance.HasDirectionalAimFrames)
+        {
+            Vector2 aim = enemy != null ? (Vector2)(enemy.transform.position - transform.position) : movement;
+            _appearance.TrySetDirectionalAim(aim);
+            return;
+        }
         if (enemy != null)
         {
             float dx = enemy.transform.position.x - transform.position.x;
             if (Mathf.Abs(dx) > FacingEpsilon)
             {
                 bodyRenderer.flipX = dx < 0f;
-                _lastPosition = transform.position;
                 return;
             }
         }
 
-        float horizontal = transform.position.x - _lastPosition.x;
-        _lastPosition = transform.position;
+        float horizontal = movement.x;
 
         if (Mathf.Abs(horizontal) <= FacingEpsilon) return;
         bodyRenderer.flipX = horizontal < 0f;

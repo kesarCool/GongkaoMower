@@ -9,7 +9,6 @@ public static class WallStuckResolver
     private const float PushStep = 0.15f;
     private const int MaxAttempts = 40;
     private const float EntityRadius = 0.35f;
-    private static readonly Collider2D[] _hitBuffer = new Collider2D[8];
 
     public static Vector2 Resolve(Vector2 position, float radius = EntityRadius)
     {
@@ -39,16 +38,19 @@ public static class WallStuckResolver
     private static bool TryGetOverlappingWall(Vector2 position, float radius, out Vector2 wallCenter)
     {
         wallCenter = Vector2.zero;
-        int count = Physics2D.OverlapCircleNonAlloc(position, radius, _hitBuffer);
-        for (int i = 0; i < count; i++)
+        if (radius < 0f) return false;
+        // Query only registered walls. A crowded enemy/bullet cluster must neither
+        // increase this work nor hide a wall behind a full eight-collider buffer.
+        var walls = WallMarker.Active;
+        for (int i = walls.Count - 1; i >= 0; i--)
         {
-            Collider2D col = _hitBuffer[i];
-            if (col == null) continue;
-            if (col.TryGetComponent<WallMarker>(out _))
+            var wall = walls[i];
+            if (wall == null)
             {
-                wallCenter = col.bounds.center;
-                return true;
+                walls.RemoveAt(i);
+                continue;
             }
+            if (wall.TryOverlapCircle(position, radius, out wallCenter)) return true;
         }
         return false;
     }

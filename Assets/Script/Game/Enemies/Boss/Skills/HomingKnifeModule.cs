@@ -10,6 +10,7 @@ public class HomingKnifeModule : BossSkillModule
     private float _lifetime = 5f;
     private float _damage = 20f;
     private float _knifeSpeed = 4f;
+    private BossKnifePresentation _presentation;
 
     public override void Init(string rawParams, BossBrain owner)
     {
@@ -22,7 +23,8 @@ public class HomingKnifeModule : BossSkillModule
         _knifeSpeed = p[4] > 0f ? p[4] : 4f;
         cooldown   = interval * firstDelayMul;
 
-        _knifePrefab = brain.FindPrefab("HomingBullet");
+        _knifePrefab = brain.FindPrefab("KnifeBullet") ?? brain.FindPrefab("HomingBullet");
+        _presentation = brain.GetComponentInChildren<BossKnifePresentation>(true);
     }
 
     public override bool CanTrigger() => base.CanTrigger() && _knifePrefab != null;
@@ -37,7 +39,11 @@ public class HomingKnifeModule : BossSkillModule
 
         GameObject bullet = SpawnBullet(_knifePrefab, boss.position, Quaternion.identity);
         var hb = bullet != null ? bullet.GetComponent<HomingBullet>() : null;
-        if (hb != null) hb.Launch(dir, _knifeSpeed, dmg, _lifetime);
+        if (hb != null)
+        {
+            hb.Launch(dir, _knifeSpeed, dmg, _lifetime);
+            if (_presentation != null) _presentation.Flash(dir);
+        }
 
         ResetCooldown();
     }

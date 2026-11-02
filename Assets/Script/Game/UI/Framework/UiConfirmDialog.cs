@@ -42,6 +42,7 @@ public class UiConfirmDialog : UIPanelBase
             cancelButton.gameObject.SetActive(showCancel);
 
         gameObject.SetActive(true);
+        GetComponent<DialogThemeLayout>()?.Refresh();
 
         if (okButton != null)
         {

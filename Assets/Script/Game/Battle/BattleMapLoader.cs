@@ -4,7 +4,7 @@ using UnityEngine.Tilemaps;
 
 /// <summary>
 /// 局内按 <see cref="ChapterLevel.mapPath"/> 从 Resources 动态实例化 Tilemap Prefab；
-/// 找不到资源时回退 <see cref="ChapterLevelCatalog.DefaultMapResourcesPath"/>（TileMap101）。
+/// 找不到资源时回退 <see cref="ChapterLevelCatalog.DefaultMapResourcesPath"/>（TileMap1_1）。
 /// </summary>
 [DefaultExecutionOrder(-500)]
 [DisallowMultipleComponent]
@@ -48,6 +48,27 @@ public sealed class BattleMapLoader : MonoBehaviour
         return sceneName == GameObjectPool.BattleSceneNameForPoolClear;
     }
 
+    private void OnEnable()
+    {
+        BattleMapPreferences.DecorationVisibilityChanged += OnDecorationVisibilityChanged;
+        ApplyDecorationVisibility(BattleMapPreferences.ShowDecoration);
+    }
+
+    private void OnDisable()
+    {
+        BattleMapPreferences.DecorationVisibilityChanged -= OnDecorationVisibilityChanged;
+    }
+
+    private void OnDecorationVisibilityChanged(bool show) { ApplyDecorationVisibility(show); }
+
+    private void ApplyDecorationVisibility(bool show)
+    {
+        if (_mapInstance == null) return;
+        // Include inactive nodes so toggling back on also finds a hidden Decoration root.
+        foreach (var node in _mapInstance.GetComponentsInChildren<Transform>(true))
+            if (node.name == "Decoration") node.gameObject.SetActive(show);
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -68,6 +89,23 @@ public sealed class BattleMapLoader : MonoBehaviour
         if (Instance == this)
             Instance = null;
         UnloadMap();
+    }
+
+    private void Start()
+    {
+        // All scene Awakes (including Player/Camera) have finished. This also runs
+        // before the loading veil is removed, even while gameplay is paused.
+        var player = FindObjectOfType<PlayerController>();
+        if (player == null) return;
+        Physics2D.SyncTransforms();
+        if (!BattlePlayerPositioning.TryGetSpawnPosition(_groundTilemap, out var spawn))
+        {
+            Debug.LogWarning("[BattleMapLoader] 地图没有可用的中心出生点，保留场景出生位置。");
+            return;
+        }
+        BattlePlayerPositioning.Teleport(player.transform, spawn);
+        foreach (var camera in FindObjectsOfType<CameraFollow2D>())
+            camera.SnapToTarget();
     }
 
     public void LoadMapForCurrentLevel()
@@ -94,6 +132,8 @@ public sealed class BattleMapLoader : MonoBehaviour
         _mapInstance.transform.localPosition = Vector3.zero;
         _mapInstance.transform.localRotation = Quaternion.identity;
         _mapInstance.transform.localScale = Vector3.one;
+
+        ApplyDecorationVisibility(BattleMapPreferences.ShowDecoration);
 
         _groundTilemap = FindGroundTilemap(_mapInstance.transform);
         WireConsumers(_groundTilemap);

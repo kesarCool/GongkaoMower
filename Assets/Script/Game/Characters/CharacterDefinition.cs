@@ -27,6 +27,9 @@ public class CharacterDefinition : ScriptableObject
     [Tooltip("角色身体精灵（替换 Body 子物体的 SpriteRenderer.sprite）")]
     public Sprite bodySprite;
 
+    [Tooltip("可选：五张整身瞄准姿态覆盖八向。留空则沿用单图左右镜像。")]
+    public CharacterAimFrames aimFrames;
+
     [Tooltip("初始武器（null = 徒手无武器视觉）")]
     public WeaponDefinition defaultWeapon;
 

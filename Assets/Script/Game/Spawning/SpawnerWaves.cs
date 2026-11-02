@@ -294,14 +294,21 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     public void TriggerReserveWave(int wave)
     {
+        TriggerReserveWave(wave, null);
+    }
+
+    /// <summary>Optional presentation callback, after a successful spawn has its final position, stats and word.</summary>
+    public bool TriggerReserveWave(int wave, System.Action<GameObject> onSpawned)
+    {
         if (!_reserveWaves.TryGetValue(wave, out var group) || group.Count == 0)
         {
             Debug.LogWarning($"[SpawnerWaves] TriggerReserveWave({wave}) 失败：无对应配置");
-            return;
+            return false;
         }
         if (debugLogs)
             GameLog.Info($"[SpawnerWaves] 召唤 wave={wave}：{group.Count} 条配置，共 {SumCap(group)} 只怪");
-        StartCoroutine(TableWaveGroupRoutine(group, 0, 0, false));
+        StartCoroutine(TableWaveGroupWithFeedbackRoutine(group, 0, 0, false, onSpawned));
+        return true;
     }
 
     private static int SumCap(List<TableWaveRuntime> group)
@@ -394,11 +401,18 @@ public class SpawnerWaves : MonoBehaviour
                 // ── Boss 波次：镜头拉远 + 中间波清场 ──
                 if (isBossWave)
                 {
-                    if (CameraFollow != null)
-                        CameraFollow.SetBossZoom(true);
-
                     if (!isLastWave)
                         ClearAllEnemyMonsters();
+
+                    var arena = BossArenaLock.FindInScene();
+                    if (arena != null)
+                    {
+                        arena.PrepareBossWave();
+                        // Finish disappearance, camera travel and arrival before warnings/spawn.
+                        while (arena != null && arena.IsEntering) yield return null;
+                    }
+                    else if (CameraFollow != null)
+                        CameraFollow.SetBossZoom(true);
                 }
 
                 PublishWaveChanged(this, w + 1, totalWaves);
@@ -648,6 +662,7 @@ public class SpawnerWaves : MonoBehaviour
         marker.isFinalBoss = isFinalBoss;
         marker.spawner = spawner;
         BattleVictoryBossTracker.RegisterBossSpawned(isFinalBoss);
+        BossArenaLock.FindInScene()?.RegisterBoss(enemy.GetComponent<EnemyBase>());
     }
 
     /// <summary>Boss 死亡后延迟再弹选卡面板，等死亡动画播完。</summary>
@@ -757,6 +772,11 @@ public class SpawnerWaves : MonoBehaviour
     /// </summary>
     private IEnumerator TableWaveGroupRoutine(List<TableWaveRuntime> group, int displayIndex, int displayTotal, bool isLastWave)
     {
+        return TableWaveGroupWithFeedbackRoutine(group, displayIndex, displayTotal, isLastWave, null);
+    }
+
+    private IEnumerator TableWaveGroupWithFeedbackRoutine(List<TableWaveRuntime> group, int displayIndex, int displayTotal, bool isLastWave, System.Action<GameObject> onSpawned)
+    {
         int entryCount = group.Count;
         int[] remaining = new int[entryCount];
         float[] nextSpawnTime = new float[entryCount];  // 基于 Time.time 或 realtime 的时间戳
@@ -820,6 +840,8 @@ public class SpawnerWaves : MonoBehaviour
                 GameObject spawnedGo = SpawnEnemy(tw.monsterId, tw.lineSpawn, tw.attack, tw.maxHp, tw.moveSpeed, tw.defense);
                 if (markBoss && spawnedGo != null)
                     TryMarkLastWaveBoss(spawnedGo, isLastWave, this);
+
+                if (spawnedGo != null && onSpawned != null) onSpawned(spawnedGo);
 
                 remaining[i]--;
                 totalSpawned++;

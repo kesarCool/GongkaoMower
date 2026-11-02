@@ -30,6 +30,12 @@ public class HomeTabBar : MonoBehaviour
     /// <summary>当前活跃页签 ID。</summary>
     public string ActiveTabId => _activeTabId;
 
+    public Button GetTabButton(string tabId)
+    {
+        int index = tabs.FindIndex(tab => tab.tabId == tabId);
+        return index >= 0 ? tabs[index].button : null;
+    }
+
     /// <summary>页签切换事件（参数为新 tabId）。</summary>
     public event System.Action<string> OnTabChanged;
 
@@ -196,16 +202,9 @@ public class HomeTabBar : MonoBehaviour
                 ? new Vector3(scale, scale, 1f)
                 : Vector3.one;
 
-            // 切换底图
-            Sprite targetSprite = isActive ? entry.activeSprite : entry.inactiveSprite;
-            if (targetSprite != null)
-            {
-                var img = entry.button.targetGraphic as Image;
-                if (img == null)
-                    img = entry.button.GetComponent<Image>();
-                if (img != null)
-                    img.sprite = targetSprite;
-            }
+            // 底图显隐：选中显示，未选中隐藏
+            if (entry.tabImage != null)
+                entry.tabImage.enabled = isActive;
         }
     }
 
@@ -228,7 +227,7 @@ public class HomeTabBar : MonoBehaviour
                 continue;
             }
 
-            // 禁用态不透明白底（选中态由代码换 Sprite，不靠透明度区分）
+            // 禁用态不透明白底（选中态由代码显隐底图 Image，不靠透明度区分）
             var colors = entry.button.colors;
             colors.disabledColor = Color.white;
             entry.button.colors = colors;
@@ -303,10 +302,8 @@ public class HomeTabBar : MonoBehaviour
         [Tooltip("Prefab 模式：拖 Prefab 资源（UIPanelBase 或 HomeTabViewBase 子类）。")]
         public GameObject prefab;
 
-        [Tooltip("选中态底图。")]
-        public Sprite activeSprite;
-        [Tooltip("非选中态底图。")]
-        public Sprite inactiveSprite;
+        [Tooltip("选中态底图 Image（选中显示，未选中隐藏）。")]
+        public Image tabImage;
         [Tooltip("选中态放大倍率（默认 1.1）。")]
         public float selectedScale;
 

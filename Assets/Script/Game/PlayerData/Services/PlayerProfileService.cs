@@ -529,6 +529,8 @@ public sealed class PlayerProfileService
             {
                 version = PlayerSaveData.CurrentVersion,
                 playerId = guestId,
+                // 新号种子金币：覆盖首战后第一次升级（HeroUpgradeData.baseGoldCost 默认 200）。
+                gold = 200,
                 levels = Array.Empty<LevelProgressEntry>(),
             };
         }

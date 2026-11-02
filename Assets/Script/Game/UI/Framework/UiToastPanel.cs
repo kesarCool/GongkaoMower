@@ -30,6 +30,7 @@ public class UiToastPanel : MonoBehaviour
 
         gameObject.SetActive(true);
         transform.SetAsLastSibling();
+        GetComponent<DialogThemeLayout>()?.Refresh();
 
         // 重置位置
         if (_rt != null) _rt.anchoredPosition = Vector2.zero;

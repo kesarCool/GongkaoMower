@@ -30,7 +30,7 @@ MonoBehaviour:
     HideAfterCallMain: 1
     preloadFiles: 
     Orientation: 0
-    bgImageSrc: Assets/Res/image/login2.png
+    bgImageSrc: Assets/Res/image/Home/login/login_background.jpg
     dataFileSubPrefix: 
     maxStorage: 200
     defaultReleaseSize: 31457280
@@ -40,7 +40,7 @@ MonoBehaviour:
     loadingBarWidth: 240
     needCheckUpdate: 0
     disableHighPerformanceFallback: 0
-    IOSDevicePixelRatio: 0
+    IOSDevicePixelRatio: 2
   SDKOptions:
     UseFriendRelation: 0
     UseCompressedTexture: 0

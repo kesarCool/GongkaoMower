@@ -17,15 +17,15 @@ MonoBehaviour:
   bondedPassiveId: 101
   maxLevelPrefab: {fileID: 0}
   displayName: "\u7F61\u6C14\u62A4\u4F53"
-  description: "\u4EE5\u7F61\u6C14\u5E03\u9635\uFF0C\u5728\u8EAB\u5468\u751F\u6210\u6301\u7EED\u4F24\u5BB3\u529B\u573A\uFF0C\u8303\u56F4\u5185\u654C\u4EBA\u6301\u7EED\u53D7\u635F\u3002"
+  description: "\u8EAB\u5468\u5F62\u6210\u7F61\u6C14\u529B\u573A\u3002\u654C\u4EBA\u8FDB\u5165\u8303\u56F4\u540E\uFF0C\u5728\u4E0B\u6B21\u8DF3\u4F24\u65F6\u53D7\u4F24\uFF1B\u505C\u7559\u671F\u95F4\u6301\u7EED\u53D7\u4F24\uFF0C\u79BB\u5F00\u540E\u505C\u6B62\u3002"
   icon: {fileID: 21300000, guid: 71dabe83775c29645bff5152585fa07b, type: 3}
   levelDescriptions: []
   radiusByLevel:
   - 1.25
-  - 1.35
   - 1.5
-  - 1.75
   - 2
+  - 2.5
+  - 3
   damagePerSecondByLevel:
   - 1
   - 2
@@ -50,6 +50,6 @@ MonoBehaviour:
   - 1
   - 0.85
   - 0.7
-  fieldVisualPrefab: {fileID: 620803830758985842, guid: de20a968a412f7f4bb057bc5da5d2bd1, type: 3}
-  visualBaseDiameter: 6
-  sortingOrder: 30
+  fieldVisualPrefab: {fileID: 2103361817362601816, guid: 0a51f36e54dcdb6419a579c04cb9779a, type: 3}
+  visualBaseDiameter: 2
+  sortingOrder: -5

@@ -47,6 +47,12 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         Instance = this;
     }
 
+    private void Start()
+    {
+        if (_playerHealth != null)
+            TutorialDirector.Ensure().EnterBattle(_playerHealth.GetComponent<PlayerController>());
+    }
+
     private void OnDestroy()
     {
         if (Instance == this)
@@ -129,14 +135,12 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
         // 克隆体/分身不计入 Boss 击杀
         if (e.enemy.GetComponent<CloneMarker>() != null)
         {
-            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: CloneMarker on {e.enemy.name}");
             return;
         }
 
         var marker = e.enemy.GetComponent<LastWaveBossMarker>();
         if (marker == null)
         {
-            GameLog.Info($"[CardTrace] OnEnemyDied SKIP: no LastWaveBossMarker on {e.enemy.name}");
             return;
         }
 
@@ -363,22 +367,8 @@ public sealed class BattleOutcomeCoordinator : MonoBehaviour
     /// <summary>传送玩家到地图 Tilemap 中心，WallStuckResolver 修正卡墙。</summary>
     private static void TeleportToMapCenter(Transform playerTr)
     {
-        var loader = BattleMapLoader.Instance;
-        if (loader == null || loader.GroundTilemap == null) return;
-
-        var tm = loader.GroundTilemap;
-        tm.CompressBounds();
-        BoundsInt cb = tm.cellBounds;
-        Vector3 mapMin = tm.CellToWorld(cb.min);
-        Vector3 mapMax = tm.CellToWorld(cb.max);
-        Vector2 center = new Vector2(
-            (mapMin.x + mapMax.x) * 0.5f,
-            (mapMin.y + mapMax.y) * 0.5f);
-
-        Vector2 resolved = WallStuckResolver.Resolve(center);
-        playerTr.position = new Vector3(resolved.x, resolved.y, playerTr.position.z);
-
-        GameLog.Info($"[Revive] 传送到地图中心 ({resolved.x:F1},{resolved.y:F1})");
+        if (BattlePlayerPositioning.TeleportToMapCenter(playerTr))
+            GameLog.Info($"[Revive] 传送到地图中心 ({playerTr.position.x:F1},{playerTr.position.y:F1})");
     }
 
     /// <summary>复活无敌光罩：脉动金环 + 渐隐，duration 秒后自动解除无敌。</summary>

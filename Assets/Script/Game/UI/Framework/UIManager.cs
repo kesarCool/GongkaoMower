@@ -59,6 +59,10 @@ public class UIManager : MonoBehaviour
     private readonly Dictionary<UIPanelBase, Coroutine> _transitions = new Dictionary<UIPanelBase, Coroutine>();
 
     private UiConfirmDialog _confirmInstance;
+    /// <summary>Changes on each confirmation presentation, allowing queued owners to detect replacement.</summary>
+    public int ConfirmationVersion { get; private set; }
+    public bool IsConfirmationActive(int version) => version == ConfirmationVersion &&
+        _confirmInstance != null && _confirmInstance.gameObject.activeInHierarchy;
     private UiToastPanel _toastInstance;
     private ItemTooltip _itemTooltipInstance;
 
@@ -135,6 +139,15 @@ public class UIManager : MonoBehaviour
 
     /// <summary>当前主栈顶（无则 null）</summary>
     public UIPanelBase Top => _stack.Count > 0 ? _stack[_stack.Count - 1] : null;
+
+    /// <summary>Queued feedback waits for confirmations and actual enter/exit transitions to finish.</summary>
+    public bool CanPresentQueuedFeedback => CanPresentTutorial && !TutorialDirector.IsShowing;
+
+    public bool CanPresentTutorial => isActiveAndEnabled && _transitions.Count == 0 &&
+        (_confirmInstance == null || !_confirmInstance.gameObject.activeInHierarchy);
+
+    public bool HasRegisteredPanel<T>() where T : UIPanelBase =>
+        _prefabByType.TryGetValue(typeof(T), out var prefab) && prefab != null;
 
     /// <summary>获取已由本管理器创建过的面板实例（可能不在栈顶或已隐藏）。</summary>
     public bool TryGetInstance<T>(out T panel) where T : UIPanelBase
@@ -340,6 +353,8 @@ public class UIManager : MonoBehaviour
 
         EnsureConfirmInstance();
 
+        ConfirmationVersion++;
+
         var o = options.PauseTime || options.UseUnscaledTime || options.CloseOnBack
             ? options
             : new UiOpenOptions { PauseTime = true, UseUnscaledTime = true, CloseOnBack = true };
@@ -492,6 +507,25 @@ public class UIManager : MonoBehaviour
         {
             RemovePauseLock();
             panel.AppliedPauseLock = false;
+        }
+    }
+
+    /// <summary>A transient overlay shares the panel pause counter without entering the modal stack.</summary>
+    public IDisposable AcquirePauseLock()
+    {
+        AddPauseLock();
+        return new OverlayPauseLock(this);
+    }
+
+    private sealed class OverlayPauseLock : IDisposable
+    {
+        private UIManager owner;
+        public OverlayPauseLock(UIManager owner) { this.owner = owner; }
+        public void Dispose()
+        {
+            var previous = owner;
+            owner = null;
+            if (previous != null) previous.RemovePauseLock();
         }
     }
 

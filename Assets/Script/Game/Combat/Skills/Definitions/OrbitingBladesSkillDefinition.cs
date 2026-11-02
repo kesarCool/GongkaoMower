@@ -30,9 +30,17 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
     public float ActiveDurationAt(int level) => activeDurationByLevel[Mathf.Clamp(level, 1, activeDurationByLevel.Length) - 1];
     public float CooldownDurationAt(int level) => cooldownDurationByLevel[Mathf.Clamp(level, 1, cooldownDurationByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        return $"飞刀x{BladeCountAt(level)},每跳伤害 {DamagePerTickAt(level):0.#},间隔 {TickIntervalAt(level):0.##}s";
+        return new[] {
+            SkillDescriptionStat.Damage("每跳伤害", DamagePerTickAt(level)),
+            SkillDescriptionStat.Count("飞刀数量", BladeCountAt(level), "把"),
+            SkillDescriptionStat.Number("伤害间隔", TickIntervalAt(level), "秒"),
+            SkillDescriptionStat.Number("环绕半径", OrbitRadiusAt(level), "米"),
+            SkillDescriptionStat.Number("旋转速度", RotateSpeedAt(level), "度/秒"),
+            SkillDescriptionStat.Number("持续时间", ActiveDurationAt(level), "秒"),
+            SkillDescriptionStat.Number("冷却", CooldownDurationAt(level), "秒")
+        };
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
@@ -59,6 +67,8 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
         if (s == null) return;
 
         level = ClampLevel(level);
+        // ApplyRuntimeStats rebuilds immediately, so the breakthrough prefab must already be available.
+        s.maxLevelBladePrefab = maxLevelPrefab;
         s.ApplyRuntimeStats(
             Mathf.Max(1, BladeCountAt(level)),
             OrbitRadiusAt(level),
@@ -67,7 +77,6 @@ public class OrbitingBladesSkillDefinition : SkillDefinitionBase
             TickIntervalAt(level),
             ActiveDurationAt(level),
             CooldownDurationAt(level));
-        s.maxLevelBladePrefab = maxLevelPrefab;
     }
 }
 

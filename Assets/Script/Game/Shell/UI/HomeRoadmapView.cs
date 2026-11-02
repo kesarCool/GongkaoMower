@@ -7,6 +7,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public class HomeRoadmapView : MonoBehaviour
 {
+    [SerializeField] private HomeChapterMapView illustratedMap;
     [Header("滚动")]
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private RectTransform content;
@@ -59,6 +60,7 @@ public class HomeRoadmapView : MonoBehaviour
 
     private IEnumerator Start()
     {
+        if (illustratedMap != null) { _startDone = true; yield break; }
         L($"[R] Start BEGIN f={Time.frameCount}");
         if (_circleSprite == null) _circleSprite = GenerateCircleSprite(circleTexSize);
         if (_whitePixelSprite == null) _whitePixelSprite = GenerateWhitePixelSprite();
@@ -98,6 +100,7 @@ public class HomeRoadmapView : MonoBehaviour
 
     public void RefreshAll()
     {
+        if (illustratedMap != null) { illustratedMap.RefreshFromProfile(); return; }
         if (!_startDone) { L($"[R] RefreshAll SKIP _sd=false"); return; }
         var stack = new System.Diagnostics.StackTrace(1, true);
         L($"[R] RefreshAll BEGIN f={Time.frameCount} _sd={_startDone} _b={_built} caller={stack.GetFrame(0)?.GetMethod()?.Name}");
@@ -215,7 +218,7 @@ public class HomeRoadmapView : MonoBehaviour
             Sprite circle = nodeCircleSprite ? nodeCircleSprite : _circleSprite;
             node.SetCircleSprite(circle);
             node.Bind(d.levelId, d.chapterId, d.unlocked, d.cleared, d.stars,
-                d.mapName, d.levelId == _currentLevelId,
+                d.stageName, d.levelId == _currentLevelId,
                 d.levelId == _currentLevelId ? currentHeroSprite : null,
                 OnNodeClicked);
             _nodes.Add(node);
@@ -420,7 +423,7 @@ public class HomeRoadmapView : MonoBehaviour
 
     // ═══════════════ 数据 ═══════════════
 
-    private struct LevelData { public int levelId, chapterId, stars; public string mapName; public bool unlocked, cleared; }
+    private struct LevelData { public int levelId, chapterId, stars; public string stageName; public bool unlocked, cleared; }
     private struct ChapterMeta { public int chapterId; }
 
     private int FindChapterIndex(List<ChapterMeta> chapters, int levelId)
@@ -465,7 +468,7 @@ public class HomeRoadmapView : MonoBehaviour
                 bool c = PlayerProfileService.Instance.HasCleared(cl.levelId);
                 int s = 0;
                 if (c && PlayerProfileService.Instance.TryGetProgress(cl.levelId, out var p)) s = Mathf.Clamp(p.stars, 1, 3);
-                list.Add(new LevelData { levelId = cl.levelId, chapterId = cl.chapterId, mapName = cl.mapName ?? "", unlocked = u, cleared = c, stars = s });
+                list.Add(new LevelData { levelId = cl.levelId, chapterId = cl.chapterId, stageName = cl.stageName ?? "", unlocked = u, cleared = c, stars = s });
             }
         }
 #endif
@@ -485,14 +488,11 @@ public class HomeRoadmapView : MonoBehaviour
     }
 
     /// <summary>
-    /// 章节显示名：第X章（主题名）。主题未知时仅返回"第X章"。
+    /// 章节显示名使用配表 mapName。
     /// </summary>
     private static string FormatChapterName(int chapterId)
     {
-        string theme = LexiconPreviewCatalog.GetThemeTabLabel(chapterId);
-        if (string.IsNullOrEmpty(theme) || theme.StartsWith("主题 "))
-            return $"第{chapterId}章";
-        return $"第{chapterId}章（{theme}）";
+        return ChapterLevelDisplay.FormatChapterTitle(chapterId);
     }
 
     // ═══════════════ 清理 ═══════════════

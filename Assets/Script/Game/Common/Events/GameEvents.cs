@@ -91,6 +91,15 @@ public struct SkillCastEvent
     public Vector3 worldPosition;
 }
 
+/// <summary>成功发射普通投射物后的纯视觉通知；不改变通用施放/爆炸事件的语义。</summary>
+public struct PlayerWeaponFiredVisualEvent
+{
+    public Transform owner;
+    public SkillId skillId;
+    public Vector2 aimDirection;
+    public int projectileCount;
+}
+
 // ── 成就系统事件 ──
 
 /// <summary>钻石收入（AddDiamond 正数时发布）。</summary>

@@ -1,0 +1,13 @@
+{
+    "generatorVersion": "v1.2",
+    "sourceFolder": "G:\\Demo\\GongkaoMower\\美术资源\\地图设计\\明快卡通_战斗地图_v1",
+    "outputFolder": "Assets/Res/Map/Styles/SharedCartoon",
+    "tileResolution": 32,
+    "importedTextures": 61,
+    "prefabs": [
+        "Assets/Res/Map/Styles/SharedCartoon/Prefabs/CartoonMap_01_田园食集.prefab",
+        "Assets/Res/Map/Styles/SharedCartoon/Prefabs/CartoonMap_02_竹林书院.prefab",
+        "Assets/Res/Map/Styles/SharedCartoon/Prefabs/CartoonMap_03_滨水古镇.prefab"
+    ],
+    "status": "美术预览；未接入战斗、碰撞、刷怪约束和配表。"
+}

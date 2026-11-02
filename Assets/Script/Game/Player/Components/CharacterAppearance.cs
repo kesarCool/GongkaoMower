@@ -19,6 +19,13 @@ public class CharacterAppearance : MonoBehaviour
     private Vector3 _weaponRestPos;
     private Quaternion _weaponRestRot;
     private bool _swingRunning;
+    private CharacterAimFrames _aimFrames;
+    private SkillId _primarySkill;
+    private int _aimSector;
+    private int _shotFrame = -1;
+
+    public bool HasDirectionalAimFrames => bodyRenderer != null && _aimFrames != null && _aimFrames.IsComplete;
+    public int AimSector => _aimSector;
 
     private void Awake()
     {
@@ -33,11 +40,13 @@ public class CharacterAppearance : MonoBehaviour
     private void OnEnable()
     {
         EventBus.Subscribe<SkillCastEvent>(OnSkillCast, owner: this);
+        EventBus.Subscribe<PlayerWeaponFiredVisualEvent>(OnWeaponFired, owner: this);
     }
 
     private void OnDisable()
     {
         EventBus.Unsubscribe<SkillCastEvent>(OnSkillCast);
+        EventBus.Unsubscribe<PlayerWeaponFiredVisualEvent>(OnWeaponFired);
     }
 
     private void LateUpdate()
@@ -50,9 +59,45 @@ public class CharacterAppearance : MonoBehaviour
     public void ApplySkin(CharacterDefinition def)
     {
         if (bodyRenderer == null) return;
-        if (def == null || def.bodySprite == null) return;
+        _aimFrames = def != null ? def.aimFrames : null;
+        _primarySkill = def != null ? def.startingSkill : SkillId.None;
+        if (def != null && def.defaultWeapon != null && def.defaultWeapon.weaponSkillId != SkillId.None)
+            _primarySkill = def.defaultWeapon.weaponSkillId;
+        _shotFrame = -1;
+        _aimSector = 0;
+        if (HasDirectionalAimFrames)
+        {
+            bodyRenderer.sprite = _aimFrames.right;
+            bodyRenderer.flipX = false;
+        }
+        else if (def != null && def.bodySprite != null)
+            bodyRenderer.sprite = def.bodySprite;
+    }
 
-        bodyRenderer.sprite = def.bodySprite;
+    /// <summary>由 PlayerController 传入已有索敌结果或真实位移，不增加索敌查询。</summary>
+    public bool TrySetDirectionalAim(Vector2 direction, bool snap = false)
+    {
+        if (!HasDirectionalAimFrames) return false;
+        if (direction.sqrMagnitude < 0.000001f || Time.timeScale <= 0f) return true;
+        // 当帧实际发射优先，LateUpdate 不再用另一份目标方向覆盖它。
+        if (!snap && _shotFrame == Time.frameCount) return true;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        int sector = (Mathf.RoundToInt(angle / 45f) % 8 + 8) % 8;
+        if (!snap && sector != _aimSector && Mathf.Abs(Mathf.DeltaAngle(_aimSector * 45f, angle)) <= 22.5f + _aimFrames.directionHysteresis)
+            return true;
+        _aimSector = sector;
+        bool mirrored;
+        bodyRenderer.sprite = _aimFrames.GetFrame(sector, out mirrored);
+        bodyRenderer.flipX = mirrored;
+        return true;
+    }
+
+    private void OnWeaponFired(PlayerWeaponFiredVisualEvent e)
+    {
+        if (!HasDirectionalAimFrames || e.owner != transform || e.skillId != _primarySkill || e.projectileCount <= 0 || Time.timeScale <= 0f)
+            return;
+        TrySetDirectionalAim(e.aimDirection, true);
+        _shotFrame = Time.frameCount;
     }
 
     // ── Weapon ──────────────────────────────────────────
@@ -63,6 +108,8 @@ public class CharacterAppearance : MonoBehaviour
         if (_weaponChild != null)
             RemoveWeapon();
 
+        // 整身姿态中已经画有枪和双手，避免再叠一把独立武器。
+        if (HasDirectionalAimFrames) return;
         if (def == null || def.sprite == null) return;
 
         _currentWeaponDef = def;

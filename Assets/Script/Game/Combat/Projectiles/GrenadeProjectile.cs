@@ -84,7 +84,7 @@ public class GrenadeProjectile : MonoBehaviour, IPoolReceiver
         Vector2 center = transform.position;
         ApplyAoeDamage(center);
         var fxPos = new Vector3(center.x, center.y, -0.1f);
-        CombatVfxSpawner.TryPlayPooled(_explosionFxPrefab, fxPos, Quaternion.identity);
+        CombatVfxSpawner.TryPlayPooled(_explosionFxPrefab, fxPos, Quaternion.identity, _aoeRadius);
 
         SpawnLimiter.Instance?.Unregister(SpawnLimiterKey, gameObject);
         GameObjectPool.Release(gameObject);

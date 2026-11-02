@@ -24,6 +24,8 @@ public class PlayerHealth : MonoBehaviour
 
     private bool _dead;
     private float _invulnerableUntil;
+    // Separate from revival/hit immunity so entry cleanup cannot cancel either.
+    public bool ArenaEntryProtected { get; set; }
 
     public float Hp => hp;
     public float MaxHp => maxHp;
@@ -91,6 +93,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float amount, Transform damageSource = null)
     {
+        if (ArenaEntryProtected) return;
         if (_dead) return;
         if (amount <= 0f) return;
 

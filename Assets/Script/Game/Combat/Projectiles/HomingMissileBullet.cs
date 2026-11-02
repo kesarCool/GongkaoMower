@@ -17,6 +17,7 @@ public class HomingMissileBullet : PlayerBullet
     private Vector2 _lastTargetPos;
     private bool _hasTarget;
     private string _enemyTag;
+    private Vector2? _visualImpactPoint;
 
     public void Launch(Vector2 direction, float speed, float damage, float lifetime,
         SkillId source, Transform target, float aoeRadius, GameObject fxPrefab,
@@ -41,6 +42,7 @@ public class HomingMissileBullet : PlayerBullet
         _hasTarget = false;
         _target = null;
         _launched = false;
+        _visualImpactPoint = null;
     }
 
     private bool _launched;
@@ -84,6 +86,14 @@ public class HomingMissileBullet : PlayerBullet
         _rb.MoveRotation(newAngle);
     }
 
+    protected override void OnTriggerEnter2D(Collider2D other)
+    {
+        // Resolve before base damage can kill and return the enemy to its pool.
+        if (_fired && other.CompareTag(targetTag))
+            _visualImpactPoint = CombatHitPlacement.Contact(other, transform.position);
+        base.OnTriggerEnter2D(other);
+    }
+
     protected override void OnHitEnemy(Collider2D other)
     {
         Explode();
@@ -104,8 +114,9 @@ public class HomingMissileBullet : PlayerBullet
         // 爆炸特效
         if (explosionFxPrefab != null)
         {
-            var fxPos = new Vector3(center.x, center.y, -0.1f);
-            CombatVfxSpawner.TryPlayPooled(explosionFxPrefab, fxPos, Quaternion.identity);
+            Vector2 point = _visualImpactPoint ?? center;
+            var fxPos = new Vector3(point.x, point.y, -0.1f);
+            CombatVfxSpawner.TryPlayPooled(explosionFxPrefab, fxPos, Quaternion.identity, explosionRadius);
         }
 
         // AOE 伤害

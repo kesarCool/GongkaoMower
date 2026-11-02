@@ -255,4 +255,4 @@ MonoBehaviour:
   targetTag: monster
   turnRate: 180
   explosionRadius: 1.5
-  explosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}
+  explosionFxPrefab: {fileID: 3838352096616094897, guid: 18551488e41a4974e99c8ff429fb9549, type: 3}

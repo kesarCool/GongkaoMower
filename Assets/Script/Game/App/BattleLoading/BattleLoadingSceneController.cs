@@ -23,11 +23,31 @@ public class BattleLoadingSceneController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private Slider progressSlider;
     [SerializeField] private Button retryButton;
+    [SerializeField] private BattleLoadingPresentation presentation;
 
     [Tooltip("表若在首包已 Init，此处仍为幂等；若表在分包内，应在分包成功后再勾选或在此处 Init。")]
     [SerializeField] private bool initTableManagerInLoading = true;
 
     private Coroutine _run;
+    private AsyncOperation _sceneLoad;
+    private System.IDisposable _battlePause;
+    private float _progress;
+    private static BattleLoadingSceneController _instance;
+    public static bool IsTransitionVisible => _instance != null;
+
+    private void Awake()
+    {
+        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
+        _instance = this;
+        DontDestroyOnLoad(gameObject);
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (_sceneLoad != null && scene.name == nextSceneName && _battlePause == null && UIManager.Instance != null)
+            _battlePause = UIManager.Instance.AcquirePauseLock();
+    }
 
     private void Start()
     {
@@ -50,6 +70,10 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void OnDestroy()
     {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        _battlePause?.Dispose(); _battlePause = null;
+        if (_sceneLoad != null && !_sceneLoad.isDone) _sceneLoad.allowSceneActivation = true;
+        if (_instance == this) _instance = null;
         if (retryButton != null)
             retryButton.onClick.RemoveListener(OnRetryClicked);
     }
@@ -64,43 +88,49 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void BeginFlow()
     {
+        if (!string.IsNullOrEmpty(nextSceneName)) GameObjectPool.BattleSceneNameForPoolClear = nextSceneName;
         if (_run != null)
             StopCoroutine(_run);
+        _battlePause?.Dispose(); _battlePause = null;
+        _progress = 0;
+        if (presentation != null) presentation.ResetProgress();
         _run = StartCoroutine(RunFlow());
     }
 
     private IEnumerator RunFlow()
     {
-        SetStatus("加载分包…");
+        SetStatus("正在整理行囊…");
         SetProgress(0f);
+        // Let the fully authored page render before any synchronous data work.
+        yield return null;
 
         string failMessage = null;
         yield return WeChatSubpackagePlaceholder.LoadSubpackagesRoutine(
             subpackageNames,
             editorSimulatedSubpackageDelay,
-            SetProgress,
+            p => SetProgress(p * .28f),
             () => { },
             err => { failMessage = err; });
 
         if (!string.IsNullOrEmpty(failMessage))
         {
-            SetStatus("分包失败：" + failMessage);
-            SetProgress(0f);
-            if (retryButton != null)
-                retryButton.gameObject.SetActive(true);
+            ShowFailure("资源准备失败，请重试。", failMessage);
             yield break;
         }
 
-        SetProgress(1f);
-        SetStatus("初始化数据…");
+        SetProgress(.28f);
+        SetStatus("正在准备关卡…");
+        yield return null;
 
         if (initTableManagerInLoading && TableManager.Instance != null)
             TableManager.Instance.Init();
 
         BattleChineseFontRuntime.EnsureLoaded();
+        if (presentation != null) presentation.RefreshSelectedContent();
+        SetProgress(.36f);
 
-        SetStatus("加载音效…");
-        SetProgress(0f);
+        SetStatus("正在准备战斗…");
+        yield return null;
 
         var audio = AudioService.Ensure();
         if (!audio.IsGroupLoaded(AudioLoadGroup.Battle))
@@ -108,32 +138,57 @@ public class BattleLoadingSceneController : MonoBehaviour
             yield return audio.LoadGroupAsync(AudioLoadGroup.Battle);
         }
 
-        SetStatus("进入战斗…");
-        SetProgress(0f);
+        SetProgress(.46f);
+        SetStatus("正在布置战场…");
 
-        var op = SceneManager.LoadSceneAsync(nextSceneName, LoadSceneMode.Single);
+        AsyncOperation op = null;
+        if (Application.CanStreamedLevelBeLoaded(nextSceneName))
+            op = SceneManager.LoadSceneAsync(nextSceneName, LoadSceneMode.Single);
         if (op == null)
         {
-            SetStatus("无法加载场景：" + nextSceneName);
-            if (retryButton != null)
-                retryButton.gameObject.SetActive(true);
+            ShowFailure("关卡准备失败，请重试。", "Scene not available: " + nextSceneName);
             yield break;
         }
 
+        _sceneLoad = op;
         op.allowSceneActivation = false;
         while (op.progress < 0.9f)
         {
-            SetProgress(Mathf.Clamp01(op.progress / 0.9f));
+            SetProgress(.46f + .48f * Mathf.Clamp01(op.progress / .9f));
             yield return null;
         }
 
-        SetProgress(1f);
+        SetProgress(.94f);
+        SetStatus("马上开始…");
         op.allowSceneActivation = true;
+        while (!op.isDone) yield return null;
+        // Keep the page opaque across activation and the new scene's Start callbacks.
+        yield return null;
+        yield return null;
+        if (BattleMapLoader.Instance == null || BattleMapLoader.Instance.GroundTilemap == null || FindObjectOfType<PlayerController>() == null)
+        {
+            ShowFailure("战场还未准备好，请重试。", "Game activated without its map or player.");
+            yield break;
+        }
 
-        // 场景加载后再初始化敏感词过滤（不阻塞首帧渲染）
         SensitiveWordFilter.Instance.LoadLocalBlacklist();
         SensitiveWordFilter.Instance.LoadRemoteCache();
-        StartCoroutine(SensitiveWordFilter.Instance.BackgroundCheckAll(null));
+        // This host survives after the loading page has been destroyed.
+        audio.StartCoroutine(SensitiveWordFilter.Instance.BackgroundCheckAll(null));
+        SetProgress(1f);
+        if (presentation != null) yield return presentation.RevealBattle();
+        _battlePause?.Dispose(); _battlePause = null;
+        _run = null;
+        Destroy(gameObject);
+    }
+
+    private void ShowFailure(string message, string detail)
+    {
+        GameLog.Warning("[BattleLoading] " + detail);
+        SetStatus(message);
+        if (presentation != null) presentation.ShowError(message);
+        else if (retryButton != null) retryButton.gameObject.SetActive(true);
+        _run = null;
     }
 
     private void SetStatus(string msg)
@@ -145,18 +200,20 @@ public class BattleLoadingSceneController : MonoBehaviour
 
     private void SetProgress(float p)
     {
-        if (progressSlider != null)
-            progressSlider.value = Mathf.Clamp01(p);
+        _progress = Mathf.Max(_progress, Mathf.Clamp01(p));
+        if (presentation != null) presentation.Report(_progress);
+        else if (progressSlider != null) progressSlider.value = _progress;
     }
 
     private void EnsureMinimalUi()
     {
+        if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
+            new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
         if (statusText != null && progressSlider != null && retryButton != null)
             return;
 
         var canvasGo = new GameObject("BattleLoadingCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
-            new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.EventSystems.StandaloneInputModule));
+        canvasGo.transform.SetParent(transform, false);
         var canvas = canvasGo.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 5000;
@@ -172,7 +229,7 @@ public class BattleLoadingSceneController : MonoBehaviour
         panelRt.offsetMin = Vector2.zero;
         panelRt.offsetMax = Vector2.zero;
         var bg = panelGo.GetComponent<Image>();
-        bg.color = new Color(0.08f, 0.08f, 0.1f, 0.95f);
+        bg.color = new Color(1, .95f, .83f, 1);
 
         if (statusText == null)
         {
@@ -185,8 +242,8 @@ public class BattleLoadingSceneController : MonoBehaviour
             statusText = textGo.GetComponent<TextMeshProUGUI>();
             statusText.alignment = TextAlignmentOptions.Center;
             statusText.fontSize = 28;
-            statusText.color = Color.white;
-            statusText.text = "Loading…";
+            statusText.color = new Color(.29f, .21f, .15f, 1);
+            statusText.text = "正在准备关卡…";
             BattleChineseFontRuntime.ApplyToTMP(statusText);
         }
 
@@ -202,6 +259,15 @@ public class BattleLoadingSceneController : MonoBehaviour
             progressSlider.minValue = 0f;
             progressSlider.maxValue = 1f;
             progressSlider.value = 0f;
+            progressSlider.interactable = false;
+            var trackGo = new GameObject("Track", typeof(RectTransform), typeof(Image));
+            trackGo.transform.SetParent(sliderGo.transform, false);
+            var trackRt = trackGo.GetComponent<RectTransform>(); trackRt.anchorMin = Vector2.zero; trackRt.anchorMax = Vector2.one; trackRt.offsetMin = trackRt.offsetMax = Vector2.zero;
+            trackGo.GetComponent<Image>().color = new Color(.3f, .23f, .16f, 1);
+            var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image)); fillGo.transform.SetParent(trackGo.transform, false);
+            var fillRt = fillGo.GetComponent<RectTransform>(); fillRt.anchorMin = Vector2.zero; fillRt.anchorMax = Vector2.one;
+            fillRt.offsetMin = new Vector2(5, 5); fillRt.offsetMax = new Vector2(-5, -5);
+            fillGo.GetComponent<Image>().color = new Color(1, .72f, .26f, 1); progressSlider.fillRect = fillRt;
         }
 
         if (retryButton == null)

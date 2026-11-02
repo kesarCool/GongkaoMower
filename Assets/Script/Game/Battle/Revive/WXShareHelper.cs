@@ -35,29 +35,39 @@ public static class WXShareHelper
     }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-    [DllImport("__Internal__")]
+    [DllImport("__Internal")]
     private static extern void SetShareImageIds(string idsJson);
 #endif
 
-    /// <summary>主动分享（已知不可用：SDK 缺少 WX_OneWayNoFunction_vt，待 SDK 升级后恢复）。</summary>
+    /// <summary>保留旧入口；需要返回结果的奖励业务应调用 RequestShareReturn。</summary>
     public static void ShareForRevive(string title)
     {
+        RequestShareReturn(title, null);
+    }
+
+    /// <summary>
+    /// 发起主动分享，只有 JS 确认调用并观察到小游戏隐藏后返回才完成。
+    /// 微信不提供可靠的送达/取消结果；true 表示返回奖励条件成立，不表示分享已送达。
+    /// </summary>
+    public static void RequestShareReturn(string title, Action<bool> onComplete)
+    {
+#if UNITY_EDITOR
+        if (EditorRequestOverride != null)
+        {
+            EditorRequestOverride(title, onComplete);
+            return;
+        }
+#endif
 #if UNITY_WEBGL && !UNITY_EDITOR
-        try
-        {
-            var option = new WeChatWASM.ShareAppMessageOption
-            {
-                title = title ?? "救我复活！",
-            };
-            WeChatWASM.WX.ShareAppMessage(option);
-            GameLog.Info("[WXShareHelper] ShareAppMessage 已调用");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"[WXShareHelper] 分享调用异常: {ex.Message}");
-        }
+        WXShareRequestRunner.Instance.Request(title, onComplete);
 #else
-        GameLog.Info("[WXShareHelper] 非 WebGL 环境，跳过分享");
+        // 保留 Editor / Standalone 联调能力，正式 WebGL 绝不使用模拟成功。
+        GameLog.Info("[WXShareHelper] 开发环境模拟分享返回奖励");
+        onComplete?.Invoke(true);
 #endif
     }
+
+#if UNITY_EDITOR
+    public static Action<string, Action<bool>> EditorRequestOverride;
+#endif
 }

@@ -10,12 +10,14 @@ public struct BackPackItemInfo
     public string iconPath;
     public int count;
     public int grade;
+    public int type;
     public string description;
 }
 
 [DisallowMultipleComponent]
 public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollDataSource
 {
+    [SerializeField] private BackpackPresentation presentation;
     [Header("列表")]
     [SerializeField] private LoopVerticalScrollRect loopScroll;
     [SerializeField] private GameObject itemCellPrefab;
@@ -36,18 +38,19 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
     private readonly Stack<Transform> _pool = new Stack<Transform>();
     private readonly List<BackPackItemInfo> _items = new List<BackPackItemInfo>();
 
-    private void Awake() => EnsureCellPoolRoot();
+    private void Awake() { if (presentation == null) EnsureCellPoolRoot(); }
 
     public override void OnOpen(object payload)
     {
         BattleChineseFontRuntime.ApplyToHierarchy(transform);
-        if (closeButton != null) closeButton.onClick.AddListener(OnCloseClicked);
+        if (closeButton != null) { closeButton.onClick.RemoveListener(OnCloseClicked); closeButton.onClick.AddListener(OnCloseClicked); }
         BuildItemList();
     }
 
     public override void OnClose()
     {
         if (closeButton != null) closeButton.onClick.RemoveListener(OnCloseClicked);
+        if (presentation != null) presentation.ClearSelection();
     }
 
     private void OnCloseClicked()
@@ -65,14 +68,15 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
 
         var data = PlayerProfileService.Instance.Data;
         var itemTable = TableManager.Instance?.GetTable<ItemTable>();
+        var added = new HashSet<int>();
 
         if (data?.itemIds != null)
         {
             for (int i = 0; i < data.itemIds.Length; i++)
             {
                 int id = data.itemIds[i];
-                int count = i < data.itemCounts.Length ? data.itemCounts[i] : 0;
-                if (count <= 0) continue;
+                int count = PlayerProfileService.Instance.GetItemCount(id);
+                if (count <= 0 || !added.Add(id)) continue;
 
                 ItemTable itemRow = null;
                 if (itemTable != null && itemTable.TryGetValue(id, out var obj))
@@ -85,15 +89,27 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
                     iconPath = itemRow?.IconPath ?? "",
                     count = count,
                     grade = itemRow?.Grade ?? 0,
+                    type = itemRow?.Type ?? 0,
                     description = itemRow?.Description ?? "",
                 });
             }
         }
 
+        // Wallet balances are stored separately; legacy item arrays can be absent or stale.
+        foreach (int currencyId in new[] { 1, 2 })
+        {
+            int count = PlayerProfileService.Instance.GetItemCount(currencyId);
+            if (count <= 0 || !added.Add(currencyId)) continue;
+            ItemTable row = null;
+            if (itemTable != null && itemTable.TryGetValue(currencyId, out var obj)) row = obj as ItemTable;
+            _items.Add(new BackPackItemInfo { itemId = currencyId, itemName = row?.ItemName ?? (currencyId == 1 ? "金币" : "钻石"),
+                count = count, grade = row?.Grade ?? 0, type = row?.Type ?? 1, iconPath = row?.IconPath ?? "", description = row?.Description ?? "" });
+        }
+
         // 兜底：characterFragmentKeys 中的碎片（AddItem 路由修复前仅存此处，itemIds 中查不到的补进来）
         if (data?.characterFragmentKeys != null)
         {
-            var catalog = GetCharacterCatalog();
+            var catalog = presentation != null && presentation.characterCatalog != null ? presentation.characterCatalog : GetCharacterCatalog();
             for (int i = 0; i < data.characterFragmentKeys.Length; i++)
             {
                 string charId = data.characterFragmentKeys[i];
@@ -131,12 +147,15 @@ public class BackPackPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollData
                     iconPath = itemRow?.IconPath ?? "",
                     count = count,
                     grade = itemRow?.Grade ?? 0,
+                    type = itemRow?.Type ?? 2,
                     description = itemRow?.Description ?? "",
                 });
             }
         }
 
-        // 补空格子：至少 minRows 行
+        if (presentation != null) { presentation.Present(_items); return; }
+
+        // Legacy layout only: the new themed grid does not pad empty cells.
         int minSlots = minRows * columnsPerRow;
         while (_items.Count < minSlots)
             _items.Add(new BackPackItemInfo { itemId = 0 });

@@ -45,6 +45,38 @@ public class CameraFollow2D : MonoBehaviour
     private Vector3? _overrideTarget;
     private float _defaultOrthoSize;
     private float _targetOrthoSize;
+    private bool _arenaTransition;
+    private Vector3 _entryStart, _entryEnd;
+    private float _entryZoomStart, _entryZoomEnd, _entryElapsed, _entryDelay, _entryDuration;
+    public bool IsArenaTransitioning => _arenaTransition;
+
+    /// <summary>Hold during departure, then pan and zoom while the player is hidden.</summary>
+    public void BeginArenaTransition(Vector3 destination, float departureDuration, float travelDuration)
+    {
+        if (_cam == null) return;
+        _overrideTarget = null;
+        _vel = Vector3.zero;
+        _arenaTransition = true;
+        _entryStart = transform.position;
+        _entryZoomStart = _cam.orthographicSize;
+        _entryZoomEnd = _defaultOrthoSize * bossZoomMultiplier;
+        _targetOrthoSize = _entryZoomEnd;
+        _entryEnd = destination + followOffset;
+        _entryEnd.z = followOffset.z;
+        // Compute one stable endpoint at the final zoom. Clamping every intermediate
+        // camera position to a moving zoom boundary creates visible edge jolts.
+        if (clampToBounds && boundsTilemap != null)
+            _entryEnd = ClampCameraToTilemapBounds(_entryEnd, boundsTilemap, _entryZoomEnd);
+        _entryElapsed = 0f;
+        _entryDelay = Mathf.Max(0, departureDuration);
+        _entryDuration = Mathf.Max(.01f, travelDuration);
+    }
+
+    public void CancelArenaTransition()
+    {
+        _arenaTransition = false;
+        _vel = Vector3.zero;
+    }
 
     /// <summary>进入/退出 Boss 波次时切换镜头缩放。</summary>
     public void SetBossZoom(bool enterBoss)
@@ -59,6 +91,7 @@ public class CameraFollow2D : MonoBehaviour
     /// <summary>瞬间跳转到目标位置并锁定镜头（Boss 击杀定格，跳过 SmoothDamp 延迟）。</summary>
     public void SnapAndLock(Vector3 worldPos)
     {
+        CancelArenaTransition();
         _overrideTarget = worldPos;
         _vel = Vector3.zero;
         Vector3 desired = worldPos + followOffset;
@@ -77,15 +110,42 @@ public class CameraFollow2D : MonoBehaviour
         }
     }
 
+    /// <summary>Align the opening frame immediately, then keep following normally.</summary>
+    public void SnapToTarget()
+    {
+        if (target == null) TryFindTarget();
+        if (target == null || _cam == null) return;
+        CancelArenaTransition();
+        ClearOverride();
+        Vector3 desired = target.position + followOffset;
+        desired.z = followOffset.z;
+        if (clampToBounds && boundsTilemap != null)
+            desired = ClampCameraToTilemapBounds(desired, boundsTilemap, _cam.orthographicSize);
+        transform.position = desired;
+    }
+
     private void LateUpdate()
     {
         if (target == null) TryFindTarget();
         if (_cam == null) return;
+        if (Time.timeScale <= 0f || Time.deltaTime <= 0f) return;
+
+        if (_arenaTransition)
+        {
+            _entryElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01((_entryElapsed - _entryDelay) / _entryDuration);
+            float eased = t * t * t * (t * (t * 6f - 15f) + 10f);
+            transform.position = Vector3.LerpUnclamped(_entryStart, _entryEnd, eased);
+            _cam.orthographicSize = Mathf.LerpUnclamped(_entryZoomStart, _entryZoomEnd, eased);
+            if (t >= 1f) CancelArenaTransition();
+            return;
+        }
 
         // Boss 镜头缩放
         if (Mathf.Abs(_cam.orthographicSize - _targetOrthoSize) > 0.005f)
         {
-            _cam.orthographicSize = Mathf.Lerp(_cam.orthographicSize, _targetOrthoSize, Time.unscaledDeltaTime * zoomSpeed);
+            float blend = 1f - Mathf.Exp(-Mathf.Max(.01f, zoomSpeed) * Time.deltaTime);
+            _cam.orthographicSize = Mathf.Lerp(_cam.orthographicSize, _targetOrthoSize, blend);
         }
 
         Vector3 desired;
@@ -100,12 +160,10 @@ public class CameraFollow2D : MonoBehaviour
         }
         desired.z = followOffset.z;
 
-        Vector3 smoothed = Vector3.SmoothDamp(transform.position, desired, ref _vel, Mathf.Max(0.001f, smoothTime));
-
         if (clampToBounds && boundsTilemap != null)
-            smoothed = ClampCameraToTilemapBounds(smoothed, boundsTilemap);
+            desired = ClampCameraToTilemapBounds(desired, boundsTilemap, _cam.orthographicSize);
 
-        transform.position = smoothed;
+        transform.position = Vector3.SmoothDamp(transform.position, desired, ref _vel, Mathf.Max(0.001f, smoothTime));
     }
 
     private void TryFindTarget()
@@ -118,7 +176,7 @@ public class CameraFollow2D : MonoBehaviour
     /// <summary>
     /// 将相机位置夹紧到 Tilemap 的世界边界内，确保相机视口不会超出地图范围。
     /// </summary>
-    private Vector3 ClampCameraToTilemapBounds(Vector3 camPos, Tilemap tm)
+    private Vector3 ClampCameraToTilemapBounds(Vector3 camPos, Tilemap tm, float orthoSize)
     {
         // Tilemap.localBounds 是 Tilemap Transform 空间，需要转为世界空间 bounds
         Bounds local = tm.localBounds;
@@ -126,7 +184,7 @@ public class CameraFollow2D : MonoBehaviour
         Vector3 ext = Vector3.Scale(local.extents, tm.transform.lossyScale);
         Bounds world = new Bounds(center, ext * 2f);
 
-        float halfH = _cam.orthographicSize;
+        float halfH = orthoSize;
         float halfW = halfH * _cam.aspect;
 
         float minX = world.min.x + halfW;

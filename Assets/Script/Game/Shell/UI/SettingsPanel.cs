@@ -121,15 +121,16 @@ public class SettingsPanel : UIPanelBase
         UiClickSound.Play();
 
         string input = giftCodeInput != null ? giftCodeInput.text : string.Empty;
-        string error = GiftCodeService.TryRedeem(input);
+        string error = GiftCodeService.TryRedeem(input, out var reward);
 
         if (error == null)
         {
             // 成功
-            UIManager.Instance.ShowToast("兑换成功！100钻石已到账");
             if (giftCodeInput != null)
                 giftCodeInput.text = string.Empty;
             RefreshClaimState();
+            EventBus.Publish(new PlayerDataChangedEvent());
+            RewardRevealQueue.ShowItem(reward.receiptId, "gift_code", reward.itemId, reward.count);
         }
         else
         {

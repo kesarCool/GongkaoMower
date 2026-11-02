@@ -13,6 +13,10 @@ public class SummonModule : BossSkillModule
     private float _chargeTime = 0.45f;
 
     private SpawnerWaves _spawner;
+    private BossSummonPresentation _presentation;
+    private EnemyBase _enemy;
+    private Coroutine _routine;
+    private bool _disposed;
 
     public override void Init(string rawParams, BossBrain owner)
     {
@@ -28,28 +32,49 @@ public class SummonModule : BossSkillModule
         if (_spawner == null)
             Debug.LogWarning($"[SummonModule] 场景中无 SpawnerWaves，召唤技能不会触发。Boss='{boss?.name}'");
         CacheSprites();
+        _presentation=owner.GetComponentInChildren<BossSummonPresentation>(true);
+        _enemy=owner.GetComponent<EnemyBase>();
+        if(_enemy!=null)_enemy.OnDied.AddListener(CancelPending);
     }
 
     public override bool CanTrigger()
     {
-        return base.CanTrigger() && _spawner != null;
+        return base.CanTrigger() && Ready();
     }
 
     public override void Execute()
     {
+        if(!Ready()||_routine!=null)return;
         ResetCooldown();
-        brain.StartCoroutine(SummonRoutine());
+        _routine=brain.StartCoroutine(SummonRoutine());
     }
 
     private IEnumerator SummonRoutine()
     {
         brain.IsBusy = true;
-        SetSpritesFlash(true, new Color(0.7f, 0.3f, 1f, 1f));
+        int castToken=_presentation!=null?_presentation.BeginCharge(_chargeTime):0;
+        SetSpritesFlash(true, new Color(1f, .35f, .08f, 1f));
         yield return new WaitForSeconds(_chargeTime);
         SetSpritesFlash(false);
 
-        _spawner.TriggerReserveWave(_reserveWaveId);
+        _routine=null;
+        if(!Ready()){if(_presentation!=null)_presentation.CancelCharge();if(brain!=null)brain.IsBusy=false;yield break;}
+        if(_presentation!=null)_presentation.ReleaseCharge(castToken);
+        bool released=_spawner.TriggerReserveWave(_reserveWaveId,spawned=>{if(_presentation!=null)_presentation.OnSummoned(spawned,castToken);});
+        if(!released&&_presentation!=null)_presentation.CancelCharge();
 
         if (brain != null) brain.IsBusy = false;
+    }
+
+    bool Ready()=>!_disposed&&boss!=null&&boss.gameObject.activeInHierarchy&&_spawner!=null&&_spawner.isActiveAndEnabled&&(_enemy==null||_enemy.Hp>0);
+    void CancelPending()
+    {
+        if(_routine!=null&&brain!=null){brain.StopCoroutine(_routine);brain.IsBusy=false;}
+        _routine=null;SetSpritesFlash(false);if(_presentation!=null)_presentation.CancelCharge();
+    }
+    public void OnOwnerDisposed()
+    {
+        if(_disposed)return;_disposed=true;CancelPending();
+        if(_enemy!=null){_enemy.OnDied.RemoveListener(CancelPending);_enemy=null;}
     }
 }

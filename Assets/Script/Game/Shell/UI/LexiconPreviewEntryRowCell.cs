@@ -8,6 +8,16 @@ using UnityEngine;
 public class LexiconPreviewEntryRowCell : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI bodyText;
+    [SerializeField] private TextMeshProUGUI rightText,leftIndex,rightIndex;
+    [SerializeField] private GameObject rightItem;
+    public void BindPair(int ordinal,string left,string right)
+    {
+        bodyText.text=left??"";leftIndex.text=ordinal.ToString("00");
+        rightItem.SetActive(right!=null);
+        rightText.text=right??"";rightIndex.text=(ordinal+1).ToString("00");
+        var layout=GetComponent<UnityEngine.UI.LayoutElement>();
+        if(layout!=null)layout.preferredHeight=Mathf.Max(111,bodyText.preferredHeight+30,right!=null?rightText.preferredHeight+30:0);
+    }
 
     private void Reset()
     {

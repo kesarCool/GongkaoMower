@@ -43,7 +43,7 @@ public static class ChapterLevelListBuilder
                 Kind = LevelSelectRowKind.ChapterHeader,
                 chapterId = ch,
                 levelId = 0,
-                mapName = string.Empty,
+                mapName = group.OrderBy(x => x.levelId).Select(x => x.mapName).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? string.Empty,
                 tableRowId = 0,
                 levelOrdinalInList = 0,
             });
@@ -57,6 +57,7 @@ public static class ChapterLevelListBuilder
                     chapterId = cl.chapterId,
                     levelId = cl.levelId,
                     mapName = cl.mapName ?? string.Empty,
+                    stageName = cl.stageName ?? string.Empty,
                     tableRowId = cl.ID,
                     levelOrdinalInList = levelOrdinal,
                 });

@@ -172,6 +172,13 @@ public class SkillAutoProjectile : SkillBase
         {
             // Debug.Log($"[SkillAutoProjectile] 普攻射击：spawned={spawned}, projectileCount={projectileCount}, level={Level}, legendStage={_legendStage}");
             PublishSkillCast(from);
+            EventBus.Publish(new PlayerWeaponFiredVisualEvent
+            {
+                owner = _ctx.player,
+                skillId = Id,
+                aimDirection = dir,
+                projectileCount = spawned
+            });
         }
     }
 

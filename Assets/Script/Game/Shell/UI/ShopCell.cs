@@ -101,7 +101,7 @@ public class ShopCell : MonoBehaviour
             if (shopRow.PriceType == 0)
                 textPrice.text = "免费";
             else if (shopRow.PriceType == 3)
-                textPrice.text = "看广告";
+                textPrice.text = "分享返回领取";
             else
                 textPrice.text = $"{price} {currencyLabel}";
         }
@@ -123,6 +123,7 @@ public class ShopCell : MonoBehaviour
         // 红点标签：免费和看广告显示（售罄不显示）
         if (redDotTag != null)
             redDotTag.SetActive(!soldOut && (shopRow.PriceType == 0 || shopRow.PriceType == 3));
+        GetComponent<ShopCellPresentation>()?.Refresh(this);
     }
 
     /// <summary>购买后外部调用来刷新限购显示。</summary>
@@ -142,6 +143,7 @@ public class ShopCell : MonoBehaviour
             int total = ShopRow.PurchaseNum;
             textLimit.text = $"限购{remaining}/{total}";
         }
+        GetComponent<ShopCellPresentation>()?.Refresh(this);
     }
 
     private void OnBuyClicked()

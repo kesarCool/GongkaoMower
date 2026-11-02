@@ -77,13 +77,13 @@ public class GameResultPanel : UIPanelBase
 
     [SerializeField] private string skillRowPrefabResourcesPath = string.Empty;
 
-    private TextMeshProUGUI _textTime;
-    private TextMeshProUGUI _textKillNum;
-    private TextMeshProUGUI _textLevel;
-    private Transform _scrollContent;
-    private Button _btnExit;
-    private Button _btnAgain;
-    private Button _btnNext;
+    [SerializeField] private TextMeshProUGUI _textTime;
+    [SerializeField] private TextMeshProUGUI _textKillNum;
+    [SerializeField] private TextMeshProUGUI _textLevel;
+    [SerializeField] private Transform _scrollContent;
+    [SerializeField] private Button _btnExit;
+    [SerializeField] private Button _btnAgain;
+    [SerializeField] private Button _btnNext;
 
     private GameResultViewModel _vm;
     private bool _openedWithPauseOnly;
@@ -92,19 +92,24 @@ public class GameResultPanel : UIPanelBase
     {
         if (textBanner == null)
             textBanner = transform.Find("TextBanner")?.GetComponent<TextMeshProUGUI>();
-        _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
-        _textKillNum = transform.Find("TextKillNum")?.GetComponent<TextMeshProUGUI>();
-        _textLevel = transform.Find("Textlevel")?.GetComponent<TextMeshProUGUI>();
-        _scrollContent = transform.Find("Scroll View/Viewport/Content");
-        _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
-        _btnAgain = transform.Find("ButtonAgain")?.GetComponent<Button>();
-        _btnNext = transform.Find("ButtonNext")?.GetComponent<Button>();
+        if (_textTime == null) _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
+        if (_textKillNum == null) _textKillNum = transform.Find("TextKillNum")?.GetComponent<TextMeshProUGUI>();
+        if (_textLevel == null) _textLevel = transform.Find("Textlevel")?.GetComponent<TextMeshProUGUI>();
+        if (_scrollContent == null) _scrollContent = transform.Find("Scroll View/Viewport/Content");
+        if (_btnExit == null) _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
+        if (_btnAgain == null) _btnAgain = transform.Find("ButtonAgain")?.GetComponent<Button>();
+        if (_btnNext == null) _btnNext = transform.Find("ButtonNext")?.GetComponent<Button>();
 
         EnsureScrollContentLayout();
 
         if (_btnExit != null) _btnExit.onClick.AddListener(OnExitClicked);
         if (_btnAgain != null) _btnAgain.onClick.AddListener(OnAgainClicked);
-        if (_btnNext != null) _btnNext.onClick.AddListener(OnNextClicked);
+        if (_btnNext != null)
+        {
+            _btnNext.onClick.AddListener(OnNextClicked);
+            // 锁定原因评估（按钮 Prefab 挂 UiLockedHint 后生效，未挂时静默跳过）
+            _btnNext.GetComponent<UiLockedHint>()?.Bind(EvaluateNextLock);
+        }
     }
 
     private void EnsureRewardContentLayout()
@@ -158,6 +163,7 @@ public class GameResultPanel : UIPanelBase
 
     public override void OnOpen(object payload)
     {
+        TutorialDirector.Ensure().NotifyBattleResult();
         // 结算弹出时清空 DDOL 下的局内对象池，避免残留占用与脏状态。
         GameObjectPool.ClearAllPools();
 
@@ -183,7 +189,9 @@ public class GameResultPanel : UIPanelBase
                 foreach (var n in _vm.unlockedCharacters)
                     nameTags.Add($"<size=+12><color=#FFD700><b>{n}</b></color></size>");
                 string names = string.Join(" ", nameTags);
-                unlockLabel.text = $"新角色解锁：{names}";
+                unlockLabel.text = GetComponent<BattlePanelPresentation>() != null
+                    ? "新角色解锁：" + string.Join("、", _vm.unlockedCharacters)
+                    : $"新角色解锁：{names}";
                 unlockLabel.gameObject.SetActive(true);
             }
             else
@@ -197,12 +205,7 @@ public class GameResultPanel : UIPanelBase
             {
                 unlockGoButton.gameObject.SetActive(true);
                 unlockGoButton.onClick.RemoveAllListeners();
-                unlockGoButton.onClick.AddListener(() =>
-                {
-                    Time.timeScale = 1f;
-                    SceneManager.LoadScene("Home");
-                    Resources.UnloadUnusedAssets();
-                });
+                unlockGoButton.onClick.AddListener(ReturnToHome);
             }
             else
             {
@@ -311,6 +314,7 @@ public class GameResultPanel : UIPanelBase
 
         BuildSkillRows();
         BuildPassiveSkillList();
+        GetComponent<BattlePanelPresentation>()?.Present(_vm);
 
         transform.SetAsLastSibling();
     }
@@ -338,8 +342,7 @@ public class GameResultPanel : UIPanelBase
             TableManager.Instance.Init();
 
         int levelId = SelectedLevelContext.LevelId;
-        string mapName = ChapterLevelDisplay.ResolveMapName(levelId);
-        _textLevel.text = ChapterLevelDisplay.FormatLevelLabel(levelId, mapName);
+        _textLevel.text = ChapterLevelDisplay.FormatLevelLabel(levelId);
     }
 
     /// <summary>设置单颗星星图片：index < earned → 亮色，否则暗色；earned < 0 → 隐藏全部。</summary>
@@ -372,8 +375,7 @@ public class GameResultPanel : UIPanelBase
         }
 
         // 清空旧 children
-        for (int i = scrollViewRewardContent.childCount - 1; i >= 0; i--)
-            Destroy(scrollViewRewardContent.GetChild(i).gameObject);
+        BattlePanelPresentation.Clear(scrollViewRewardContent);
 
         if (_vm == null || _vm.rewardItems == null || _vm.rewardItems.Count == 0)
         {
@@ -386,6 +388,8 @@ public class GameResultPanel : UIPanelBase
         foreach (var entry in _vm.rewardItems)
         {
             GameObject go = Instantiate(itemCellPrefab, scrollViewRewardContent, false);
+            var themed = go.GetComponent<BattleRewardCell>();
+            if (themed != null) { themed.Bind(entry); continue; }
             var cell = go.GetComponent<ItemCell>();
             if (cell == null)
             {
@@ -407,8 +411,7 @@ public class GameResultPanel : UIPanelBase
     {
         if (_scrollContent == null) return;
 
-        for (int i = _scrollContent.childCount - 1; i >= 0; i--)
-            Destroy(_scrollContent.GetChild(i).gameObject);
+        BattlePanelPresentation.Clear(_scrollContent);
 
         GameObject rowPrefab = skillDamageRowPrefab;
         if (rowPrefab == null && !string.IsNullOrEmpty(skillRowPrefabResourcesPath))
@@ -447,8 +450,7 @@ public class GameResultPanel : UIPanelBase
     {
         if (passiveSkillListParent == null || passiveSkillRowPrefab == null) return;
 
-        for (int i = passiveSkillListParent.childCount - 1; i >= 0; i--)
-            Destroy(passiveSkillListParent.GetChild(i).gameObject);
+        BattlePanelPresentation.Clear(passiveSkillListParent);
 
         PlayerSkills ps = FindObjectOfType<PlayerSkills>();
         if (ps == null) return;
@@ -479,6 +481,17 @@ public class GameResultPanel : UIPanelBase
     private void OnExitClicked()
     {
         UiClickSound.PlayClose();
+        ReturnToHome();
+    }
+
+    private void ReturnToHome()
+    {
+        // Victory progress is already saved. Let Home locate the latest unlocked level
+        // instead of treating the completed battle's selection as a manual replay.
+        if (_vm != null && _vm.victory)
+            SelectedLevelContext.Clear();
+        // Release result/modal pause locks before restoring normal scene time.
+        UIManager.Instance?.CloseAllStack();
         Time.timeScale = 1f;
         SceneManager.LoadScene("Home");
         Resources.UnloadUnusedAssets();
@@ -492,6 +505,23 @@ public class GameResultPanel : UIPanelBase
         // 本关重开：SelectedLevelContext 不变，直接重载 Game。
         GameObjectPool.ClearAllPools();
         SceneManager.LoadScene("Game");
+    }
+
+    /// <summary>下一关按钮锁定原因（与 OnNextClicked 的守卫分支一致；按钮置灰时 onClick 不会触发，由 UiLockedHint 补提示）。</summary>
+    private UiLockedHint.Status EvaluateNextLock()
+    {
+        if (!SelectedLevelContext.HasSelection)
+            return UiLockedHint.Status.Deny(GameErrorCodes.LevelNoContext);
+
+        if (!ChapterLevelNavigation.TryGetNext(
+                SelectedLevelContext.ChapterId, SelectedLevelContext.LevelId, out _, out int nextLv))
+            return UiLockedHint.Status.Deny(GameErrorCodes.LevelNoNext);
+
+        PlayerProfileService.Instance.LoadOrCreate();
+        if (!PlayerProfileService.Instance.IsLevelUnlocked(nextLv))
+            return UiLockedHint.Status.Deny(GameErrorCodes.LevelLocked, nextLv);
+
+        return UiLockedHint.Status.Available();
     }
 
     private void OnNextClicked()

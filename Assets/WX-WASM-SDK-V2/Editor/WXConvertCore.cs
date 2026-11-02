@@ -975,7 +975,6 @@ namespace WeChatWASM
         {
             UnityEngine.Debug.LogFormat("[Converter] Starting to adapt framework. Dst: " + config.ProjectConf.DST);
 
-            UnityUtil.DelectDir(Path.Combine(config.ProjectConf.DST, miniGameDir));
             string text = String.Empty;
             var target = "webgl.wasm.framework.unityweb.js";
             if (WXExtEnvDef.GETDEF("UNITY_2020_1_OR_NEWER"))
@@ -1071,6 +1070,11 @@ namespace WeChatWASM
 
             FixWXStorageStubs(ref text);
             FixWXAudioStubs(ref text);
+            if (UseIL2CPP && !isPlayableBuild)
+                text = WXFrameScheduler.Apply(text, config.CompileOptions.DevelopBuild);
+            // SDK bridge gaps must fail export rather than abort when a player opens a feature.
+            WXBridgeValidator.ValidateFramework(text);
+            UnityUtil.DelectDir(Path.Combine(config.ProjectConf.DST, miniGameDir));
 
             if (!Directory.Exists(Path.Combine(config.ProjectConf.DST, miniGameDir)))
             {

@@ -378,12 +378,12 @@ export default {
             // eslint-disable-next-line no-param-reassign
             eventName = '';
         }
-        // eslint-disable-next-line no-param-reassign
-        functionName = functionName.replace(/Off/, 'On');
-        if (!ClassOnEventLists[className + functionName][id + eventName]) {
+        const onFunctionName = functionName.replace(/^Off/, 'On');
+        const listeners = ClassOnEventLists[className + onFunctionName];
+        if (!listeners || !listeners[id + eventName]) {
             return;
         }
-        ClassOnEventLists[className + functionName][id + eventName].forEach((v) => {
+        listeners[id + eventName].forEach((v) => {
             
             
             if (className === 'WXVideoDecoder' || className === 'WXPageManager') {
@@ -393,7 +393,7 @@ export default {
                 obj[functionName.replace(/^\w/, (a) => a.toLowerCase())](v);
             }
         });
-        delete ClassOnEventLists[className + functionName][id + eventName];
+        delete listeners[id + eventName];
     },
     WX_ClassOneWayNoFunction_v(className, functionName, id) {
         WX_ClassOneWayNoFunction(className, functionName, id);

@@ -23,6 +23,7 @@ public class LexiconPreviewPanel : UIPanelBase
     [SerializeField] private LoopVerticalScrollRect loopScroll;
     [SerializeField] private LexiconPreviewLoopScrollDriver loopDriver;
     [SerializeField] private RectTransform listContent;
+    [SerializeField] private HomeLexiconPresentation presentation;
 
     private int _selectedThemeId;
     private int _selectedCategoryTag;
@@ -216,6 +217,7 @@ public class LexiconPreviewPanel : UIPanelBase
             var c = root.GetChild(i);
             if (c == keep)
                 continue;
+            c.gameObject.SetActive(false);
             Destroy(c.gameObject);
         }
     }
@@ -288,14 +290,15 @@ public class LexiconPreviewPanel : UIPanelBase
         else
             lines = LexiconPreviewCatalog.CollectDisplayTexts(_selectedThemeId, _selectedCategoryTag);
 
-        if (lines.Count == 0)
+        if(presentation!=null)presentation.Refresh(_selectedThemeId,_selectedCategoryTag,lines.Count);
+        if (lines.Count == 0 && presentation==null)
             loopDriver.SetLines(new List<string> { "（无词条或未编译 USE_FB_TABLE / 表未加载）" });
         else
             loopDriver.SetLines(lines);
 
         if (listContent != null && loopScroll != null && loopScroll.viewport != null)
         {
-            var w = ((RectTransform)loopScroll.viewport).rect.width - 16f;
+            var w = ((RectTransform)loopScroll.viewport).rect.width - (presentation!=null?0:16f);
             listContent.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Mathf.Max(120f, w));
         }
 
@@ -306,6 +309,9 @@ public class LexiconPreviewPanel : UIPanelBase
         }
 
         if (loopScroll != null)
-            loopScroll.verticalNormalizedPosition = 0f;
+        {
+            if(presentation!=null)loopScroll.RefillCells(0);
+            else loopScroll.verticalNormalizedPosition = 0f;
+        }
     }
 }

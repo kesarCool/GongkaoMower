@@ -4,7 +4,7 @@ using UnityEngine;
 public enum WordMonsterWaveTintMode
 {
     Off = 0,
-    /// <summary>每波随机一次色相（饱和、亮度在易读区间）</summary>
+    /// <summary>每波从地图配色中随机选一种字色</summary>
     RandomPerWave = 1,
     /// <summary>同关卡 ID + 同 wave 表字段可复现同色</summary>
     SeededByLevelAndWave = 2,
@@ -15,6 +15,11 @@ public enum WordMonsterWaveTintMode
 /// </summary>
 public static class WordMonsterWaveStyle
 {
+    // Light faces are separated from both terrain and props by a solid dark outline.
+    private static readonly Color[] Palette = {
+        new Color32(255,245,221,255),new Color32(165,240,218,255),new Color32(184,223,254,255),
+        new Color32(255,219,122,255),new Color32(255,198,161,255)
+    };
     public static bool HasWaveTint { get; private set; }
 
     /// <summary>当前波字面渐变用的「面」色基准（不含描边）。</summary>
@@ -35,9 +40,7 @@ public static class WordMonsterWaveStyle
 
         if (mode == WordMonsterWaveTintMode.RandomPerWave)
         {
-            Color c = Random.ColorHSV(0f, 1f, 0.55f, 0.85f, 0.85f, 1f);
-            c.a = 1f;
-            WaveFaceTint = c;
+            WaveFaceTint = Palette[Random.Range(0,Palette.Length)];
             HasWaveTint = true;
             return;
         }
@@ -46,12 +49,7 @@ public static class WordMonsterWaveStyle
         {
             int seed = levelId * 73856093 ^ waveNumber * 19349663;
             var rng = new System.Random(seed);
-            float h = (float)rng.NextDouble();
-            float s = Mathf.Lerp(0.55f, 0.85f, (float)rng.NextDouble());
-            float v = Mathf.Lerp(0.85f, 1f, (float)rng.NextDouble());
-            Color c = Color.HSVToRGB(h, s, v);
-            c.a = 1f;
-            WaveFaceTint = c;
+            WaveFaceTint = Palette[rng.Next(Palette.Length)];
             HasWaveTint = true;
         }
     }

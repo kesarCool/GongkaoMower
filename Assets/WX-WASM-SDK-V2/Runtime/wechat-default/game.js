@@ -36,6 +36,17 @@ const managerConfig = {
     PROFILER_UPLOAD_URL: '',
 };
 GameGlobal.managerConfig = managerConfig;
+console.info('[PerformanceBuild] ' + JSON.stringify({
+  revision: 'ios-login-entry-20261028-r2',
+    variant: 'B-dpr2',
+    codeMd5: managerConfig.CODE_FILE_MD5,
+    dataMd5: managerConfig.DATA_FILE_MD5,
+    unityTargetFps: 30,
+    devicePixelRatio: window.devicePixelRatio,
+    iosHighPerformance: !!GameGlobal.isIOSHighPerformanceMode,
+    iosHighPerformancePlus: !!GameGlobal.isIOSHighPerformanceModePlus,
+    contextType: managerConfig.contextConfig.contextType,
+}));
 // 版本检查
 checkVersion().then((enable) => {
     if (enable) {

@@ -10,6 +10,17 @@ public static class CombatVfxSpawner
 
     public static bool TryPlayPooled(GameObject prefab, Vector3 position, Quaternion rotation)
     {
+        return TryPlayPooled(prefab, position, rotation, 0f);
+    }
+
+    /// <summary>仅对声明 referenceRadius 的特效按实际范围缩放；旧特效维持原尺寸。</summary>
+    public static bool TryPlayPooled(GameObject prefab, Vector3 position, Quaternion rotation, float effectRadius)
+    {
+        return TryPlayPooled(prefab, position, rotation, effectRadius, null, null, Vector3.zero);
+    }
+
+    public static bool TryPlayPooled(GameObject prefab, Vector3 position, Quaternion rotation, float effectRadius, EnemyWordLabel target, Transform anchor, Vector3 localPoint)
+    {
         if (prefab == null) return false;
 
         if (SpawnLimiter.Instance != null && !SpawnLimiter.Instance.CanSpawn(SpawnLimiterKey, out _))
@@ -26,7 +37,8 @@ public static class CombatVfxSpawner
         if (vfx == null)
             vfx = go.AddComponent<PooledCombatVfx>();
 
-        vfx.Play();
+        vfx.FollowHitAnchor(target, anchor, localPoint);
+        vfx.Play(effectRadius);
         return true;
     }
 

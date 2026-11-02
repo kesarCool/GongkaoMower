@@ -39,9 +39,14 @@ public class GrenadeSkillDefinition : SkillDefinitionBase
     public float ArcHeightAt(int level) => arcHeightByLevel[Mathf.Clamp(level, 1, arcHeightByLevel.Length) - 1];
     public int MaxBouncesAt(int level) => maxBouncesByLevel[Mathf.Clamp(level, 1, maxBouncesByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        return $"伤害{DamageAt(level):0.#},CD {CooldownAt(level):0.##}s,范围 {AoeRadiusAt(level):0.##}";
+        return new[] {
+            SkillDescriptionStat.Damage("爆炸伤害", DamageAt(level)),
+            SkillDescriptionStat.Number("冷却", CooldownAt(level), "秒"),
+            SkillDescriptionStat.Number("爆炸半径", AoeRadiusAt(level), "米"),
+            SkillDescriptionStat.Count("弹射次数", MaxBouncesAt(level), "次")
+        };
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

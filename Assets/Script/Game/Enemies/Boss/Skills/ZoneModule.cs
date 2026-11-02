@@ -1,175 +1,89 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 地裂技能：Boss 拍地，扇形区域延迟爆发 AOE。
-/// elementNum = "10,5,5,30" = cooldown, zoneCount, zoneRadius, damage
-/// </summary>
+/// <summary>Ground fissure: locked-origin fan, independent 0.7-second warnings, sequential impacts.
+/// elementNum = cooldown, count (2..32), radius, damage. No Monster row is reassigned by the presentation builder.</summary>
 public class ZoneModule : BossSkillModule
 {
-    private int _zoneCount = 5;
-    private float _zoneRadius = 1.5f;
-    private float _damage = 30f;
-    private float _warnDuration = 0.7f;
-    private float _coneAngle = 150f;
-    private float _spreadLength = 6f;
-
-    private Rigidbody2D _rb;
-    private GameObject _indicatorPrefab;
-    private GameObject _explosionPrefab;
-
-    public override void Init(string rawParams, BossBrain owner)
+    private int _zoneCount=5;
+    private float _zoneRadius=1.5f,_damage=30f;
+    private float _warnDuration=.7f,_coneAngle=150f,_spreadLength=6f;
+    private Rigidbody2D _rb;EnemyBase _enemy;BossZonePresentation _presentation;
+    private Coroutine _routine;bool _disposed;
+    readonly HashSet<int> _hitSet=new HashSet<int>();
+    readonly Vector2[] _positions=new Vector2[BossZonePresentation.Capacity];
+    readonly float[] _warnAt=new float[BossZonePresentation.Capacity];
+    public int ImpactCount {get;private set;}
+    public float LastImpactTime {get;private set;}
+    public float CastTime {get;private set;}
+    public Vector2 LastImpactPosition {get;private set;}
+    public override void Init(string rawParams,BossBrain owner)
     {
-        base.Init(rawParams, owner);
-        firstDelayMul = 0.5f;
-
-        float[] p = ParseFloats(rawParams, 4);
-        interval   = p[0] > 0f ? p[0] : 10f;
-        _zoneCount = Mathf.Max(2, (int)(p[1] > 0f ? p[1] : 5f));
-        _zoneRadius = p[2] > 0f ? p[2] : 1.5f;
-        _damage     = p[3] > 0f ? p[3] : 30f;
-        cooldown   = interval * firstDelayMul;
-
-        _rb = boss.GetComponent<Rigidbody2D>();
-        _indicatorPrefab = brain.FindPrefab("ZoneIndicator");
-        _explosionPrefab = brain.FindPrefab("ZoneExplosion");
-        CacheSprites();
+        base.Init(rawParams,owner);firstDelayMul=.5f;float[] p=ParseFloats(rawParams,4);
+        interval=p[0]>0?p[0]:10;_zoneCount=Mathf.Clamp((int)(p[1]>0?p[1]:5),2,BossZonePresentation.Capacity);
+        _zoneRadius=p[2]>0?p[2]:1.5f;_damage=p[3]>0?p[3]:30;cooldown=interval*firstDelayMul;
+        _rb=boss.GetComponent<Rigidbody2D>();_enemy=boss.GetComponent<EnemyBase>();_presentation=owner.GetComponentInChildren<BossZonePresentation>(true);
+        if(_enemy!=null)_enemy.OnDied.AddListener(CancelPending);
+        if(_presentation==null)Debug.LogWarning("[ZoneModule] Missing BossZonePresentation: refusing invisible ground-fissure damage on "+owner.name);
     }
-
+    bool Ready()=>!_disposed&&brain!=null&&brain.isActiveAndEnabled&&boss.gameObject.activeInHierarchy&&(_enemy==null||_enemy.Hp>0)&&_presentation!=null&&_presentation.Ready;
+    public override bool CanTrigger()=>base.CanTrigger()&&Ready()&&_routine==null;
     public override void Execute()
     {
-        ResetCooldown();
-        brain.StartCoroutine(ZoneRoutine());
+        if(!Ready()||_routine!=null||brain.IsReviving)return;
+        ResetCooldown();_routine=brain.StartCoroutine(ZoneRoutine());
     }
-
-    private IEnumerator ZoneRoutine()
+    IEnumerator ZoneRoutine()
     {
-        brain.IsBusy = true;
-        SetSpritesFlash(true, new Color(1f, 0.3f, 0f, 1f));
-
-        Vector2 center = _rb != null ? _rb.position : (Vector2)boss.position;
-        Transform target = FindPlayer();
-        Vector2 toPlayer = target != null
-            ? ((Vector2)target.position - center).normalized
-            : Vector2.down;
-
-        float baseAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
-        float halfCone = _coneAngle * 0.5f;
-
-        SetSpritesFlash(false);
-
-        float dmg = ResolveDamage(_damage, 30f);
-        var hitSet = new System.Collections.Generic.HashSet<int>();
-        float intervalBetweenZones = _warnDuration / Mathf.Max(1, _zoneCount);
-
-        // ── 逐个生成→预警→爆发（顺序扩散）──
-        for (int i = 0; i < _zoneCount; i++)
+        brain.IsBusy=true;_presentation.CancelAll();_hitSet.Clear();ImpactCount=0;CastTime=Time.time;
+        Vector2 center=_rb!=null?_rb.position:(Vector2)boss.position;
+        Transform target=FindPlayer();Vector2 aim=target!=null?(Vector2)target.position-center:Vector2.down;if(aim.sqrMagnitude<.0001f)aim=Vector2.down;
+        float baseAngle=Mathf.Atan2(aim.y,aim.x)*Mathf.Rad2Deg,spacing=_warnDuration/_zoneCount;
+        int warned=0;float damage=ResolveDamage(_damage,30);
+        while(ImpactCount<_zoneCount)
         {
-            float t = _zoneCount > 1 ? (float)i / (_zoneCount - 1) : 0.5f;
-            float deg = baseAngle + Mathf.Lerp(-halfCone, halfCone, t);
-            Vector2 dir = new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad));
-            float dist = Mathf.Lerp(1f, _spreadLength, t * 0.7f + Random.value * 0.3f);
-            Vector2 pos = center + dir * dist;
-
-            // 生成指示器
-            GameObject go = SpawnIndicator(pos, i);
-            if (go == null) continue;
-
-            // 短闪预警
-            var sr = go.GetComponent<SpriteRenderer>();
-            if (sr != null)
+            if(!Ready()){CancelPending();yield break;}
+            // A frame stall may delay release, but must never shorten a warning that was actually displayed.
+            if(warned<_zoneCount&&Time.time-CastTime>=warned*spacing)
             {
-                for (int flash = 0; flash < 2; flash++)
-                {
-                    sr.color = new Color(1f, 0.25f, 0f, flash % 2 == 0 ? 0.6f : 0.2f);
-                    yield return new WaitForSeconds(intervalBetweenZones * 0.5f);
-                }
+                float t=(float)warned/(_zoneCount-1),angle=baseAngle+Mathf.Lerp(-_coneAngle*.5f,_coneAngle*.5f,t);
+                float distance=Mathf.Lerp(1,_spreadLength,t*.7f+Random.value*.3f);
+                _positions[warned]=center+new Vector2(Mathf.Cos(angle*Mathf.Deg2Rad),Mathf.Sin(angle*Mathf.Deg2Rad))*distance;
+                _warnAt[warned]=Time.time;_presentation.Warn(warned,_positions[warned],_zoneRadius,_warnDuration);warned++;
             }
-            else
+            if(ImpactCount<warned&&Time.time-_warnAt[ImpactCount]>=_warnDuration)
             {
-                yield return new WaitForSeconds(intervalBetweenZones);
+                int index=ImpactCount;Vector2 point=_positions[index];
+                // Retire the gameplay warning in the same frame as its one real overlap query.
+                _presentation.Impact(index);LastImpactPosition=point;LastImpactTime=Time.time;ImpactCount++;
+                ApplyHit(point,damage);
             }
-
-            // 爆发
-            if (_explosionPrefab != null)
-                Object.Instantiate(_explosionPrefab, new Vector3(pos.x, pos.y, -0.1f), Quaternion.identity);
-
-            bool prev = Physics2D.queriesHitTriggers;
-            Physics2D.queriesHitTriggers = true;
-            var hits = Physics2D.OverlapCircleAll(pos, _zoneRadius);
-            for (int h = 0; h < hits.Length; h++)
-            {
-                var ph = hits[h].GetComponent<PlayerHealth>();
-                if (ph == null) ph = hits[h].GetComponentInParent<PlayerHealth>();
-                if (ph == null) continue;
-                if (!hitSet.Add(ph.GetInstanceID())) continue;
-                ph.TakeDamage(dmg, boss);
-            }
-            Physics2D.queriesHitTriggers = prev;
-
-            brain.StartCoroutine(PopAndDestroy(go, 0.12f));
-        }
-
-        brain.IsBusy = false;
-    }
-
-    private GameObject SpawnIndicator(Vector2 pos, int index)
-    {
-        if (_indicatorPrefab != null)
-        {
-            var go = Object.Instantiate(_indicatorPrefab, pos, Quaternion.identity, boss);
-            go.name = "ZoneWarn_" + index;
-            go.transform.localScale = Vector3.one * (_zoneRadius * 2f);
-            return go;
-        }
-
-        var legacy = new GameObject("ZoneWarn_" + index);
-        legacy.transform.position = pos;
-        legacy.transform.SetParent(boss, false);
-        var sr = legacy.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateCircleSprite();
-        sr.color = new Color(1f, 0.25f, 0f, 0.5f);
-        sr.sortingOrder = 15;
-        legacy.transform.localScale = Vector3.one * (_zoneRadius * 2f);
-        return legacy;
-    }
-
-    private static Sprite CreateCircleSprite()
-    {
-        int size = 128;
-        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        var colors = new Color[size * size];
-        float radius = size * 0.45f;
-        Vector2 center = new Vector2(size * 0.5f, size * 0.5f);
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float d = Vector2.Distance(new Vector2(x, y), center);
-                float alpha = 1f - Mathf.Clamp01(d / radius);
-                alpha = alpha > 0.8f ? 1f : alpha * 0.8f;
-                colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
-            }
-        }
-        tex.SetPixels(colors);
-        tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
-    }
-
-    private static IEnumerator PopAndDestroy(GameObject go, float duration)
-    {
-        if (go == null) yield break;
-        var sr = go.GetComponent<SpriteRenderer>();
-        Vector3 baseScale = go.transform.localScale;
-        float t = 0f;
-        while (t < duration && go != null)
-        {
-            t += Time.deltaTime;
-            float u = t / duration;
-            go.transform.localScale = baseScale * (1f + u * 0.5f);
-            if (sr != null) { var c = sr.color; c.a = 1f - u; sr.color = c; }
             yield return null;
         }
-        if (go != null) Object.Destroy(go);
+        _routine=null;if(brain!=null)brain.IsBusy=false;
+    }
+    void ApplyHit(Vector2 point,float damage)
+    {
+        bool previous=Physics2D.queriesHitTriggers;
+        try
+        {
+            Physics2D.queriesHitTriggers=true;
+            foreach(var hit in Physics2D.OverlapCircleAll(point,_zoneRadius))
+            {
+                var player=hit.GetComponentInParent<PlayerHealth>();if(player==null||!_hitSet.Add(player.GetInstanceID()))continue;
+                player.TakeDamage(damage,boss);
+            }
+        }
+        finally{Physics2D.queriesHitTriggers=previous;}
+    }
+    void CancelPending()
+    {
+        if(_routine!=null&&brain!=null){brain.StopCoroutine(_routine);brain.IsBusy=brain.IsReviving;}_routine=null;
+        if(_presentation!=null)_presentation.CancelAll();_hitSet.Clear();
+    }
+    public void OnOwnerDisposed()
+    {
+        if(_disposed)return;_disposed=true;CancelPending();if(_enemy!=null){_enemy.OnDied.RemoveListener(CancelPending);_enemy=null;}
     }
 }

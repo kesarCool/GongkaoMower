@@ -31,10 +31,15 @@ public class HomingMissileSkillDefinition : SkillDefinitionBase
     public int   MaxTargetsAt(int lv) => maxTargetsByLevel[Mathf.Clamp(lv, 1, maxTargetsByLevel.Length) - 1];
     public float AoeRadiusAt(int lv)  => aoeRadiusByLevel[Mathf.Clamp(lv, 1, aoeRadiusByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        int lv = ClampLevel(level);
-        return $"冷却时长{CooldownAt(lv):0.#}s, {SalvoAt(lv)}发导弹, 爆炸范围{AoeRadiusAt(lv):0.#}m";
+        return new[] {
+            SkillDescriptionStat.Damage("导弹伤害", DamageAt(level)),
+            SkillDescriptionStat.Number("冷却", CooldownAt(level), "秒"),
+            SkillDescriptionStat.Count("导弹数量", SalvoAt(level), "发"),
+            SkillDescriptionStat.Count("锁定目标", MaxTargetsAt(level), "个"),
+            SkillDescriptionStat.Number("爆炸半径", AoeRadiusAt(level), "米")
+        };
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

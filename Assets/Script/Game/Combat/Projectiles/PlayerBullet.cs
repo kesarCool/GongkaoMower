@@ -22,12 +22,14 @@ public abstract class PlayerBullet : MonoBehaviour
     protected bool _fired;
     protected int _pierceRemaining;
     protected float _pierceRate;
+    private ProjectileHitFeedback _hitFeedback;
 
     public string targetTag = "monster";
 
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _hitFeedback = GetComponent<ProjectileHitFeedback>();
         _rb.bodyType = RigidbodyType2D.Dynamic;
         _rb.gravityScale = 0f;
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -95,6 +97,8 @@ public abstract class PlayerBullet : MonoBehaviour
 
             if (eb != null)
             {
+                // Capture the contact position before a lethal hit can return the enemy to its pool.
+                if (_hitFeedback != null) _hitFeedback.Play(other);
                 eb.TakeDamage(damage, skillSource, IsCrit, IsPenetration);
                 BattleRunMetrics.AddSkillDamage(skillSource, damage);
             }

@@ -42,11 +42,20 @@ public class AutoProjectileSkillDefinition : SkillDefinitionBase
     public float DamageAt(int level) => damageByLevel[Mathf.Clamp(level, 1, damageByLevel.Length) - 1];
     public int ProjectileCountAt(int level) => projectileCountByLevel[Mathf.Clamp(level, 1, projectileCountByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        float interval = IntervalAt(level);
-        int count = ProjectileCountAt(level);
-        return $"伤害{DamageAt(level):0.#},射速{interval:0.##}s,子弹x{count}";
+        var stats = new System.Collections.Generic.List<SkillDescriptionStat>
+        {
+            SkillDescriptionStat.Damage("伤害", DamageAt(level)),
+            SkillDescriptionStat.AttackInterval(IntervalAt(level)),
+            SkillDescriptionStat.Count("发射数量", ProjectileCountAt(level), "发")
+        };
+        if (level >= maxLevel && burstBulletPrefab != null)
+        {
+            stats.Add(SkillDescriptionStat.Count("爆发数量", burstCount, "发"));
+            stats.Add(SkillDescriptionStat.Number("爆发冷却", burstCooldown, "秒"));
+        }
+        return stats.ToArray();
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

@@ -23,25 +23,40 @@ public class ResistShield : MonoBehaviour
     private SpriteRenderer[] _sprites;
     private Color[] _originalColors;
     private GameObject _activationRing;
+    private bool _reuse, _showVisual;
+    public bool IsActive => isActiveAndEnabled && remainingTriggers != 0 && _elapsed < _duration;
     private static readonly Color ShieldTint = new Color(0.3f, 0.6f, 1f, 0.5f);
 
     /// <summary>初始化护盾参数并开始计时。</summary>
     public void Setup(float ratio, SkillDamageType[] types, int maxTriggers, float duration)
     {
+        SetupCore(ratio,types,maxTriggers,duration,true,false);
+    }
+
+    /// <summary>Revive owns its separate presentation; retain this small inactive component for the next pool lease.</summary>
+    public void SetupReusable(float ratio,SkillDamageType[] types,int maxTriggers,float duration)
+    {
+        SetupCore(ratio,types,maxTriggers,duration,false,true);
+    }
+
+    private void SetupCore(float ratio,SkillDamageType[] types,int maxTriggers,float duration,bool showVisual,bool reuse)
+    {
+        if(_showVisual)ApplyShieldVisual(false);
+        if(_activationRing!=null){Destroy(_activationRing);_activationRing=null;}
+        _showVisual=showVisual;_reuse=reuse;enabled=true;
         resistRatio = Mathf.Clamp01(ratio);
         blockedTypes = types ?? Array.Empty<SkillDamageType>();
         remainingTriggers = maxTriggers > 0 ? maxTriggers : -1; // -1 = 不限
         _duration = Mathf.Max(0.1f, duration);
         _elapsed = 0f;
 
-        ApplyShieldVisual(true);
-        PlayActivationEffect();
+        if(_showVisual){ApplyShieldVisual(true);PlayActivationEffect();}
     }
 
     /// <summary>每帧由 EnemyBase.TakeDamage 调用。返回 true 表示本次伤害被抵抗。</summary>
     public bool ApplyResist(SkillId damageSource, ref float damage)
     {
-        if (remainingTriggers == 0) return false; // 0 = 耗尽，-1 = 不限
+        if (!IsActive) return false;
         if (blockedTypes.Length == 0) return false;
 
         SkillDamageType incoming = damageSource.GetDamageType();
@@ -83,9 +98,12 @@ public class ResistShield : MonoBehaviour
 
     private void DestroyShield()
     {
-        ApplyShieldVisual(false);
-        Destroy(this);
+        remainingTriggers=0;
+        if(_showVisual)ApplyShieldVisual(false);
+        if(_reuse)enabled=false;else Destroy(this);
     }
+
+    public void Cancel(){_elapsed=_duration;DestroyShield();}
 
     // ── 视觉 ──
 
@@ -169,7 +187,7 @@ public class ResistShield : MonoBehaviour
 
     private void OnDestroy()
     {
-        ApplyShieldVisual(false);
+        if(_showVisual)ApplyShieldVisual(false);
         if (_activationRing != null) Destroy(_activationRing);
     }
 

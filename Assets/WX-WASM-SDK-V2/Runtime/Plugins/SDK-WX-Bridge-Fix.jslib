@@ -102,13 +102,9 @@ var WXBridgeFixLibrary = {
     var id = UTF8ToString(idPtr);
     var key = UTF8ToString(keyPtr);
     var val = window.WXWASMSDK.WXADGetStyleValue(id, key);
-    if (typeof val === "string") {
-      var bufferSize = lengthBytesUTF8(val) + 1;
-      var buffer = _malloc(bufferSize);
-      stringToUTF8(val, buffer, bufferSize);
-      return buffer;
-    }
-    return val || -1;
+    // wx-runtime.dll declares an Int32 result. Zero is a valid top/left value;
+    // returning an allocated string here would pass a heap address as a number.
+    return typeof val === "number" && isFinite(val) ? val : -1;
   },
 
   WXReportShareBehavior: function (idPtr, confPtr) {

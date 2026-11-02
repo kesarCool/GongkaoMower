@@ -18,6 +18,7 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
 
     [Header("按钮")]
     [SerializeField] private Button closeButton;
+    [SerializeField] private TMPro.TMP_Text readyCountText;
 
     /// <summary>扁平化条目：stage + 所属 group。</summary>
     private struct FlatItem
@@ -40,7 +41,10 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
         BattleChineseFontRuntime.ApplyToHierarchy(transform);
 
         if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(OnCloseClicked);
             closeButton.onClick.AddListener(OnCloseClicked);
+        }
 
         RebuildAndRefresh();
     }
@@ -79,6 +83,11 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
             if (pa != pb) return pa.CompareTo(pb);
             return a.group.sortOrder.CompareTo(b.group.sortOrder);
         });
+        if(readyCountText!=null)
+        {
+            int ready=0;foreach(var item in _flat)if(item.stage.isUnlocked&&item.stage.isCompleted&&!item.stage.isClaimed)ready++;
+            readyCountText.text=ready>0?$"有 {ready} 项奖励待领取":"继续挑战，解锁更多奖励";
+        }
 
         // 3. 刷新 LoopScrollRect
         if (loopScroll == null) loopScroll = GetComponent<LoopVerticalScrollRect>();
@@ -90,7 +99,7 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
         if (Application.isPlaying) loopScroll.ClearCells();
         loopScroll.totalCount = _flat.Count;
         loopScroll.RefillCells();
-        loopScroll.verticalNormalizedPosition = 0f;
+        if(readyCountText==null)loopScroll.verticalNormalizedPosition = 0f;
 
         // 4. 空态
         if (emptyHint != null) emptyHint.SetActive(_flat.Count == 0);
@@ -105,9 +114,7 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
             RebuildAndRefresh();
             BattleChineseFontRuntime.ApplyToHierarchy(transform);
 
-            string msg = $"领取成功！获得钻石 ×{result.rewardCount}";
-            if (UIManager.Instance != null)
-                UIManager.Instance.ShowToast(msg, 2f);
+            RewardRevealQueue.ShowItem($"achievement:{groupId}:{stage}", "achievement", result.rewardId, result.rewardCount);
         }
     }
 
@@ -165,5 +172,8 @@ public class AchievementPanel : UIPanelBase, LoopScrollPrefabSource, LoopScrollD
         var cell = transform.GetComponent<AchievementCell>();
         if (cell == null) return;
         cell.Bind(item.stage, item.group, OnCellClaimClicked);
+        int state=State(item.stage);
+        cell.SetSectionHeader(idx==0||State(_flat[idx-1].stage)!=state,state==0?"可领取":state==1?"进行中":"已领取");
     }
+    private static int State(AchievementService.StageInfo stage)=>stage.isClaimed?2:stage.isUnlocked&&stage.isCompleted?0:1;
 }

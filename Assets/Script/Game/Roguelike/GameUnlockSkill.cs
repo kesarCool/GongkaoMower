@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 关卡进入时检测 MainCardPoolProgression 是否有新技能解锁。
-/// 首次进入该关卡时通过 UIManager.ShowAlert 弹出介绍，暂停游戏，确认后恢复。
+/// 新技能介绍排在 Loading、新手引导、选卡和其它弹窗之后，确认后恢复。
 /// 已看过的状态存 PlayerPrefs，重复进同一关不再弹。
 /// </summary>
 [DisallowMultipleComponent]
@@ -18,7 +18,8 @@ public class GameUnlockSkill : MonoBehaviour
 
     private const string PrefPrefix = "unlock_skill_seen_";
     private const string GlobalUnlockKeyPrefix = "global_skill_unlock_";
-    private const string TutorialSeenKey = "tutorial_seen";
+    private UIManager alertOwner;
+    private int alertVersion;
 
     private IEnumerator Start()
     {
@@ -34,43 +35,23 @@ public class GameUnlockSkill : MonoBehaviour
             yield break;
         }
 
-        // ── 新手引导：首次进 101 弹，之后永不再弹 ──
-        if (currentLevel == 101 && PlayerPrefs.GetInt(TutorialSeenKey, 0) == 0)
-        {
-            bool done = false;
-            UIManager.Instance.ShowAlert("操作指引",
-                "滑动屏幕操控角色移动\n"
-                + "角色会自动攻击附近的字灵\n"
-                + "击败字灵收集能量,能量攒满后\n可选择技能升级\n"
-                + "祝你一路披荆斩棘!",
-                () => done = true);
-
-            yield return new WaitUntil(() => done);
-            PlayerPrefs.SetInt(TutorialSeenKey, 1);
-            PlayerPrefs.Save();
-
-            // 101 的技能解锁不在新手关弹，直接标记已展示
-            if (progression != null && progression.unlockConditions != null)
-            {
-                foreach (var cond in progression.unlockConditions)
-                {
-                    if (cond == null || cond.unlockAtLevel != currentLevel) continue;
-                    string key = PrefPrefix + currentLevel + "_" + (int)cond.skill;
-                    PlayerPrefs.SetInt(key, 1);
-                    PlayerPrefs.SetInt(GlobalUnlockKeyPrefix + (int)cond.skill, currentLevel);
-                }
-                PlayerPrefs.Save();
-            }
-
-            yield break;
-        }
-
-        // ── 技能解锁弹窗（101 除外，上面已处理）──
         if (progression == null)
         {
             Debug.LogWarning("[GameUnlockSkill] 未找到 CardPoolProgression，跳过。");
             yield break;
         }
+
+        // Starter skills are explained by TutorialDirector. Never show the retired entry popup.
+        if (currentLevel == 101)
+        {
+            if (progression.unlockConditions != null)
+                foreach (var condition in progression.unlockConditions)
+                    if (condition != null && condition.unlockAtLevel == currentLevel) MarkSeen(currentLevel, condition.skill);
+            PlayerPrefs.Save();
+            yield break;
+        }
+
+        if (skillCatalog == null) skillCatalog = Resources.Load<SkillCatalog>("SkillCatalog");
 
         var unseen = new List<SkillId>();
         if (progression.unlockConditions != null)
@@ -97,7 +78,6 @@ public class GameUnlockSkill : MonoBehaviour
 
         foreach (SkillId id in unseen)
         {
-            bool done = false;
             var def = FindSkillDef(id);
             string title = "技能解锁";
             string msg;
@@ -106,29 +86,49 @@ public class GameUnlockSkill : MonoBehaviour
             else
                 msg = $"新技能 {id} 解锁！";
 
-            UIManager.Instance.ShowAlert(title, msg, () => done = true);
-            yield return new WaitUntil(() => done);
-
-            string key = PrefPrefix + currentLevel + "_" + (int)id;
-            PlayerPrefs.SetInt(key, 1);
-            PlayerPrefs.SetInt(GlobalUnlockKeyPrefix + (int)id, currentLevel);
+            bool done = false;
+            while (!done)
+            {
+                while (!CanPresentUnlock()) yield return null;
+                alertOwner = UIManager.Instance;
+                alertOwner.ShowAlert(title, msg, () => done = true);
+                alertVersion = alertOwner.ConfirmationVersion;
+                if (!alertOwner.IsConfirmationActive(alertVersion))
+                {
+                    alertOwner = null;
+                    yield break; // Missing presentation must never mark an unseen skill as read.
+                }
+                while (!done && alertOwner != null && alertOwner.IsConfirmationActive(alertVersion)) yield return null;
+                alertOwner = null;
+                // Card selection may replace a confirmation silently. Retry after it closes rather than
+                // waiting forever for a lost callback or pretending the user acknowledged the message.
+                yield return null;
+            }
+            MarkSeen(currentLevel, id);
+            PlayerPrefs.Save();
         }
-
-        PlayerPrefs.Save();
     }
 
-#if UNITY_EDITOR
-    [UnityEditor.MenuItem("Tools/清除新手引导记录", false, 500)]
-    private static void ClearTutorialPrefs()
+    public static bool CanPresentUnlock()
     {
-        PlayerPrefs.DeleteKey(TutorialSeenKey);
-        PlayerPrefs.DeleteKey(PrefPrefix + "101_" + (int)SkillId.AutoProjectile);
-        PlayerPrefs.DeleteKey(PrefPrefix + "101_" + (int)SkillId.OrbitingBlades);
-        PlayerPrefs.DeleteKey(PrefPrefix + "101_" + (int)SkillId.ThrowGrenade);
-        PlayerPrefs.Save();
-        UnityEditor.EditorUtility.DisplayDialog("清除完成", "新手引导和 101 技能解锁记录已清除。", "确定");
+        var ui = UIManager.Instance;
+        return !BattleLoadingSceneController.IsTransitionVisible && !TutorialDirector.IsBattleIntroductionPending &&
+            !TutorialDirector.IsShowing && ui != null && ui.CanPresentQueuedFeedback && ui.Top == null;
     }
-#endif
+
+    private static void MarkSeen(int level, SkillId id)
+    {
+        PlayerPrefs.SetInt(PrefPrefix + level + "_" + (int)id, 1);
+        string globalKey = GlobalUnlockKeyPrefix + (int)id;
+        PlayerPrefs.SetInt(globalKey, Mathf.Max(level, PlayerPrefs.GetInt(globalKey, 0)));
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        if (alertOwner != null && alertOwner.IsConfirmationActive(alertVersion)) alertOwner.CloseConfirm();
+        alertOwner = null;
+    }
 
     /// <summary>移除当前角色不会出现在卡池的技能（如非本变体的 AutoProjectile）。</summary>
     private void FilterByEquippedCharacter(List<SkillId> unseen)

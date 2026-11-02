@@ -32,19 +32,11 @@ public class LevelSelectChapterHeaderCell : MonoBehaviour
         {
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(titleText);
-            titleText.text = FormatChapterTitle(row.chapterId);
+            titleText.text = ChapterLevelDisplay.FormatChapterTitle(row.chapterId, row.mapName);
         }
 
         if (background != null)
             background.color = IsChapterUnlocked(row.chapterId) ? unlockedColor : lockedColor;
-    }
-
-    private static string FormatChapterTitle(int chapterId)
-    {
-        string theme = LexiconPreviewCatalog.GetThemeTabLabel(chapterId);
-        if (string.IsNullOrEmpty(theme) || theme.StartsWith("主题 "))
-            return $"第 {chapterId} 章";
-        return $"第 {chapterId} 章（{theme}）";
     }
 
     /// <summary>该章下至少有一关已解锁即为已解锁。</summary>

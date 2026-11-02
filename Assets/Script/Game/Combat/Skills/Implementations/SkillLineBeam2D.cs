@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 射线技能：感知范围（beamLength）内仅 1 只怪时全部射线指向该怪；
-/// 多只怪时第 1 条（红）指向范围内最近怪，其余 360° 随机散射。
+/// 多只怪时第 1 条指向范围内最近怪，其余 360° 随机散射。
 /// </summary>
 public class SkillLineBeam2D : SkillBase
 {
@@ -38,6 +38,8 @@ public class SkillLineBeam2D : SkillBase
     private float _timer;
     private float _visualUntil;
     private int _shotCounter;
+    private LineBeamPresentation _presentation;
+    private bool _chargeStarted;
 
     public SkillLineBeam2D(float beamLength, float damage, float interval, LayerMask hitMask)
     {
@@ -53,6 +55,15 @@ public class SkillLineBeam2D : SkillBase
         beamLines = lines;
     }
 
+    public void SetPresentation(LineBeamPresentation presentation) { _presentation = presentation; }
+
+    public override void OnUnequip()
+    {
+        base.OnUnequip();_chargeStarted = false;
+        if (_presentation != null) _presentation.Cancel();
+        HideExtraBeamVisuals(0);
+    }
+
     public static Color GetRainbowBeamColor(int beamIndex)
     {
         if (RainbowBeamColors.Length == 0)
@@ -66,7 +77,20 @@ public class SkillLineBeam2D : SkillBase
         if (_ctx.player == null) return;
 
         _timer += deltaTime;
-        if (_timer < interval) return;
+        if (_timer < interval)
+        {
+            // Anticipation uses the final 100 ms of the existing cooldown, never postpones damage.
+            if (_presentation != null && !_chargeStarted && _timer >= Mathf.Max(0, interval - .10f) && !string.IsNullOrEmpty(_ctx.enemyTag))
+            {
+                var target = FindNearestEnemy(_ctx.player.position, _ctx.enemyTag, Mathf.Max(.5f, beamLength));
+                if (target != null)
+                {
+                    _presentation.BeginCharge(_ctx.player.position, (Vector2)(target.transform.position - _ctx.player.position), interval - _timer);
+                    _chargeStarted = true;
+                }
+            }
+            return;
+        }
 
         Vector2 origin = _ctx.player.position;
         float senseRange = Mathf.Max(0.5f, beamLength);
@@ -76,9 +100,14 @@ public class SkillLineBeam2D : SkillBase
 
         int livingEnemies = CountActiveEnemiesInRange(origin, _ctx.enemyTag, senseRange);
         if (livingEnemies <= 0)
+        {
+            _chargeStarted = false;
+            if (_presentation != null) _presentation.CancelCharge();
             return;
+        }
 
         _timer = 0f;
+        _chargeStarted = false;
 
         _shotCounter++;
         bool useVariant = Level >= skillMaxLevel && maxLevelVariantInterval > 0
@@ -104,6 +133,7 @@ public class SkillLineBeam2D : SkillBase
 
         bool prev = Physics2D.queriesHitTriggers;
         Physics2D.queriesHitTriggers = true;
+        if (_presentation != null) _presentation.BeginCast(origin, count, useVariant);
 
         for (int i = 0; i < count; i++)
         {
@@ -120,12 +150,14 @@ public class SkillLineBeam2D : SkillBase
                 if (eb == null) eb = col.GetComponentInParent<EnemyBase>();
                 if (eb == null) continue;
 
+                if (_presentation != null) _presentation.AddImpact(CombatHitPlacement.Contact(col, _sharedRayHits[h].point));
                 eb.TakeDamage(finalDamage, SkillId.LineBeam, isCrit, isPenetration);
             }
         }
 
         Physics2D.queriesHitTriggers = prev;
         HideExtraBeamVisuals(count);
+        if (_presentation != null) _presentation.RenderNow();
         PublishSkillCast(origin);
     }
 
@@ -151,6 +183,11 @@ public class SkillLineBeam2D : SkillBase
 
     private void UpdateBeamVisualLine(int index, Vector2 origin, Vector2 dir, float effectiveLength)
     {
+        if (_presentation != null)
+        {
+            _presentation.SetBeam(index, origin, dir, effectiveLength);
+            return;
+        }
         if (beamLines == null || index < 0 || index >= beamLines.Length)
             return;
 
@@ -187,6 +224,7 @@ public class SkillLineBeam2D : SkillBase
 
     public void TickVisual()
     {
+        if (_presentation != null) return; // The reusable component updates its own scaled-time fade.
         if (beamLines == null)
             return;
         if (Time.time < _visualUntil)

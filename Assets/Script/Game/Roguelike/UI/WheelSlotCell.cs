@@ -14,9 +14,18 @@ public class WheelSlotCell : MonoBehaviour
     public TextMeshProUGUI levelText;
     [Tooltip("高亮选中标记（初始隐藏）")]
     public GameObject highlightMark;
+    public Image face;
+    public Sprite activeFace, passiveFace, winnerFace;
+    public GameObject winnerMark;
+    public bool IsWinner { get; private set; }
+    private bool _passive;
 
     public void Bind(WheelSlotData data)
     {
+        IsWinner = false;
+        _passive = data != null && !data.isActive;
+        if (face != null) face.sprite = _passive ? passiveFace : activeFace;
+        if (winnerMark != null) winnerMark.SetActive(false);
         if (icon != null && data.def != null)
             icon.sprite = data.def.icon;
 
@@ -33,5 +42,13 @@ public class WheelSlotCell : MonoBehaviour
     {
         if (highlightMark != null)
             highlightMark.SetActive(on);
+    }
+
+    public void SetWinner(bool on)
+    {
+        IsWinner = on;
+        if (face != null) face.sprite = on ? winnerFace : _passive ? passiveFace : activeFace;
+        if (winnerMark != null) winnerMark.SetActive(on);
+        SetHighlight(false);
     }
 }

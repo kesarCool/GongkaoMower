@@ -12,6 +12,9 @@ using UnityEngine.UI;
 public class LexiconPreviewLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource, LoopScrollDataSource
 {
     [SerializeField] private GameObject entryRowPrefab;
+    [SerializeField,Min(1)] private int columns=1;
+    public int EntryCount=>_lines.Count;
+    private int RowCount=>(_lines.Count+Mathf.Max(1,columns)-1)/Mathf.Max(1,columns);
 
     private LoopVerticalScrollRect _loop;
     /// <summary>回收的 Cell 只能挂在这里，不能挂 <see cref="ScrollRect.content"/>。</summary>
@@ -74,14 +77,14 @@ public class LexiconPreviewLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSou
         if (Application.isPlaying)
             _loop.ClearCells();
 
-        _loop.totalCount = _lines.Count;
+        _loop.totalCount = RowCount;
         _loop.RefillCells();
-        _loop.verticalNormalizedPosition = 0f;
+        if(columns!=2)_loop.verticalNormalizedPosition = 0f;
     }
 
     public GameObject GetObject(int index)
     {
-        if (index < 0 || index >= _lines.Count || entryRowPrefab == null)
+        if (index < 0 || index >= RowCount || entryRowPrefab == null)
             return null;
 
         if (_pool.Count > 0)
@@ -111,9 +114,11 @@ public class LexiconPreviewLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSou
 
     public void ProvideData(Transform transform, int idx)
     {
-        if (idx < 0 || idx >= _lines.Count)
+        if (idx < 0 || idx >= RowCount)
             return;
 
-        transform.GetComponent<LexiconPreviewEntryRowCell>()?.Bind(idx + 1, _lines[idx]);
+        var cell=transform.GetComponent<LexiconPreviewEntryRowCell>();
+        if(columns==2){int index=idx*2;cell?.BindPair(index+1,_lines[index],index+1<_lines.Count?_lines[index+1]:null);}
+        else cell?.Bind(idx+1,_lines[idx]);
     }
 }

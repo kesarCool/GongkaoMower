@@ -11,7 +11,10 @@ public class OrbitingBladeVisual : MonoBehaviour, IPoolReceiver
 
     [SerializeField] private SpriteRenderer _spriteRenderer;
     [SerializeField] private TrailRenderer _trail;
-    [SerializeField] private ParticleSystem[] _particles;
+    [SerializeField] private ParticleSystem[] _particles = new ParticleSystem[0];
+
+    // Clear after the owner has finished positioning a pooled / re-enabled blade.
+    private bool _restartTrail;
 
     public void Apply(Sprite sprite, Color tint, int sortingOrder, float scale)
     {
@@ -24,6 +27,11 @@ public class OrbitingBladeVisual : MonoBehaviour, IPoolReceiver
                 _spriteRenderer.sprite = sprite;
             _spriteRenderer.color = tint;
             _spriteRenderer.sortingOrder = sortingOrder;
+            if (_trail != null)
+            {
+                _trail.sortingLayerID = _spriteRenderer.sortingLayerID;
+                _trail.sortingOrder = sortingOrder - 1;
+            }
         }
 
         transform.localScale = Vector3.one * Mathf.Max(0.01f, scale);
@@ -46,15 +54,40 @@ public class OrbitingBladeVisual : MonoBehaviour, IPoolReceiver
         transform.Rotate(0f, 0f, spinSpeedDeg * Time.deltaTime, Space.Self);
     }
 
+    private void OnEnable()
+    {
+        RestartTrail();
+    }
+
+    private void RestartTrail()
+    {
+        if (_trail == null) return;
+        _trail.emitting = false;
+        _trail.Clear();
+        _restartTrail = true;
+    }
+
+    private void LateUpdate()
+    {
+        if (!_restartTrail || _trail == null) return;
+        _trail.Clear();
+        _trail.emitting = true;
+        _restartTrail = false;
+    }
+
+    private void OnDisable()
+    {
+        _restartTrail = false;
+        if (_trail == null) return;
+        _trail.emitting = false;
+        _trail.Clear();
+    }
+
     public void OnPoolGet()
     {
-        if (_trail != null)
-        {
-            _trail.Clear();
-            _trail.emitting = true;
-        }
+        RestartTrail();
 
-        for (int i = 0; i < _particles.Length; i++)
+        for (int i = 0; _particles != null && i < _particles.Length; i++)
         {
             if (_particles[i] == null) continue;
             _particles[i].Clear(true);
@@ -64,13 +97,14 @@ public class OrbitingBladeVisual : MonoBehaviour, IPoolReceiver
 
     public void OnPoolRelease()
     {
+        _restartTrail = false;
         if (_trail != null)
         {
             _trail.emitting = false;
             _trail.Clear();
         }
 
-        for (int i = 0; i < _particles.Length; i++)
+        for (int i = 0; _particles != null && i < _particles.Length; i++)
         {
             if (_particles[i] == null) continue;
             _particles[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);

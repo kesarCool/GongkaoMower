@@ -14,15 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 104
   maxLevel: 5
-  displayName: "铁壁铜墙"
-  description: "防御提升，减少受到的伤害。"
+  bondedPassiveId: 0
+  maxLevelPrefab: {fileID: 0}
+  displayName: "\u94C1\u58C1\u94DC\u5899"
+  description: "\u9632\u5FA1\u63D0\u5347\uFF0C\u51CF\u5C11\u53D7\u5230\u7684\u4F24\u5BB3\u3002"
   icon: {fileID: 21300000, guid: 044781f66d26e6f4f8831e8b52ed58cf, type: 3}
-  levelDescriptions:
-  - "防御 +20%"
-  - "防御 +24%"
-  - "防御 +28%"
-  - "防御 +33%"
-  - "防御 +40%"
+  levelDescriptions: []
   modType: 1
   bonusByLevel:
   - 0.2

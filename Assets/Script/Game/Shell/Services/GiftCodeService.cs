@@ -12,6 +12,19 @@ public static class GiftCodeService
     private const string ClaimedHashesKey = "gift_code_claimed_hashes";
     private const string LastClaimDateKey = "gift_code_last_claim_date";
 
+    public readonly struct GiftCodeReward
+    {
+        public readonly string receiptId;
+        public readonly int itemId, count;
+        public GiftCodeReward(string receiptId, int itemId, int count)
+        { this.receiptId = receiptId; this.itemId = itemId; this.count = count; }
+    }
+
+#if UNITY_EDITOR
+    /// <summary>Editor validation seam; null keeps the normal PlayerPrefs path.</summary>
+    public static ISaveStorage EditorStorageOverride;
+#endif
+
     /// <summary>
     /// 有效礼包码的 SHA256 哈希列表（由 Tools/生成礼包码哈希 编辑器工具生成）。
     /// 输入统一 ToUpper 后再做哈希比对。
@@ -31,7 +44,7 @@ public static class GiftCodeService
         get
         {
             string today = DateTime.Now.ToString("yyyy-MM-dd");
-            string lastDate = PlayerPrefs.GetString(LastClaimDateKey, "");
+            string lastDate = ReadClaimString(LastClaimDateKey);
             return lastDate != today;
         }
     }
@@ -42,6 +55,13 @@ public static class GiftCodeService
     /// <returns>null 表示成功；否则返回用户可读的错误文案。</returns>
     public static string TryRedeem(string code)
     {
+        return TryRedeem(code, out _);
+    }
+
+    /// <summary>Returns the already-granted reward; presenting it must never grant it again.</summary>
+    public static string TryRedeem(string code, out GiftCodeReward reward)
+    {
+        reward = default;
         if (string.IsNullOrWhiteSpace(code))
             return "请输入礼包码";
 
@@ -74,7 +94,9 @@ public static class GiftCodeService
             return "数据服务未就绪，请稍后再试";
 
         MarkClaimed(hash);
-        PlayerProfileService.Instance.AddDiamond(100);
+        const int itemId = 2, count = 100;
+        PlayerProfileService.Instance.AddDiamond(count);
+        reward = new GiftCodeReward("gift_code:" + ReadClaimString(LastClaimDateKey), itemId, count);
 
         return null; // success
     }
@@ -82,7 +104,7 @@ public static class GiftCodeService
     /// <summary>指定哈希的码是否已兑换过。</summary>
     private static bool HasClaimedHash(string hash)
     {
-        string claimed = PlayerPrefs.GetString(ClaimedHashesKey, "");
+        string claimed = ReadClaimString(ClaimedHashesKey);
         if (string.IsNullOrEmpty(claimed)) return false;
 
         string[] parts = claimed.Split(',');
@@ -96,14 +118,34 @@ public static class GiftCodeService
     /// <summary>标记兑换：记入已兑哈希列表 + 更新今日日期。</summary>
     private static void MarkClaimed(string hash)
     {
-        string claimed = PlayerPrefs.GetString(ClaimedHashesKey, "");
+        string claimed = ReadClaimString(ClaimedHashesKey);
         if (!string.IsNullOrEmpty(claimed))
             claimed += ",";
         claimed += hash;
 
-        PlayerPrefs.SetString(ClaimedHashesKey, claimed);
-        PlayerPrefs.SetString(LastClaimDateKey, DateTime.Now.ToString("yyyy-MM-dd"));
+        WriteClaimString(ClaimedHashesKey, claimed);
+        WriteClaimString(LastClaimDateKey, DateTime.Now.ToString("yyyy-MM-dd"));
+#if UNITY_EDITOR
+        if (EditorStorageOverride != null) return;
+#endif
         PlayerPrefs.Save();
+    }
+
+    private static string ReadClaimString(string key)
+    {
+#if UNITY_EDITOR
+        if (EditorStorageOverride != null)
+            return EditorStorageOverride.TryLoadString(key, out string value) ? value : "";
+#endif
+        return PlayerPrefs.GetString(key, "");
+    }
+
+    private static void WriteClaimString(string key, string value)
+    {
+#if UNITY_EDITOR
+        if (EditorStorageOverride != null) { EditorStorageOverride.SaveString(key, value); return; }
+#endif
+        PlayerPrefs.SetString(key, value);
     }
 
     private static string ComputeSha256(string input)

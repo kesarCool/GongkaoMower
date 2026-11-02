@@ -17,6 +17,14 @@ public static class GameErrorCodes
     public const string FeatureNotImplemented = "ERR_FEATURE_NOT_IMPLEMENTED";
     public const string LoginSceneNameEmpty = "ERR_LOGIN_SCENE_NAME_EMPTY";
 
+    // 局外养成 / 商店 / 兑换（按钮锁定提示，CodeDisplay=1 Toast；见 Doc/UI按钮反馈改造任务书.md）
+    public const string GoldNotEnough = "ERR_GOLD_NOT_ENOUGH";
+    public const string FragmentNotEnough = "ERR_FRAGMENT_NOT_ENOUGH";
+    public const string StageLevelNotEnough = "ERR_STAGE_LEVEL_NOT_ENOUGH";
+    public const string ShopSoldOut = "ERR_SHOP_SOLD_OUT";
+    public const string GiftCodeAlreadyClaimed = "ERR_GIFT_CODE_ALREADY_CLAIMED";
+    public const string LevelNextLocked = "ERR_LEVEL_NEXT_LOCKED";
+
     // 战斗 / 结算
     public const string LevelWaveTableMissing = "ERR_LEVEL_WAVE_TABLE_MISSING";
     public const string LevelWaveConfigMissing = "ERR_LEVEL_WAVE_CONFIG_MISSING";

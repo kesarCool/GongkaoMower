@@ -32,6 +32,9 @@ public class CardSelectionSystem : MonoBehaviour
     private List<SkillId> _excludedSkills = new List<SkillId>();
     private int _remainingFreeRefresh;
     private int _remainingAdRefresh;
+    private bool _shareRefreshInFlight;
+    private int _selectionVersion;
+    private int _shareRefreshRequestVersion;
 
     private PlayerSkills _playerSkills;
 
@@ -40,9 +43,6 @@ public class CardSelectionSystem : MonoBehaviour
 
     /// <summary>本次选卡是否由 <see cref="UIManager"/> 打开（影响暂停与关闭方式）。</summary>
     private bool _selectionUsesUIManager;
-
-    /// <summary>面板打开时间（unscaledTime），用于防止误触瞬时选卡。</summary>
-    private float _panelOpenTime;
 
     /// <summary>是否 Boss 触发（triggerCount=-1），防误触用更长阈值。</summary>
     public bool IsBossTrigger { get; set; }
@@ -92,6 +92,8 @@ public class CardSelectionSystem : MonoBehaviour
 
     private void StartSelection()
     {
+        _selectionVersion++;
+        _shareRefreshInFlight = false;
         _selectionUsesUIManager = false;
         _isSelecting = true;
         _excludedSkills.Clear();
@@ -142,7 +144,8 @@ public class CardSelectionSystem : MonoBehaviour
                 OnRefreshRequested = OnRefreshRequested,
                 OnAdRefreshRequested = OnAdRefreshRequested,
                 FreeRefreshCount = _remainingFreeRefresh,
-                AdRefreshCount = _remainingAdRefresh
+                AdRefreshCount = _remainingAdRefresh,
+                InputDelay = IsBossTrigger ? 1.2f : .3f
             };
             var opts = new UiOpenOptions
             {
@@ -155,7 +158,6 @@ public class CardSelectionSystem : MonoBehaviour
             {
                 GameLog.Info($"[CardTrace] UIManager 打开成功, panel.active={opened.gameObject.activeSelf} activeInHierarchy={opened.gameObject.activeInHierarchy}");
                 _selectionUsesUIManager = true;
-                _panelOpenTime = Time.unscaledTime;
                 return;
             }
             GameLog.Warning("[CardTrace] UIManager.Open 返回 null，回退 panel.Show");
@@ -169,7 +171,7 @@ public class CardSelectionSystem : MonoBehaviour
             EnsureTransformHierarchyActive(panel.transform);
             Time.timeScale = 0f;
             var showOk = panel.Show(_currentCards, OnCardSelected, OnRefreshRequested, OnAdRefreshRequested,
-                _remainingFreeRefresh, _remainingAdRefresh);
+                _remainingFreeRefresh, _remainingAdRefresh, IsBossTrigger ? 1.2f : .3f);
             GameLog.Info($"[CardTrace] panel.Show 返回={showOk}, panel.active={panel.gameObject.activeSelf} activeInHierarchy={panel.gameObject.activeInHierarchy}");
             if (!showOk)
                 EndSelection("panel.Show-false");
@@ -183,6 +185,7 @@ public class CardSelectionSystem : MonoBehaviour
 
     private void OnRefreshRequested()
     {
+        if (!_isSelecting || _shareRefreshInFlight) return;
         if (_remainingFreeRefresh <= 0 && _remainingAdRefresh <= 0) return;
 
         var prevCards = _currentCards;
@@ -232,29 +235,50 @@ public class CardSelectionSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// 广告刷新：播放激励视频，完整观看后刷新卡牌。
-    /// 广告失败则次数不变，用户可重试。
+    /// 分享返回后刷新卡牌；调用失败或未观察到返回则次数不变，可重试。
     /// </summary>
     private void OnAdRefreshRequested()
     {
-        if (_remainingAdRefresh <= 0) return;
+        if (!_isSelecting || _shareRefreshInFlight || _remainingAdRefresh <= 0) return;
 
-        GameLog.Info("[CardSelectionSystem] 请求广告刷新…");
-        WeChatRewardedAdProvider.Instance.RequestReviveAd(success =>
+        _shareRefreshInFlight = true;
+        int version = _selectionVersion;
+        int requestVersion = ++_shareRefreshRequestVersion;
+        var targetPanel = CurrentPanel();
+        targetPanel?.SetRewardRequestPending(true);
+        UIManager.Instance?.ShowToast("分享返回后换一组", 2f);
+        GameLog.Info("[CardSelectionSystem] 请求分享返回刷新…");
+        System.Action<bool> complete = success =>
         {
+            if (this == null || !_isSelecting || !_shareRefreshInFlight || _selectionVersion != version || _shareRefreshRequestVersion != requestVersion) return;
+            _shareRefreshInFlight = false;
+            CurrentPanel()?.SetRewardRequestPending(false);
             if (success)
             {
-                GameLog.Info("[CardSelectionSystem] 广告完成，刷新卡牌");
+                GameLog.Info("[CardSelectionSystem] 分享返回，刷新卡牌");
                 OnRefreshRequested(); // 内部扣减 _remainingAdRefresh 并重抽
             }
             else
             {
-                Debug.LogWarning("[CardSelectionSystem] 广告未完成");
+                Debug.LogWarning("[CardSelectionSystem] 未能确认分享返回");
                 if (UIManager.Instance != null)
-                    UIManager.Instance.ShowToast("广告未完成，可重试", 1.5f);
+                    UIManager.Instance.ShowToast("未能确认分享返回，可重试", 1.5f);
                 // 次数不回退（面板端也未扣减）
             }
-        });
+        };
+        try { WeChatRewardedAdProvider.Instance.RequestShareReward("快来一起玩文字割草机！", complete); }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[CardSelectionSystem] 分享请求异常: " + ex.Message);
+            complete(false);
+        }
+    }
+
+    private CardSelectionPanel CurrentPanel()
+    {
+        if (_selectionUsesUIManager && UIManager.Instance != null && UIManager.Instance.TryGetInstance<CardSelectionPanel>(out var opened))
+            return opened;
+        return panel;
     }
 
     /// <summary>
@@ -262,26 +286,21 @@ public class CardSelectionSystem : MonoBehaviour
     /// </summary>
     private void OnCardSelected(int index)
     {
+        if (!_isSelecting || _shareRefreshInFlight) return;
         if (index < 0 || index >= _currentCards.Count) return;
 
-        // 防止误触：Boss 选卡 1.2s，能量选卡 0.3s
-        float minElapsed = IsBossTrigger ? 1.2f : 0.3f;
-        float elapsed = Time.unscaledTime - _panelOpenTime;
-        if (elapsed < minElapsed)
-        {
-            GameLog.Info($"[CardTrace] CardSelectionSystem.OnCardSelected IGNORED: index={index} elapsed={elapsed:F3}s min={minElapsed}s (anti-mistap isBoss={IsBossTrigger})");
-            return;
-        }
+        // The panel checks input readiness before locking/animating a card. Rejecting
+        // here used to leave every button disabled when an early click was ignored.
 
         var selected = _currentCards[index];
-        ApplyCard(selected);
+        if (ApplyCard(selected)) TutorialDirector.Ensure().NotifyCardApplied();
         EndSelection("card-picked");
     }
 
     /// <summary>
     /// 应用卡牌效果
     /// </summary>
-    private void ApplyCard(CardDeck.DrawResult card)
+    private bool ApplyCard(CardDeck.DrawResult card)
     {
         bool isPassive = card.skillId.IsPassive();
         if (card.currentLevel == 0)
@@ -291,6 +310,7 @@ public class CardSelectionSystem : MonoBehaviour
                 ? _playerSkills.TryAddPassive(card.skillId)
                 : _playerSkills.TryAddSkill(card.skillId);
             GameLog.Info($"[CardSelectionSystem] New {(isPassive ? "passive" : "skill")} {card.skillId}, added={added}");
+            return added;
         }
         else
         {
@@ -299,6 +319,7 @@ public class CardSelectionSystem : MonoBehaviour
                 ? _playerSkills.TryLevelUpPassive(card.skillId)
                 : _playerSkills.TryLevelUp(card.skillId);
             GameLog.Info($"[CardSelectionSystem] Upgrade {(isPassive ? "passive" : "skill")} {card.skillId} to Lv.{card.targetLevel}, success={leveled}");
+            return leveled;
         }
     }
 
@@ -309,6 +330,9 @@ public class CardSelectionSystem : MonoBehaviour
     {
         GameLog.Info($"[CardTrace] CardSelectionSystem.EndSelection reason={reason}");
         _isSelecting = false;
+        _selectionVersion++;
+        _shareRefreshInFlight = false;
+        CurrentPanel()?.SetRewardRequestPending(false);
         try
         {
             if (_selectionUsesUIManager && UIManager.Instance != null)

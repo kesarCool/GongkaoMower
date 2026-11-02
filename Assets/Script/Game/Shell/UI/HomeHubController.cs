@@ -55,6 +55,7 @@ public class HomeHubController : MonoBehaviour
 
         // 成就系统：登录天数（Init 已由 RuntimeInitializeOnLoadMethod 自动完成）
         AchievementService.Instance.OnEnterHome();
+        TutorialDirector.Ensure().EnterHome(startGameButton, homeTabBar);
     }
 
     private void OnEnable()
@@ -141,7 +142,7 @@ public class HomeHubController : MonoBehaviour
         if (TableManager.Instance != null)
             TableManager.Instance.Init();
 
-        if (!ChapterLevelNavigation.TryGetMaxUnlockedLevel(out int chapterId, out int levelId))
+        if (!TryResolveStartLevel(out int chapterId, out int levelId))
         {
             UIManager.Instance?.ShowToast("关卡数据加载失败", 1.5f);
             return;
@@ -149,6 +150,18 @@ public class HomeHubController : MonoBehaviour
 
         SelectedLevelContext.Set(chapterId, levelId);
         BattleFlowLauncher.TryStartBattleLoading();
+    }
+
+    public static bool TryResolveStartLevel(out int chapterId, out int levelId)
+    {
+        var profile = PlayerProfileService.Instance; profile.LoadOrCreate();
+        if (SelectedLevelContext.HasSelection && profile.IsLevelUnlocked(SelectedLevelContext.LevelId))
+        {
+            chapterId = SelectedLevelContext.ChapterId;
+            levelId = SelectedLevelContext.LevelId;
+            return true;
+        }
+        return ChapterLevelNavigation.TryGetMaxUnlockedLevel(out chapterId, out levelId);
     }
 
     /// <summary>打开设置面板（模态弹窗）。</summary>

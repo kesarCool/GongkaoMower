@@ -1,9 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Boss 波次竞技场锁定：Boss 出场时在四周生成围墙，玩家无法离开。
-/// Boss 被击杀时拆除围墙。
-/// 不干涉镜头、不干涉摇杆，仅物理阻拦。
+/// Boss 波次先将玩家送回地图中心，Boss 出场后立即生成围墙。
+/// 同场所有 Boss 被击杀时拆除围墙，入场传送与镜头共用一次平滑过渡。
 /// </summary>
 [DisallowMultipleComponent]
 public class BossArenaLock : MonoBehaviour
@@ -18,13 +18,16 @@ public class BossArenaLock : MonoBehaviour
     [Tooltip("墙的厚度")]
     public float wallThickness = 0.5f;
 
-    private EnemyBase _currentBoss;
+    private readonly HashSet<EnemyBase> _bosses = new HashSet<EnemyBase>();
     private GameObject _wallParent;
     private bool _locked;
     private Vector2 _arenaCenter;
+    private bool _prepared;
+    private BossArenaEntryTransition _entry;
 
     /// <summary>竞技场是否已锁定（围墙存在）。</summary>
     public bool IsLocked => _locked;
+    public bool IsEntering => _entry != null && _entry.IsPlaying;
 
     /// <summary>场景中查找活跃的 BossArenaLock（避免每帧 FindObjectOfType）。</summary>
     public static BossArenaLock FindInScene()
@@ -32,7 +35,7 @@ public class BossArenaLock : MonoBehaviour
         return FindObjectOfType<BossArenaLock>();
     }
 
-    /// <summary>将世界坐标 clamp 到竞技场内（留 0.5 单位边距）。</summary>
+    /// <summary>将世界坐标 clamp 到竞技场内（留 0.8 单位边距）。</summary>
     public Vector2 ClampInside(Vector2 worldPos)
     {
         float pad = 0.8f;
@@ -55,29 +58,62 @@ public class BossArenaLock : MonoBehaviour
     {
         EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
         EventBus.Unsubscribe<EnemyDiedEvent>(OnEnemyDied);
+        if (_entry != null) _entry.Cancel();
         UnlockArena();
     }
 
     private void OnEnemyDamaged(EnemyDamagedEvent e)
     {
+        // Compatibility for Bosses created outside SpawnerWaves.
         if (_locked) return;
-        if (e.enemy == null) return;
-        if (!e.enemy.TryGetComponent<LastWaveBossMarker>(out _)) return;
+        RegisterBoss(e.enemy);
+    }
 
-        _currentBoss = e.enemy;
-
-        // 以角色当前位置为竞技场中心
+    /// <summary>Run at Boss wave start, before the warning/spawn delay.</summary>
+    public void PrepareBossWave()
+    {
+        if (_locked || _prepared) return;
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        _arenaCenter = player != null ? (Vector2)player.transform.position : e.worldPosition;
+        if (!BattlePlayerPositioning.TryGetMapCenter(out _arenaCenter))
+            _arenaCenter = player != null ? (Vector2)player.transform.position : Vector2.zero;
+        ClampArenaCenterToMapBounds();
+        _prepared = true;
+        if (player != null) BeginEntry(player.transform);
+        else FindObjectOfType<CameraFollow2D>()?.SetBossZoom(true);
+    }
 
-        LockArena();
+    private void BeginEntry(Transform player)
+    {
+        _entry = player.GetComponent<BossArenaEntryTransition>();
+        if (_entry == null) _entry = player.gameObject.AddComponent<BossArenaEntryTransition>();
+        _entry.Play(_arenaCenter, FindObjectOfType<CameraFollow2D>());
+    }
+
+    /// <summary>Called immediately after a spawned enemy is marked as a Boss.</summary>
+    public void RegisterBoss(EnemyBase boss)
+    {
+        if (boss == null || !boss.TryGetComponent<LastWaveBossMarker>(out _) || boss.GetComponent<CloneMarker>() != null) return;
+        if (!_bosses.Add(boss)) return;
+        if (!_locked)
+        {
+            PrepareBossWave();
+            LockArena();
+            // Normally the player remains at the arrival point: no second jump.
+            // If they left during a long warning, use the same visible portal safety net.
+            var player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null && !IsEntering &&
+                Vector2.Distance(player.transform.position, ClampInside(player.transform.position)) > .01f)
+                BeginEntry(player.transform);
+        }
+        else
+            PullBossesIntoArena(_arenaCenter.x - arenaHalfWidth, _arenaCenter.x + arenaHalfWidth,
+                _arenaCenter.y - arenaHalfHeight, _arenaCenter.y + arenaHalfHeight);
     }
 
     private void OnEnemyDied(EnemyDiedEvent e)
     {
-        if (!_locked || _currentBoss != e.enemy) return;
-        _currentBoss = null;
-        UnlockArena();
+        if (!_locked || !_bosses.Remove(e.enemy)) return;
+        if (_bosses.Count == 0) UnlockArena();
     }
 
     private void LockArena()
@@ -110,7 +146,7 @@ public class BossArenaLock : MonoBehaviour
     }
 
     /// <summary>把围墙范围外的 Boss 拽入竞技场，边缘 clamp（保留相对方位）。</summary>
-    private static void PullBossesIntoArena(float left, float right, float bottom, float top)
+    private void PullBossesIntoArena(float left, float right, float bottom, float top)
     {
         const float pad = 0.8f;
         float il = left + pad;
@@ -118,21 +154,26 @@ public class BossArenaLock : MonoBehaviour
         float ib = bottom + pad;
         float it = top - pad;
 
-        var markers = FindObjectsOfType<LastWaveBossMarker>();
-        foreach (var m in markers)
+        foreach (var boss in _bosses)
         {
-            Vector2 pos = m.transform.position;
-            bool outside = pos.x < left || pos.x > right || pos.y < bottom || pos.y > top;
+            if (boss == null) continue;
+            var bossTransform = boss.transform;
+            Vector2 pos = bossTransform.position;
+            bool outside = pos.x < il || pos.x > ir || pos.y < ib || pos.y > it;
             if (!outside) continue;
 
             float x = Mathf.Clamp(pos.x, il, ir);
             float y = Mathf.Clamp(pos.y, ib, it);
-            m.transform.position = new Vector3(x, y, m.transform.position.z);
-
-            WallStuckResolver.ResolveTransform(m.transform);
-
-            GameLog.Info($"[BossArenaLock] Boss '{m.name}' ({pos.x:F1},{pos.y:F1}) → 拉入竞技场 ({x:F1},{y:F1})");
+            Vector2 resolved = WallStuckResolver.Resolve(new Vector2(x, y));
+            bossTransform.position = new Vector3(resolved.x, resolved.y, bossTransform.position.z);
+            if (boss.TryGetComponent<Rigidbody2D>(out var body))
+            {
+                body.position = resolved;
+                body.velocity = Vector2.zero;
+            }
+            GameLog.Info($"[BossArenaLock] Boss '{boss.name}' ({pos.x:F1},{pos.y:F1}) → 拉入竞技场 ({resolved.x:F1},{resolved.y:F1})");
         }
+        Physics2D.SyncTransforms();
     }
 
     /// <summary>确保竞技场不超出地图 Tilemap 的外墙范围。</summary>
@@ -200,10 +241,15 @@ public class BossArenaLock : MonoBehaviour
             sr.size = size;
             sr.tileMode = SpriteTileMode.Continuous;
         }
+        // Directional art is independent of the unchanged physics size and wall lifetime.
+        var visual = wall.GetComponent<BossArenaWallVisual>();
+        if (visual != null) visual.Configure(size);
     }
 
     private void UnlockArena()
     {
+        _bosses.Clear();
+        _prepared = false;
         if (!_locked) return;
         _locked = false;
 

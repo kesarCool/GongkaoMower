@@ -64,9 +64,22 @@ public class WordMonsterShatterRuntime : MonoBehaviour
 
     /// <summary>活跃碎片（集中 Tick，无物理/独立 Update）</summary>
     private readonly List<ActiveFragment> _activeFragments = new List<ActiveFragment>(64);
+    private readonly Stack<FragmentVisual> _inactiveFragments = new Stack<FragmentVisual>(64);
+    private readonly char[] _characterBuffer = new char[1];
+
+    public int ActiveFragmentCount => _activeFragments.Count;
+    public int PooledFragmentCount => _inactiveFragments.Count;
+    public int PendingFragmentCount => _pending.Count;
+
+    private sealed class FragmentVisual
+    {
+        public GameObject go;
+        public TextMeshPro text;
+    }
 
     private struct ActiveFragment
     {
+        public FragmentVisual visual;
         public GameObject go;
         public Transform tr;
         public Vector2 velocity;
@@ -91,8 +104,6 @@ public class WordMonsterShatterRuntime : MonoBehaviour
         public Color color;
         public bool enableVertexGradient;
         public VertexGradient colorGradient;
-        public float outlineWidth;
-        public Color outlineColor;
         public int sortingOrder;
         public bool isBoss;
         public float lifeMul;
@@ -124,6 +135,11 @@ public class WordMonsterShatterRuntime : MonoBehaviour
             if (f.go != null) Destroy(f.go);
         }
         _activeFragments.Clear();
+        while (_inactiveFragments.Count > 0)
+        {
+            var visual = _inactiveFragments.Pop();
+            if (visual.go != null) Destroy(visual.go);
+        }
         _pending.Clear();
         s_globalActiveFragments = 0;
         _spawnFailCount = 0;
@@ -224,8 +240,6 @@ public class WordMonsterShatterRuntime : MonoBehaviour
                 color = src.color,
                 enableVertexGradient = src.enableVertexGradient,
                 colorGradient = src.colorGradient,
-                outlineWidth = src.outlineWidth,
-                outlineColor = src.outlineColor,
                 sortingOrder = src.sortingOrder + 2,
                 isBoss = isBoss,
                 lifeMul = isBoss ? bossLifetimeMul : 1f,
@@ -254,22 +268,32 @@ public class WordMonsterShatterRuntime : MonoBehaviour
             return;
         }
 
-        var go = new GameObject($"ShatterChar_{p.character}");
+        FragmentVisual visual = null;
+        while (_inactiveFragments.Count > 0 && (visual == null || visual.go == null))
+            visual = _inactiveFragments.Pop();
+        if (visual == null || visual.go == null)
+        {
+            var created = new GameObject("ShatterChar");
+            visual = new FragmentVisual { go = created, text = created.AddComponent<TextMeshPro>() };
+            visual.text.alignment = TextAlignmentOptions.Center;
+        }
+        var go = visual.go;
         go.transform.SetPositionAndRotation(p.worldPos, p.worldRot);
 
-        var tmp = go.AddComponent<TextMeshPro>();
+        var tmp = visual.text;
         tmp.font = p.font;
         tmp.fontSharedMaterial = p.fontSharedMaterial;
         tmp.fontSize = p.fontSize;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.text = p.character.ToString();
+        _characterBuffer[0] = p.character;
+        tmp.SetCharArray(_characterBuffer, 0, 1);
         tmp.color = p.color;
         tmp.enableVertexGradient = p.enableVertexGradient;
         if (p.enableVertexGradient)
             tmp.colorGradient = p.colorGradient;
-        tmp.outlineWidth = p.outlineWidth;
-        tmp.outlineColor = p.outlineColor;
+        // Outline values already belong to the source material. TMP's per-text
+        // outline setters clone that material, breaking sharing for every shard.
         tmp.sortingOrder = p.sortingOrder;
+        go.SetActive(true);
         tmp.ForceMeshUpdate(true);
 
         // 纯 Transform 运动，无 Rigidbody2D / 无物理 / 无独立 Update
@@ -285,6 +309,7 @@ public class WordMonsterShatterRuntime : MonoBehaviour
 
         _activeFragments.Add(new ActiveFragment
         {
+            visual = visual,
             go = go,
             tr = go.transform,
             velocity = dir * imp,
@@ -321,7 +346,14 @@ public class WordMonsterShatterRuntime : MonoBehaviour
     {
         int last = _activeFragments.Count - 1;
         var f = _activeFragments[index];
-        if (f.go != null) Destroy(f.go);
+        if (f.go != null)
+        {
+            f.go.SetActive(false);
+            if (_inactiveFragments.Count < Mathf.Max(0, maxActiveFragments))
+                _inactiveFragments.Push(f.visual);
+            else
+                Destroy(f.go);
+        }
         if (index < last) _activeFragments[index] = _activeFragments[last];
         _activeFragments.RemoveAt(last);
         s_globalActiveFragments = Mathf.Max(0, s_globalActiveFragments - 1);

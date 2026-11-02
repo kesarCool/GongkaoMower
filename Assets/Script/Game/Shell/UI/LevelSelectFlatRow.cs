@@ -14,8 +14,10 @@ public struct LevelSelectFlatRow
     public int chapterId;
     /// <summary>关卡 ID；仅 <see cref="LevelSelectRowKind.Level"/> 有意义。</summary>
     public int levelId;
-    /// <summary>配表 <c>ChapterLevel.mapName</c>；章节行可作副标题，关卡行作主显示。</summary>
+    /// <summary>配表 <c>ChapterLevel.mapName</c>，大章名称。</summary>
     public string mapName;
+    /// <summary>配表 <c>ChapterLevel.stageName</c>，具体关卡名称。</summary>
+    public string stageName;
     /// <summary>配表行主键，便于调试或跳转。</summary>
     public int tableRowId;
     /// <summary>全列表中关卡行的序号（从 1 起）；仅 <see cref="LevelSelectRowKind.Level"/> 有效，章节头为 0。</summary>

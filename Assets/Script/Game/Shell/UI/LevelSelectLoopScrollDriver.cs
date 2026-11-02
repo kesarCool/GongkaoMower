@@ -13,6 +13,7 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
 {
     [SerializeField] private GameObject chapterHeaderPrefab;
     [SerializeField] private GameObject levelRowPrefab;
+    [SerializeField] private GameObject themedCellPrefab;
 
     private readonly Stack<Transform> _poolChapter = new Stack<Transform>();
     private readonly Stack<Transform> _poolLevel = new Stack<Transform>();
@@ -79,19 +80,21 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
         // 弹窗关闭再打开：Loop 不会在 OnDisable 里收齐 cell；先绑好 Source 再 ClearCells，把 Content 上残留全部退回池并归零内部索引。
         _loop.prefabSource = this;
         _loop.dataSource = this;
+        _loop.StopAllCoroutines();
         _loop.StopMovement();
         if (Application.isPlaying)
             _loop.ClearCells();
 
         _loop.totalCount = _rows.Count;
-        _loop.RefillCells();
-
-        // 定位到当前进度关卡
+        // Fill at the current stage before the opening animation reveals the list.
+        // Keep one preceding row for context; do not scroll through earlier chapters.
         int currentIdx = FindCurrentLevelIndex();
-        if (currentIdx >= 0)
-            _loop.ScrollToCell(currentIdx, 300f);
-        else
-            _loop.verticalNormalizedPosition = 1f;
+        _loop.RefillCells(Mathf.Max(0, currentIdx - 1));
+        // Near the end, anchor from the bottom immediately instead of allowing
+        // the loop's next LateUpdate to clamp a partially filled final viewport.
+        float lastOffset;
+        if (_rows.Count > 0 && _loop.GetLastItem(out lastOffset) == _rows.Count - 1)
+            _loop.RefillCellsFromEnd();
     }
 
     public GameObject GetObject(int index)
@@ -100,6 +103,8 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
             return null;
 
         var kind = _rows[index].Kind;
+        if (themedCellPrefab != null)
+            return SpawnOrPop(themedCellPrefab, _poolLevel);
         if (kind == LevelSelectRowKind.ChapterHeader)
             return SpawnOrPop(chapterHeaderPrefab, _poolChapter);
         return SpawnOrPop(levelRowPrefab, _poolLevel);
@@ -134,6 +139,12 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
         trans.gameObject.SetActive(false);
         trans.SetParent(EnsureCellPoolRoot(), false);
 
+        if (trans.GetComponent<LevelSelectThemeCell>() != null)
+        {
+            _poolLevel.Push(trans);
+            return;
+        }
+
         var header = trans.GetComponent<LevelSelectChapterHeaderCell>();
         if (header != null)
         {
@@ -151,6 +162,12 @@ public class LevelSelectLoopScrollDriver : MonoBehaviour, LoopScrollPrefabSource
             return;
 
         var row = _rows[idx];
+        var themed = transform.GetComponent<LevelSelectThemeCell>();
+        if (themed != null)
+        {
+            themed.Bind(row);
+            return;
+        }
         var header = transform.GetComponent<LevelSelectChapterHeaderCell>();
         if (header != null)
         {

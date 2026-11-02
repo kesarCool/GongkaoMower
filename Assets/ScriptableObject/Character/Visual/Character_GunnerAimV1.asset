@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c69164575a8791f4c89b1f987f851cfc, type: 3}
+  m_Name: Character_GunnerAimV1
+  m_EditorClassIdentifier: 
+  right: {fileID: -405594995543512187, guid: 8a4418c14c8c8c64e9cd83baa9f68c57, type: 3}
+  upRight: {fileID: 2747038456344370414, guid: 8a4418c14c8c8c64e9cd83baa9f68c57, type: 3}
+  up: {fileID: -5837907736414421214, guid: 8a4418c14c8c8c64e9cd83baa9f68c57, type: 3}
+  downRight: {fileID: 1537472915954540870, guid: 8a4418c14c8c8c64e9cd83baa9f68c57, type: 3}
+  down: {fileID: -3030277636503931898, guid: 8a4418c14c8c8c64e9cd83baa9f68c57, type: 3}
+  directionHysteresis: 6

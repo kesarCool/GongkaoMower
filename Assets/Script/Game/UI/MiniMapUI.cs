@@ -32,6 +32,7 @@ public class MiniMapUI : MonoBehaviour
 
     [Header("目标")]
     [SerializeField] private Transform player;
+    [SerializeField] private bool usePrefabLayout;
 
     private RenderTexture _rt;
     private RectTransform _mapRt;
@@ -51,13 +52,14 @@ public class MiniMapUI : MonoBehaviour
 
         FindTilemap();
 
-        // 如果面板已存在，删掉重建（适配 Inspector 改过 panelSize / mapResolution）
-        var oldPanel = transform.Find("MiniMap");
-        if (oldPanel != null) Destroy(oldPanel.gameObject);
-        if (_rt != null) { _rt.Release(); Destroy(_rt); _rt = null; }
-        if (mapImage != null) mapImage = null;
-
-        BuildUI();
+        if (!usePrefabLayout || mapImage == null || playerDot == null)
+        {
+            var oldPanel = transform.Find("MiniMap");
+            if (oldPanel != null) Destroy(oldPanel.gameObject);
+            if (_rt != null) { _rt.Release(); Destroy(_rt); _rt = null; }
+            mapImage = null;
+            BuildUI();
+        }
         _mapRt = mapImage != null ? mapImage.rectTransform : null;
         SetupCamera();
     }
@@ -174,7 +176,7 @@ public class MiniMapUI : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (playerDot == null || _mapRt == null || _tilemap == null || player == null)
+        if (playerDot == null || _mapRt == null || _tilemap == null || player == null || _mapWorldSize.x <= 0 || _mapWorldSize.y <= 0)
             return;
 
         // 更新玩家红点位置

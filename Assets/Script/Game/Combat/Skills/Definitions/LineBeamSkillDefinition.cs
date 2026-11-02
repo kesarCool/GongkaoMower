@@ -33,9 +33,19 @@ public class LineBeamSkillDefinition : SkillDefinitionBase
         return beamCountByLevel[Mathf.Clamp(level, 1, beamCountByLevel.Length) - 1];
     }
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        return $"伤害{DamageAt(level):0.#},间隔{IntervalAt(level):0.##}s,随机散射射线x{BeamCountAt(level)}";
+        var stats = new System.Collections.Generic.List<SkillDescriptionStat> {
+            SkillDescriptionStat.Damage("射线伤害", DamageAt(level)),
+            SkillDescriptionStat.AttackInterval(IntervalAt(level)),
+            SkillDescriptionStat.Count("射线数量", BeamCountAt(level), "道")
+        };
+        if (level >= maxLevel && maxLevelVariantInterval > 0)
+        {
+            stats.Add(SkillDescriptionStat.Count("变体触发间隔", maxLevelVariantInterval, "次攻击"));
+            stats.Add(SkillDescriptionStat.Count("变体射线", variantBeamCount, "道"));
+        }
+        return stats.ToArray();
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

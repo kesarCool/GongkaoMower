@@ -13,6 +13,17 @@ public class SkillLightningStrike : SkillBase
     public float strikeStagger = 0.18f;
     public float maxRange = 14f;
     public GameObject strikeFxPrefab;
+    public GameObject breakthroughFxPrefab;
+    public int skillMaxLevel = 5;
+
+    private int _legendStage;
+    public bool IsBreakthroughVisual => Level >= skillMaxLevel || _legendStage >= 2;
+    public GameObject SelectedStrikeFxPrefab => IsBreakthroughVisual && breakthroughFxPrefab != null ? breakthroughFxPrefab : strikeFxPrefab;
+
+    public override void ApplyLegendBreakthrough(int stage)
+    {
+        _legendStage = Mathf.Max(0, stage);
+    }
 
     private float _cooldownTimer;
     private int _strikesRemaining;
@@ -92,10 +103,11 @@ public class SkillLightningStrike : SkillBase
             return;
 
         Vector2 center = target.position;
-        var fxPos = new Vector3(center.x, center.y, -0.1f);
-        CombatVfxSpawner.TryPlayPooled(strikeFxPrefab, fxPos, Quaternion.identity);
+        Vector2 visualCenter = CombatHitPlacement.Center(target);
+        var fxPos = new Vector3(visualCenter.x, visualCenter.y, -0.1f);
+        CombatVfxSpawner.TryPlayPooled(SelectedStrikeFxPrefab, fxPos, Quaternion.identity, strikeRadius);
         ApplyStrikeDamage(center);
-        PublishSkillCast(fxPos);
+        PublishSkillCast(new Vector3(center.x, center.y, -0.1f));
     }
 
     private void ApplyStrikeDamage(Vector2 center)

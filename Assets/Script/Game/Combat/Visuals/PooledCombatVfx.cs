@@ -11,15 +11,64 @@ public class PooledCombatVfx : MonoBehaviour, IPoolReceiver
     [Tooltip("0 = 按粒子 main.duration + startLifetime 估算")]
     [SerializeField] private float lifetimeOverride;
     [SerializeField] private int sortingOrder = 100;
+    [Tooltip("0 = 不按范围缩放；大于 0 表示 Prefab 原尺寸对应的伤害半径")]
+    [Min(0f)] [SerializeField] private float referenceRadius;
 
     private Coroutine _releaseRoutine;
+    private Vector3 _authoredScale;
+    private bool _scaleCaptured;
+    private EnemyWordLabel _hitTarget;
+    private EnemyBase _hitEnemy;
+    private Transform _hitAnchor;
+    private Vector3 _hitLocalPoint;
+    private int _hitAnchorVersion;
+
+    public void FollowHitAnchor(EnemyWordLabel target, Transform anchor, Vector3 localPoint)
+    {
+        _hitTarget = target;
+        _hitEnemy = target != null ? target.GetComponentInParent<EnemyBase>() : null;
+        _hitAnchor = anchor;
+        _hitLocalPoint = localPoint;
+        _hitAnchorVersion = target != null ? target.HitAnchorVersion : 0;
+    }
+
+    private void LateUpdate()
+    {
+        if (_hitAnchor == null) return;
+        // A dead or recycled enemy must not carry its old hit stamp to the next spawn.
+        if (_hitTarget == null || !_hitTarget.isActiveAndEnabled || _hitTarget.HitAnchorVersion != _hitAnchorVersion || (_hitEnemy != null && _hitEnemy.Hp <= 0f))
+        {
+            FollowHitAnchor(null, null, Vector3.zero);
+            return;
+        }
+        if (Time.timeScale == 0f) return;
+        Vector3 point = _hitAnchor.TransformPoint(_hitLocalPoint);
+        point.z = transform.position.z;
+        transform.position = point;
+    }
 
     public void Play()
+    {
+        Play(0f);
+    }
+
+    public void Play(float effectRadius)
     {
         if (_releaseRoutine != null)
         {
             StopCoroutine(_releaseRoutine);
             _releaseRoutine = null;
+        }
+
+        if (referenceRadius > 0f)
+        {
+            if (!_scaleCaptured)
+            {
+                _authoredScale = transform.localScale;
+                _scaleCaptured = true;
+            }
+            float scale = effectRadius > 0f ? effectRadius / referenceRadius : 1f;
+            transform.localScale = _authoredScale * scale;
         }
 
         ApplyRenderSettings();
@@ -32,6 +81,7 @@ public class PooledCombatVfx : MonoBehaviour, IPoolReceiver
 
     public void OnPoolGet()
     {
+        FollowHitAnchor(null, null, Vector3.zero);
         if (_releaseRoutine != null)
         {
             StopCoroutine(_releaseRoutine);
@@ -41,6 +91,7 @@ public class PooledCombatVfx : MonoBehaviour, IPoolReceiver
 
     public void OnPoolRelease()
     {
+        FollowHitAnchor(null, null, Vector3.zero);
         if (_releaseRoutine != null)
         {
             StopCoroutine(_releaseRoutine);
@@ -48,6 +99,7 @@ public class PooledCombatVfx : MonoBehaviour, IPoolReceiver
         }
 
         StopParticles(true);
+        if (_scaleCaptured) transform.localScale = _authoredScale;
     }
 
     private IEnumerator ReleaseAfter(float seconds)

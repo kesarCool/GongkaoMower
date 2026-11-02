@@ -30,6 +30,20 @@ public class AchievementCell : MonoBehaviour
     [SerializeField] private Button btnClaim;          // 可领取时显示
     [SerializeField] private GameObject objClaimed;    // 已领取 ✓ 标记
     [SerializeField] private GameObject objNotAchieved; // 未达成标签
+    [Header("Home theme (optional)")]
+    [SerializeField] private bool homeTheme;
+    [SerializeField] private Sprite normalCard,claimableCard,claimedCard,greenProgress,goldProgress,themeGem,themeGold;
+    [SerializeField] private TMPro.TMP_Text sectionTitle,rewardCountText;
+    [SerializeField] private RectTransform cardBody;
+    public void SetSectionHeader(bool visible,string title)
+    {
+        if(!homeTheme)return;
+        sectionTitle.gameObject.SetActive(visible);sectionTitle.text=title;
+        float top=visible?59:0;
+        float height=156+Mathf.Max(0,Mathf.Ceil(textDescription.preferredHeight-54));
+        cardBody.anchoredPosition=new Vector2(0,-top);cardBody.sizeDelta=new Vector2(972,height);
+        GetComponent<LayoutElement>().preferredHeight=top+height;
+    }
 
     private int _groupId;
     private int _stage;
@@ -48,7 +62,10 @@ public class AchievementCell : MonoBehaviour
 
         // 背景色
         if (bgImage != null)
-            bgImage.color = claimed ? colorClaimed : colorNormal;
+        {
+            bgImage.color = homeTheme?Color.white:claimed ? colorClaimed : colorNormal;
+            if(homeTheme)bgImage.sprite=claimed?claimedCard:canClaim?claimableCard:normalCard;
+        }
 
         // 描述
         if (textDescription != null)
@@ -57,6 +74,7 @@ public class AchievementCell : MonoBehaviour
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(textDescription);
             textDescription.gameObject.SetActive(true);
+            if(homeTheme){textDescription.color=claimed?new Color32(141,122,93,255):new Color32(73,54,39,255);textDescription.fontStyle=claimed?TMPro.FontStyles.Normal:TMPro.FontStyles.Bold;}
         }
 
         // 进度文本 & 进度条
@@ -81,6 +99,7 @@ public class AchievementCell : MonoBehaviour
                     ? (float)current / stageInfo.targetValue
                     : 0f;
                 progressFill.gameObject.SetActive(true);
+                if(homeTheme)progressFill.sprite=claimed||canClaim?goldProgress:greenProgress;
             }
         }
 
@@ -182,6 +201,12 @@ public class AchievementCell : MonoBehaviour
             icon = Resources.Load<Sprite>("UI/Items/icon_diamond");
         if (string.IsNullOrEmpty(itemName))
             itemName = "钻石";
+        if(homeTheme)
+        {
+            if(itemName.Contains("钻石"))icon=themeGem;
+            else if(itemName.Contains("金币"))icon=themeGold;
+            rewardCountText.text="×"+rewardCount;
+        }
 
         rewardItemCell.Bind(icon, itemName, rewardCount, grade);
     }

@@ -14,6 +14,7 @@ public class ItemTooltip : MonoBehaviour
     [SerializeField] private TextMeshProUGUI descText;
     [SerializeField] private Button dismissMask;
     [SerializeField] private RectTransform contentPanel;
+    [SerializeField] private ScrollRect descriptionScroll;
 
     [Header("尺寸限制")]
     [SerializeField] private float minWidth = 280f;
@@ -74,6 +75,27 @@ public class ItemTooltip : MonoBehaviour
 
         if (contentPanel == null) return;
 
+        if (descriptionScroll != null)
+        {
+            var root = (RectTransform)transform;
+            float widthLimit = Mathf.Max(120, Mathf.Min(maxWidth, root.rect.width - 64));
+            float panelWidth = Mathf.Clamp(Mathf.Max(nameText.preferredWidth, descText.GetPreferredValues(description ?? "", widthLimit - 80, 0).x) + 80,
+                Mathf.Min(minWidth, widthLimit), widthLimit);
+            float nameHeight = Mathf.Max(52, nameText.GetPreferredValues(itemName ?? "", panelWidth - 80, 0).y);
+            float descHeight = descText.GetPreferredValues(description ?? "", panelWidth - 80, 0).y + 12;
+            float headerHeight = nameHeight + 64;
+            float panelHeight = Mathf.Min(headerHeight + descHeight + 38, Mathf.Min(maxHeight, root.rect.height - 80));
+            contentPanel.sizeDelta = new Vector2(panelWidth, Mathf.Max(headerHeight + 72, panelHeight));
+            nameText.rectTransform.sizeDelta = new Vector2(panelWidth - 80, nameHeight);
+            var view = (RectTransform)descriptionScroll.transform;
+            view.offsetMax = new Vector2(-40, -headerHeight);
+            descriptionScroll.content.sizeDelta = new Vector2(0, descHeight);
+            Canvas.ForceUpdateCanvases();
+            descriptionScroll.verticalNormalizedPosition = 1;
+            PositionNear(anchorRect);
+            return;
+        }
+
         // 1. 计算合适宽度：取 name/desc 中较长者，限制在 [minWidth, maxWidth]
         float nameW = nameText != null ? nameText.GetPreferredValues(itemName ?? "", maxWidth, 0).x : 0f;
         float descW = descText != null ? descText.GetPreferredValues(description ?? "", maxWidth, 0).x : 0f;
@@ -106,9 +128,11 @@ public class ItemTooltip : MonoBehaviour
             return;
         }
 
-        Vector3 anchorWorld = anchorRect.position;
+        var canvas = GetComponentInParent<Canvas>();
+        var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+        Vector2 anchorWorld = RectTransformUtility.WorldToScreenPoint(camera, anchorRect.position);
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            (RectTransform)transform, anchorWorld, null, out Vector2 anchorLocal);
+            (RectTransform)transform, anchorWorld, camera, out Vector2 anchorLocal);
 
         Vector2 panelSize = contentPanel.sizeDelta;
         // pivot 默认 (0.5, 0.5) → 半个尺寸即是边界

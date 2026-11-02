@@ -46,7 +46,7 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
-        if (_brain != null && _brain.IsBusy)
+        if (_brain != null && (_brain.IsBusy || _brain.IsReviving))
             return;
 
         // 帧级卡墙推出：若因碰撞挤压等原因嵌入墙壁，逐步推出

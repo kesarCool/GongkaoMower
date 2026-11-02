@@ -100,6 +100,13 @@ public class DynamicJoystick : MonoBehaviour
 
     private void Update()
     {
+        if (TutorialDirector.BlocksGameplayInput)
+        {
+            if (_isTouching) EndTouch();
+            if (_joystickRoot != null && _joystickRoot.gameObject.activeSelf) HideJoystickImmediate();
+            if (playerRigidbody != null) playerRigidbody.velocity = Vector2.zero;
+            return;
+        }
         if (playerRigidbody == null)
             TryFindPlayerRigidbody();
 
@@ -114,6 +121,7 @@ public class DynamicJoystick : MonoBehaviour
     /// </summary>
     public void OnTouchDown(Vector2 screenPos)
     {
+        if (TutorialDirector.BlocksGameplayPointer(screenPos)) return;
         if (debugLogs)
             GameLog.Info($"[DynamicJoystick] OnTouchDown pos={screenPos} self={name} joystickRoot={(_joystickRoot == null ? "null" : _joystickRoot.name)} active={( _joystickRoot != null && _joystickRoot.gameObject.activeSelf)}");
         BeginTouchSynthetic(screenPos);
@@ -351,6 +359,7 @@ public class DynamicJoystick : MonoBehaviour
 
     private void BeginTouch(Touch t)
     {
+        if (TutorialDirector.BlocksGameplayPointer(t.position)) return;
         _isTouching = true;
         _fingerId = t.fingerId;
         _startScreenPos = t.position;
@@ -440,6 +449,12 @@ public class DynamicJoystick : MonoBehaviour
     private void ApplyMovement()
     {
         if (playerRigidbody == null) return;
+        if (_playerController == null) _playerController = playerRigidbody.GetComponent<PlayerController>();
+        if (_playerController != null && _playerController.IsArenaEntryLocked)
+        {
+            playerRigidbody.velocity = Vector2.zero;
+            return;
+        }
 
         if (_isTouching && _currentInput.sqrMagnitude > 0.0001f)
         {

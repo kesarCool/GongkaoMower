@@ -9,6 +9,9 @@ using UnityEngine.SceneManagement;
 [DisallowMultipleComponent]
 public class AppBootstrap : MonoBehaviour
 {
+    public const int TargetFrameRate = 30;
+    public const int EditorTargetFrameRate = 60;
+    public const string PerformanceRevision = "ios-login-entry-20261028-r2";
     [Tooltip("Boot 启动后异步加载的场景名（须已在 Build Settings 中）；留空则仅驻留 AppRoot，由其它逻辑切场景。")]
     [SerializeField] private string loadSceneOnStart = "Login";
 
@@ -20,15 +23,19 @@ public class AppBootstrap : MonoBehaviour
 
         DontDestroyOnLoad(root.gameObject);
 
-        // 全局性能设置
-        //   Editor/Standalone: vSync=1 + targetFrameRate=30
-        //   WebGL/微信小游戏: vSyncCount/targetFrameRate 在微信环境均无效，
-        //     帧率由 WX.SetPreferredFramesPerSecond 通过 .jslib 桥直接调 wx API
-        QualitySettings.vSyncCount = 1;
-#if !UNITY_WEBGL || UNITY_EDITOR
-        Application.targetFrameRate = 30;
-#else
-        WeChatWASM.WX.SetPreferredFramesPerSecond(30);
+        // The WeChat converter maps Unity's loop timing to wx frame scheduling.
+        // Keep Unity's target authoritative so loop setup/resume cannot restore
+        // an unrelated 60 FPS target after a one-off wx API call.
+        ApplyFrameRateSettings();
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // Establish the SDK receiver once before features register native callbacks.
+        WeChatWASM.WX.InitSDK(code =>
+        {
+            if (code == 200)
+                ApplyFrameRateSettings();
+            else
+                Debug.LogWarning($"[WeChatSDK] Initialization failed: {code}");
+        });
 #endif
 
         Time.fixedDeltaTime = 1f / 30f;
@@ -38,5 +45,28 @@ public class AppBootstrap : MonoBehaviour
 
         if (!string.IsNullOrWhiteSpace(loadSceneOnStart))
             SceneManager.LoadSceneAsync(loadSceneOnStart, LoadSceneMode.Single);
+    }
+
+    public static void ApplyFrameRateSettings()
+    {
+        QualitySettings.vSyncCount = 0;
+        // Unity owns the requested rate. The exported scheduler separately
+        // preserves its logical timing value across platform pause/resume.
+#if UNITY_EDITOR
+        // Local preview is independent of the player's mobile CPU budget.
+        Application.targetFrameRate = EditorTargetFrameRate;
+#else
+        Application.targetFrameRate = TargetFrameRate;
+#endif
+    }
+
+    private void OnApplicationFocus(bool focused)
+    {
+        if (focused) ApplyFrameRateSettings();
+    }
+
+    private void OnApplicationPause(bool paused)
+    {
+        if (!paused) ApplyFrameRateSettings();
     }
 }

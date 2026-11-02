@@ -17,10 +17,30 @@ public class PassiveSkillDefinition : SkillDefinitionBase
     public float BonusAt(int level) =>
         bonusByLevel[Mathf.Clamp(level, 1, bonusByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    private bool IsPercentageBonus => id == SkillId.PassiveRegen || modType == PassiveModType.Multiplicative ||
+        id == SkillId.PassiveCritRate || id == SkillId.PassiveArmorPen;
+
+    public string FormatBonusAt(int level) => SkillDescriptionStat.Bonus("", BonusAt(level), IsPercentageBonus,
+        modType != PassiveModType.Absolute || id == SkillId.PassiveRegen).FormatValue();
+
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        float b = BonusAt(level);
-        return $"+{b * 100f:F0}%";
+        string label;
+        switch (id)
+        {
+            case SkillId.PassiveMaxHp: label = "血量上限"; break;
+            case SkillId.PassiveAttack: label = "攻击加成"; break;
+            case SkillId.PassiveMoveSpeed: label = "移速加成"; break;
+            case SkillId.PassiveDefense: label = "防御加成"; break;
+            case SkillId.PassiveCritRate: label = "暴击率加成"; break;
+            case SkillId.PassiveArmorPen: label = "破防率加成"; break;
+            case SkillId.PassiveRegen: label = "每秒回复"; break;
+            case SkillId.PassiveAttackRange: label = "范围加成"; break;
+            default: label = "属性加成"; break;
+        }
+        return new[] { SkillDescriptionStat.Bonus(label, BonusAt(level), IsPercentageBonus,
+            modType != PassiveModType.Absolute || id == SkillId.PassiveRegen,
+            id == SkillId.PassiveRegen ? "最大血量" : "") };
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)

@@ -24,13 +24,16 @@ public class PlayerSkills : MonoBehaviour
     public string enemyTag = "monster";
 
     [Header("技能表现：射线")]
+    [Tooltip("使用共享网格的分层光束、凝气与命中反馈；关闭可回看旧射线表现。")]
+    public bool enhancedBeamVisuals = true;
+
     [Tooltip("射线可视化线段宽度（世界单位）")]
     public float beamVisualWidth = 0.08f;
 
-    [Tooltip("射线 LineRenderer 的 Sorting Order（确保在角色/地面之上）")]
+    [Tooltip("射线表现的 Sorting Order（确保在角色/地面之上）")]
     public int beamSortingOrder = 200;
 
-    [Tooltip("射线可视化持续时间（秒）。建议略小于 SkillDef 间隔，避免线段常亮。")]
+    [Tooltip("旧射线显示时长（秒）；增强表现按其 3 倍收束，并限制在 0.20~0.30 秒。")]
     [Range(0.02f, 0.5f)]
     public float beamVisualDuration = 0.08f;
 
@@ -106,6 +109,7 @@ public class PlayerSkills : MonoBehaviour
     private PlayerController _pc;
     private SkillLineBeam2D _lineBeamSkill;
     private LineRenderer[] _beamLines;
+    private LineBeamPresentation _beamPresentation;
 
     private const int MaxLineBeamVisuals = 8;
 
@@ -141,6 +145,7 @@ public class PlayerSkills : MonoBehaviour
 
     private void Update()
     {
+        if (_pc != null && _pc.IsArenaEntryLocked) return;
         float dt = Time.deltaTime;
         for (int i = 0; i < _skills.Count; i++)
             _skills[i].Tick(dt);
@@ -235,6 +240,25 @@ public class PlayerSkills : MonoBehaviour
     private void EnsureBeamVisual(SkillLineBeam2D skill)
     {
         if (skill == null) return;
+
+        if (enhancedBeamVisuals)
+        {
+            if (_beamLines != null) foreach (var old in _beamLines) if (old != null) old.enabled = false;
+            Transform visualRoot = transform.Find("SkillBeamVisuals");
+            if (visualRoot == null)
+            {
+                var visualObject = new GameObject("SkillBeamVisuals");
+                visualObject.transform.SetParent(transform, false);visualRoot = visualObject.transform;
+            }
+            _beamPresentation = visualRoot.GetComponent<LineBeamPresentation>();
+            if (_beamPresentation == null) _beamPresentation = visualRoot.gameObject.AddComponent<LineBeamPresentation>();
+            _beamPresentation.enabled = true;
+            _beamPresentation.Configure(beamVisualWidth, beamSortingOrder, beamVisualDuration);
+            skill.SetBeamLines(null);skill.SetPresentation(_beamPresentation);
+            return;
+        }
+        if (_beamPresentation != null) { _beamPresentation.Cancel(); _beamPresentation.enabled = false; }
+        skill.SetPresentation(null);
 
         if (_beamLines == null || _beamLines.Length < MaxLineBeamVisuals)
         {

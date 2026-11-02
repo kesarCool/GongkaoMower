@@ -19,12 +19,7 @@ MonoBehaviour:
   displayName: "\u81F4\u547D\u4E00\u51FB"
   description: "\u66B4\u51FB\u7387\u63D0\u5347\uFF0C\u66F4\u9AD8\u51E0\u7387\u6253\u51FA\u66B4\u51FB\u4F24\u5BB3\u3002"
   icon: {fileID: 21300000, guid: 8cd0168400af460478853e29071431fd, type: 3}
-  levelDescriptions:
-  - "\u66B4\u51FB\u7387 +5%"
-  - "\u66B4\u51FB\u7387 +7%"
-  - "\u66B4\u51FB\u7387 +9%"
-  - "\u66B4\u51FB\u7387 +11%"
-  - "\u66B4\u51FB\u7387 +13%"
+  levelDescriptions: []
   modType: 0
   bonusByLevel:
   - 0.05

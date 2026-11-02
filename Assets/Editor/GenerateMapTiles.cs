@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 public static class GenerateMapTiles
 {
-    private const string OutputDir = "Assets/Res/Map/GeneratedTiles";
+    private const string OutputDir = MapResourcePaths.Common + "/GeneratedTiles";
     private const int Size = 32;
 
     [MenuItem("Tools/生成地图瓦片纹理", false, 201)]

@@ -206,6 +206,7 @@ MonoBehaviour:
   startingSkill: 6
   disableLegacyAutoShoot: 1
   enemyTag: monster
+  enhancedBeamVisuals: 1
   beamVisualWidth: 0.08
   beamSortingOrder: 200
   beamVisualDuration: 0.08
@@ -351,6 +352,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 8105927056559153167}
     m_Modifications:
+    - target: {fileID: 38905712491479094, guid: aa77ab70357dec645970961c2713c938, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 38905712491479094, guid: aa77ab70357dec645970961c2713c938, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.185
+      objectReference: {fileID: 0}
     - target: {fileID: 1705557793599710532, guid: aa77ab70357dec645970961c2713c938, type: 3}
       propertyPath: m_RootOrder
       value: 1

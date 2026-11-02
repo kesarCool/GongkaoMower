@@ -27,6 +27,10 @@ public class CharacterSelectionElement : MonoBehaviour
     [Header("红点")]
     [Tooltip("红点根节点（纯红点无数字），有可解锁/可升级/可升阶时显示。")]
     [SerializeField] private GameObject badgeRoot;
+    [Header("Home presentation (optional)")]
+    [SerializeField] private TextMeshProUGUI conditionText;
+    [SerializeField] private Sprite normalCard, selectedCard, lockedCard, pressedCard, selectedPressedCard;
+    private bool _unlocked;
 
     public CharacterDefinition CharacterDef { get; private set; }
     public int Index { get; private set; }
@@ -92,6 +96,17 @@ public class CharacterSelectionElement : MonoBehaviour
 
         // 锁定状态
         bool unlocked = CharacterUnlockEvaluator.IsUnlocked(def);
+        _unlocked = unlocked;
+        if (conditionText != null)
+        {
+            conditionText.gameObject.SetActive(!unlocked);
+            conditionText.text = def.unlockLevelId > 0
+                ? $"通关{def.unlockLevelId / 100}-{def.unlockLevelId % 100}"
+                : def.unlockFragmentCount > 0
+                    ? $"{CharacterUnlockEvaluator.GetFragmentCount(PlayerProfileService.Instance.Data, def.characterId, def.fragmentItemId)} / {def.unlockFragmentCount}"
+                    : "暂未开放";
+        }
+        if (normalCard != null && avatarImage != null) avatarImage.color = new Color(1,1,1,unlocked ? 1 : .38f);
 
         if (lockedOverlay != null)
         {
@@ -160,12 +175,26 @@ public class CharacterSelectionElement : MonoBehaviour
     public void SetSelected(bool selected)
     {
         if (highlightBorder != null)
+        {
+            if (normalCard != null)
+            {
+                highlightBorder.color = Color.white;
+                highlightBorder.sprite = selected ? selectedCard : _unlocked ? normalCard : lockedCard;
+                if (clickButton != null)
+                {
+                    var state = clickButton.spriteState;
+                    state.pressedSprite = selected ? selectedPressedCard : pressedCard;
+                    clickButton.spriteState = state;
+                }
+            }
+            else
             highlightBorder.color = selected
                 ? new Color(1f, 0.82f, 0.15f, 1f)
                 : new Color(0.3f, 0.3f, 0.35f, 1f);
+        }
 
         if (selectedCheckmark != null)
-            selectedCheckmark.SetActive(selected);
+            selectedCheckmark.SetActive(normalCard != null ? CharacterDef != null && CharacterDef.characterId == PlayerProfileService.Instance.EquippedCharacterId : selected);
     }
 
     private void OnClicked()

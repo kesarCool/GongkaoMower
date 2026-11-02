@@ -20,11 +20,11 @@ MonoBehaviour:
   description: "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u5B50\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
   icon: {fileID: 21300000, guid: 6f6eef89c87fd524caf384a3b74996d2, type: 3}
   levelDescriptions:
-  - "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u8FFD\u8E2A\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
-  - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  - "\u5B50\u5F39\u52A01\uFF0C\u4F24\u5BB3\u51CF5%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  - "\u4F24\u5BB3\u52A010%\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
-  - "\u5B50\u5F39\u52A01\uFF0C\u653B\u51FB\u95F4\u9694\u51CF5%"
+  - "\u8FFD\u8E2A\u9501\u5B9A\u6700\u8FD1\u654C\u4EBA\uFF0C\u8FDE\u7EED\u53D1\u5C04\u5B50\u5F39\uFF0C\u5F39\u5F39\u5230\u8089\u3002"
+  - ""
+  - ""
+  - ""
+  - ""
   targetSkillId: 1
   bulletPrefab: {fileID: 685301462951185581, guid: 354c4bf4f77c72f4e85e4bb762fc258b, type: 3}
   bulletSpeed: 10
@@ -50,3 +50,4 @@ MonoBehaviour:
   burstLaunchSpeed: 0
   burstTargetSingleEnemy: 0
   burstTargetSingleRange: 10
+  burstFullScreenPenetration: 0

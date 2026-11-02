@@ -20,7 +20,7 @@ public class LightningStrikeSkillDefinition : SkillDefinitionBase
     public float strikeStagger = 0.18f;
 
     [Header("Visual")]
-    [Tooltip("落雷命中池化特效（须含 PooledCombatVfx；可后续换成雷电 Prefab）")]
+    [Tooltip("普通落雷池化特效；满级/Legend 突破使用 maxLevelPrefab，未配置时回退普通特效。")]
     public GameObject strikeFxPrefab;
 
     public float IntervalAt(int level) => intervalByLevel[Mathf.Clamp(level, 1, intervalByLevel.Length) - 1];
@@ -28,9 +28,14 @@ public class LightningStrikeSkillDefinition : SkillDefinitionBase
     public float StrikeRadiusAt(int level) => strikeRadiusByLevel[Mathf.Clamp(level, 1, strikeRadiusByLevel.Length) - 1];
     public int StrikeCountAt(int level) => strikeCountByLevel[Mathf.Clamp(level, 1, strikeCountByLevel.Length) - 1];
 
-    protected override string GenerateLevelDescription(int level)
+    protected override SkillDescriptionStat[] GetDescriptionStats(int level)
     {
-        return $"伤害 {DamageAt(level):0.#},范围 {StrikeRadiusAt(level):0.##},落雷 ×{StrikeCountAt(level)},间隔 {IntervalAt(level):0.##}s";
+        return new[] {
+            SkillDescriptionStat.Damage("落雷伤害", DamageAt(level)),
+            SkillDescriptionStat.Number("落雷间隔", IntervalAt(level), "秒"),
+            SkillDescriptionStat.Number("落雷半径", StrikeRadiusAt(level), "米"),
+            SkillDescriptionStat.Count("落雷数量", StrikeCountAt(level), "道")
+        };
     }
 
     protected override ISkill CreateRuntimeSkillInternal(SkillRuntimeBindings bindings)
@@ -56,6 +61,8 @@ public class LightningStrikeSkillDefinition : SkillDefinitionBase
 
         level = ClampLevel(level);
         s.strikeFxPrefab = strikeFxPrefab;
+        s.breakthroughFxPrefab = maxLevelPrefab;
+        s.skillMaxLevel = Mathf.Max(1, maxLevel);
         s.ApplyRuntimeStats(
             IntervalAt(level),
             DamageAt(level),

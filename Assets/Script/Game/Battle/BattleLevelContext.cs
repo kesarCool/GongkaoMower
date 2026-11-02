@@ -1,9 +1,5 @@
 using UnityEngine;
 
-#if USE_FB_TABLE
-using ProtoTable;
-#endif
-
 /// <summary>
 /// 局内关卡唯一数据源：读 <see cref="SelectedLevelContext"/>（选关 / 结算下一关写入），
 /// 不再由 SpawnerWaves、RoguelikeCardManager 等各自维护 levelId。
@@ -22,28 +18,10 @@ public static class BattleLevelContext
 
     public static bool HasSelection => SelectedLevelContext.HasSelection;
 
-    /// <summary>如 101 → 「关卡1-1」；有配表 mapName 时追加名称。</summary>
+    /// <summary>使用配表 stageName；未配置时显示关卡编号。</summary>
     public static string GetDisplayText()
     {
-        int id = LevelId;
-        int chapter = id / 100;
-        int stage = id % 100;
-        if (chapter <= 0 || stage <= 0)
-            return $"关卡 {id}";
-
-        string text = $"关卡{chapter}-{stage}";
-
-/*#if USE_FB_TABLE
-        if (ChapterLevelCatalog.TryGetByLevelId(id, out ChapterLevel row) &&
-            row != null &&
-            !string.IsNullOrEmpty(row.mapName))
-        {
-            text = $"{text} {row.mapName}";
-        }
-#endif
-*/
-
-        return text;
+        return ChapterLevelDisplay.FormatLevelName(LevelId);
     }
 
     public static void LogMissingSelectionOnce(string caller)

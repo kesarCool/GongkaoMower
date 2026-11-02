@@ -14,10 +14,13 @@ public class WheelRewardSkillCell : MonoBehaviour
     public TextMeshProUGUI nameText;
     [Tooltip("等级文字（如 Lv.2 → Lv.3）")]
     public TextMeshProUGUI levelText;
+    public Image face;
+    public Sprite activeFace, passiveFace;
 
     public void Bind(WheelSlotData data)
     {
         if (data == null) return;
+        if (face != null) face.sprite = data.isActive ? activeFace : passiveFace;
 
         if (icon != null && data.def != null)
             icon.sprite = data.def.icon;

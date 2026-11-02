@@ -5,31 +5,35 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 首次死亡复活弹窗：10 秒倒计时（Image Fill 1→0）、退出进结算、看广告复活（默认直接成功）。
+/// 首次死亡复活弹窗：倒计时、退出进结算、分享返回复活。请求期间暂停倒计时。
 /// </summary>
 [DisallowMultipleComponent]
 public class GameRevivePanel : UIPanelBase
 {
     [SerializeField] private float countdownSeconds = 10f;
 
-    private Image _countdownFillImage;
-    private TextMeshProUGUI _textTime;
-    private Button _btnRevive;
-    private Button _btnExit;
+    [SerializeField] private Image _countdownFillImage;
+    [SerializeField] private TextMeshProUGUI _textTime;
+    [SerializeField] private Button _btnRevive;
+    [SerializeField] private Button _btnExit;
 
     private GameRevivePanelPayload _payload;
     private Coroutine _countdownRoutine;
     private bool _resolved;
+    private bool _requesting;
+    private int _requestVersion;
+    private float _remainingSeconds;
+    private float _countdownDuration;
 
     private void Awake()
     {
-        _countdownFillImage = transform.Find("Image")?.GetComponent<Image>();
-        _textTime = transform.Find("Image/TextTime")?.GetComponent<TextMeshProUGUI>();
+        if (_countdownFillImage == null) _countdownFillImage = transform.Find("Image")?.GetComponent<Image>();
+        if (_textTime == null) _textTime = transform.Find("Image/TextTime")?.GetComponent<TextMeshProUGUI>();
         if (_textTime == null)
             _textTime = transform.Find("TextTime")?.GetComponent<TextMeshProUGUI>();
 
-        _btnRevive = transform.Find("ButtonRevive")?.GetComponent<Button>();
-        _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
+        if (_btnRevive == null) _btnRevive = transform.Find("ButtonRevive")?.GetComponent<Button>();
+        if (_btnExit == null) _btnExit = transform.Find("ButtonExit")?.GetComponent<Button>();
 
         if (_btnRevive != null) _btnRevive.onClick.AddListener(OnReviveClicked);
         if (_btnExit != null) _btnExit.onClick.AddListener(OnExitClicked);
@@ -39,10 +43,16 @@ public class GameRevivePanel : UIPanelBase
     {
         _payload = payload as GameRevivePanelPayload;
         _resolved = false;
+        _requesting = false;
+        _requestVersion++;
+        GetComponent<BattlePanelPresentation>()?.Present();
 
         float duration = _payload != null && _payload.countdownSeconds > 0f
             ? _payload.countdownSeconds
             : countdownSeconds;
+        _remainingSeconds = _countdownDuration = duration;
+        var reviveText = _btnRevive != null ? _btnRevive.GetComponentInChildren<TextMeshProUGUI>(true) : null;
+        if (reviveText != null) reviveText.text = "分享返回复活";
 
         if (_countdownFillImage != null)
         {
@@ -54,7 +64,7 @@ public class GameRevivePanel : UIPanelBase
 
         if (_countdownRoutine != null)
             StopCoroutine(_countdownRoutine);
-        _countdownRoutine = StartCoroutine(CountdownRoutine(duration));
+        _countdownRoutine = StartCoroutine(CountdownRoutine());
 
         transform.SetAsLastSibling();
     }
@@ -67,23 +77,24 @@ public class GameRevivePanel : UIPanelBase
             _countdownRoutine = null;
         }
 
-        _resolved = false;
+        _resolved = true;
+        _requesting = false;
+        _requestVersion++;
         _payload = null;
     }
 
-    private IEnumerator CountdownRoutine(float duration)
+    private IEnumerator CountdownRoutine()
     {
-        float remaining = duration;
-        while (remaining > 0f && !_resolved)
+        while (_remainingSeconds > 0f && !_resolved)
         {
-            remaining -= UseUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
-            float ratio = duration > 0f ? Mathf.Clamp01(remaining / duration) : 0f;
+            _remainingSeconds -= UseUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            float ratio = _countdownDuration > 0f ? Mathf.Clamp01(_remainingSeconds / _countdownDuration) : 0f;
 
             if (_countdownFillImage != null)
                 _countdownFillImage.fillAmount = ratio;
 
             if (_textTime != null)
-                _textTime.text = Mathf.CeilToInt(Mathf.Max(0f, remaining)).ToString();
+                _textTime.text = Mathf.CeilToInt(Mathf.Max(0f, _remainingSeconds)).ToString();
 
             yield return null;
         }
@@ -96,27 +107,44 @@ public class GameRevivePanel : UIPanelBase
 
     private void OnReviveClicked()
     {
-        if (_resolved) return;
+        if (_resolved || _requesting) return;
         UiClickSound.Play();
-        _resolved = true;
+        _requesting = true;
+        int version = ++_requestVersion;
         StopCountdown();
         SetButtonsInteractable(false);
 
-        UIManager.Instance.ShowToast("广告还在路上，分享先把奖励领走～", 2f);
+        UIManager.Instance?.ShowToast("分享返回后复活，倒计时已暂停", 2f);
 
         IReviveAdProvider provider = _payload?.adProvider ?? WeChatRewardedAdProvider.Instance;
-        provider.RequestReviveAd(success =>
+        var payload = _payload;
+        Action<bool> complete = success =>
         {
+            if (this == null || !_requesting || _resolved || _requestVersion != version || _payload != payload) return;
+            _requesting = false;
             if (success)
-                _payload?.onRevived?.Invoke();
+            {
+                _resolved = true;
+                payload?.onRevived?.Invoke();
+            }
             else
-                _payload?.onGiveUp?.Invoke();
-        });
+            {
+                SetButtonsInteractable(true);
+                _countdownRoutine = StartCoroutine(CountdownRoutine());
+                UIManager.Instance?.ShowToast("未能确认分享返回，可重试或退出", 2f);
+            }
+        };
+        try { provider.RequestReviveAd(complete); }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[Revive] 分享请求异常: " + ex.Message);
+            complete(false);
+        }
     }
 
     private void OnExitClicked()
     {
-        if (_resolved) return;
+        if (_resolved || _requesting) return;
         UiClickSound.PlayClose();
         _resolved = true;
         StopCountdown();

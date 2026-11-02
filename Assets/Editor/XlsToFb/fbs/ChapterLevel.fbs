@@ -9,6 +9,7 @@ table ChapterLevel{
 	unlockChapterId:int32;
 	levelId:int32;
 	mapName:string;
+	stageName:string;
 	mapPath:string;
 	firstClearPoolId:int32;
 	threeStarPoolId:int32;

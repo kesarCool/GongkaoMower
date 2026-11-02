@@ -10,6 +10,7 @@ using UnityEngine;
 public class DamageFloatText : MonoBehaviour, IPoolReceiver
 {
     [SerializeField] private TMP_Text label;
+    [SerializeField] private bool useCartoonTextTheme = true;
 
     [Tooltip("总存活时间（秒）")]
     [SerializeField] private float lifetime = 0.65f;
@@ -55,6 +56,7 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
             label = GetComponentInChildren<TextMeshPro>(true);
         if (label != null)
         {
+            if(useCartoonTextTheme)BattleTextTheme.Apply(label,BattleTextTheme.Role.Damage);
             var rend = label.GetComponent<Renderer>();
             if (rend != null)
                 rend.sortingOrder = sortingOrder;
@@ -75,7 +77,10 @@ public class DamageFloatText : MonoBehaviour, IPoolReceiver
 
         // 池化复用时重新应用中文 SDF 字体（LiberationSans 无中文）
         if (label != null)
-            BattleChineseFontRuntime.ApplyToTMP(label);
+        {
+            if(useCartoonTextTheme)BattleTextTheme.Apply(label,BattleTextTheme.Role.Damage);
+            else BattleChineseFontRuntime.ApplyToTMP(label);
+        }
     }
 
     public void OnPoolRelease()

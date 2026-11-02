@@ -98,4 +98,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spinSpeedDeg: 540
-  defaultExplosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}
+  defaultExplosionFxPrefab: {fileID: 532864156046613907, guid: 5441768efc67dc546973799d41a2bb5b, type: 3}

@@ -24,7 +24,11 @@ public class PlayerWorldHpBar : MonoBehaviour
 
         ResolveFillTransform();
         if (hpText != null)
+        {
+            BattleTextTheme.Apply(hpText,BattleTextTheme.Role.Health);
+            hpText.color=BattleTextTheme.Cream;
             hpText.sortingOrder = hpTextSortingOrder;
+        }
         if (fillTransform != null)
         {
             _fullScale = fillTransform.localScale;

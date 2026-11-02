@@ -4,7 +4,7 @@ using System;
 [Serializable]
 public class PlayerSaveData
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6;
 
     public int version = CurrentVersion;
     public string playerId;
@@ -35,13 +35,20 @@ public class PlayerSaveData
     public AchievementProgressEntry[] achievementProgress = Array.Empty<AchievementProgressEntry>();
     public string lastLoginDate;  // "yyyy-MM-dd"，登录天数判定
 
+    // v6: first-session onboarding. Separate from rewards and level progression.
+    public TutorialProgressData tutorial = new TutorialProgressData();
+
     /// <summary>升级到最新版本（结构迁移）。</summary>
     public void MigrateToLatest()
     {
+        if (tutorial == null) tutorial = new TutorialProgressData();
         if (version >= CurrentVersion) return;
 
         // v3 → v4：gold/diamond/itemIds/itemCounts 默认 0/空，无需额外迁移
         // v4 → v5：achievementProgress/lastLoginDate 默认空，无需额外迁移
+        // Established players keep their existing flow; unfinished new accounts can still learn.
+        if (version < 6 && levels != null && Array.Exists(levels, entry => entry != null && entry.cleared))
+            tutorial.skipped = true;
         version = CurrentVersion;
     }
 }

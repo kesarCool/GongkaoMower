@@ -52,7 +52,7 @@ MonoBehaviour:
   maxFlightTime: 1.1
   maxTargetRange: 14
   grenadePrefab: {fileID: 9012345678901235001, guid: eb7c8892ec69eee4d9d1a3923afb6a1c, type: 3}
-  explosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}
+  explosionFxPrefab: {fileID: 2132146514143654997, guid: e2e2d5673880f314c9598afb4d91b9b6, type: 3}
   bounceSearchRadius: 8
   bounceArcHeight: 2
   bounceFlightTime: 0.8

@@ -10,9 +10,11 @@ public class GamePassiveSkillCell : MonoBehaviour
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private GameObject emptyMark;
 
     public void Bind(Sprite icon, string skillName, int level)
     {
+        if (emptyMark != null) emptyMark.SetActive(icon == null);
         if (iconImage != null)
         {
             iconImage.sprite = icon;

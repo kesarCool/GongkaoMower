@@ -98,10 +98,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spinSpeedDeg: 540
-  defaultExplosionFxPrefab: {fileID: 8378288021900666343, guid: e69394b309447ec41b7d605456b43a1a, type: 3}
+  defaultExplosionFxPrefab: {fileID: 2132146514143654997, guid: e2e2d5673880f314c9598afb4d91b9b6, type: 3}
   maxBounces: 3
   bounceSearchRadius: 8
   bounceArcHeight: 2
   bounceFlightTime: 0
   chainExplosion: 1
-  chainExplosionFxPrefab: {fileID: 8378288021900666343, guid: f710559712e48fd4f98b9b0feef06dc6, type: 3}
+  chainExplosionFxPrefab: {fileID: 7081592861422884903, guid: da6a91a0023340847842c24410ec6cea, type: 3}

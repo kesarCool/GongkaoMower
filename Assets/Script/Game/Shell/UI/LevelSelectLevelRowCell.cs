@@ -20,6 +20,11 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
     [Header("星级")]
     [SerializeField] private TextMeshProUGUI starText;
+    [Header("Optional themed state")]
+    [SerializeField] private Sprite availableSprite, clearedSprite, lockedSprite;
+    [SerializeField] private Image stateIcon;
+    [SerializeField] private Sprite flagIcon, checkIcon, lockIcon;
+    [SerializeField] private TextMeshProUGUI stateText;
 
     private LevelSelectFlatRow _row;
 
@@ -65,16 +70,21 @@ public class LevelSelectLevelRowCell : MonoBehaviour
             BattleChineseFontRuntime.EnsureLoaded();
             BattleChineseFontRuntime.ApplyToTMP(titleText);
 
-            string name;
-            if (!string.IsNullOrEmpty(row.mapName))
-                name = row.mapName;
-            else
-                name = $"关卡 {row.levelId}";
+            string name = ChapterLevelDisplay.FormatLevelName(row.levelId, row.stageName);
 
-            if (!unlocked)
+            if (!unlocked && stateText == null)
                 name += "（未解锁）";
 
             titleText.text = name;
+        }
+
+        if (availableSprite != null && background != null)
+        {
+            bool cleared = unlocked && PlayerProfileService.Instance.TryGetProgress(row.levelId, out var progress) && progress.cleared;
+            background.sprite = !unlocked ? lockedSprite : cleared ? clearedSprite : availableSprite;
+            background.color = Color.white;
+            if (stateIcon != null) stateIcon.sprite = !unlocked ? lockIcon : cleared ? checkIcon : flagIcon;
+            if (stateText != null) stateText.text = !unlocked ? "未解锁" : cleared ? "已通关" : "可挑战";
         }
 
         if (starText != null)
@@ -124,6 +134,6 @@ public class LevelSelectLevelRowCell : MonoBehaviour
 
     private string BuildConfirmMessage()
     {
-        return $"是否进入「{ChapterLevelDisplay.FormatLevelName(_row.levelId, _row.mapName)}」？";
+        return $"是否进入「{ChapterLevelDisplay.FormatLevelName(_row.levelId, _row.stageName)}」？";
     }
 }

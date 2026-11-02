@@ -133,12 +133,14 @@ public sealed class TalismanOrbiter : MonoBehaviour
     private TraitTalismanOrbit _owner;
     private float _speed;
     private float _orbitRadius;
+    private ProjectileHitFeedback _hitFeedback;
 
     public void Init(TraitTalismanOrbit owner, float speed, float orbitRadius)
     {
         _owner = owner;
         _speed = speed;
         _orbitRadius = orbitRadius;
+        _hitFeedback = GetComponent<ProjectileHitFeedback>();
     }
 
     public void FlyToward(Vector3 target, float dt)
@@ -176,6 +178,7 @@ public sealed class TalismanOrbiter : MonoBehaviour
             {
                 var ps = _owner.GetComponent<PlayerSkills>();
                 float dmg = ps != null ? ps.attackMultiplier * _owner.contactDamageMul : 10f;
+                if (_hitFeedback != null) _hitFeedback.Play(h);
                 eb.TakeDamage(dmg);
             }
             Destroy(gameObject);

@@ -50,6 +50,13 @@ public class EnemyBase : MonoBehaviour
     private ResistShield _cachedResistShield;
     private bool _resistShieldCached;
 
+    /// <summary>Refresh after a dynamically installed revive shield, without adding a lookup to every ordinary hit.</summary>
+    public void InvalidateResistShieldCache()
+    {
+        _cachedResistShield=null;
+        _resistShieldCached=false;
+    }
+
     public int EnemyId => enemyId;
     public string EnemyName => enemyName;
 
@@ -193,7 +200,7 @@ public class EnemyBase : MonoBehaviour
             GameLog.Info($"[CardTrace] EnemyBase.Die: publishing EnemyDiedEvent for BOSS {name}");
 
         // 通过事件发布"怪物死亡"，由 UI/掉落/统计等模块订阅处理
-        int killReward = Mathf.Max(1, rewardKillCount);
+        int killReward = GetComponent<CloneMarker>() != null ? 0 : Mathf.Max(1, rewardKillCount);
         EventBus.Publish(new EnemyDiedEvent
         {
             enemy = this,
@@ -221,10 +228,10 @@ public class EnemyBase : MonoBehaviour
         if (col == null) col = GetComponentInChildren<Collider2D>();
         if (col != null) col.enabled = false;
 
-        var sprites = GetComponentsInChildren<SpriteRenderer>();
+        var sprites = GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var sr in sprites) sr.enabled = false;
 
-        var renderers = GetComponentsInChildren<MeshRenderer>();
+        var renderers = GetComponentsInChildren<MeshRenderer>(true);
         foreach (var mr in renderers) mr.enabled = false;
 
         var rb = GetComponent<Rigidbody2D>();
@@ -238,10 +245,10 @@ public class EnemyBase : MonoBehaviour
         if (col == null) col = GetComponentInChildren<Collider2D>();
         if (col != null) col.enabled = true;
 
-        var sprites = GetComponentsInChildren<SpriteRenderer>();
+        var sprites = GetComponentsInChildren<SpriteRenderer>(true);
         foreach (var sr in sprites) sr.enabled = true;
 
-        var renderers = GetComponentsInChildren<MeshRenderer>();
+        var renderers = GetComponentsInChildren<MeshRenderer>(true);
         foreach (var mr in renderers) mr.enabled = true;
 
         var rb = GetComponent<Rigidbody2D>();

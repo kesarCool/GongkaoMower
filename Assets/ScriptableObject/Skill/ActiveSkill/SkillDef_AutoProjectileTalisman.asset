@@ -20,11 +20,11 @@ MonoBehaviour:
   description: "\u5929\u5E08\u6555\u4EE4\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\uFF0C\u7F81\u7ECA\u6280\u80FD\uFF0C\u7B26\u7B93\u7206\u53D1\uFF1B"
   icon: {fileID: 21300000, guid: bde8bb0daba412745a4f2c60b316c6c4, type: 3}
   levelDescriptions:
-  - "\u9053\u6CD5\u7B26\u7B93\uFF0C\u6162\u901F\u9AD8\u4F24\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
-  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%"
-  - "\u4F24\u5BB3+15%"
-  - "\u7B26\u7B93+1\uFF0C\u4F24\u5BB3+10%"
-  - "\u4F24\u5BB3+12%\uFF0C\u5C04\u901F+5%,\u73AF\u7ED5\u5468\u8EAB\u751F\u6210\u516B\u5F20\u7B26\u7B93\uFF1B"
+  - "\u5929\u5E08\u6555\u4EE4\uFF0C\u8FFD\u8E2A\u7B26\u7B93\uFF0C\u4E00\u51FB\u81F4\u547D\u3002"
+  - ""
+  - ""
+  - ""
+  - "\u7B26\u7B93\u73AF\u7ED5\u5468\u8EAB\u540E\u7206\u53D1\u3002"
   targetSkillId: 9
   bulletPrefab: {fileID: 1613592626320682331, guid: a467d8ccecf1c9e43a734c2104178aee, type: 3}
   bulletSpeed: 8

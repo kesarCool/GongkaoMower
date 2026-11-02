@@ -9,7 +9,7 @@ using ProtoTable;
 public static class ChapterLevelCatalog
 {
     public const int DefaultFirstLevelId = 101;
-    public const string DefaultMapResourcesPath = "Map/TileMap101";
+    public const string DefaultMapResourcesPath = "Map/TileMap1_1";
 
 #if USE_FB_TABLE
     private static Dictionary<int, ChapterLevel> _byLevelId;
@@ -33,7 +33,7 @@ public static class ChapterLevelCatalog
     }
 
     /// <summary>
-    /// 关卡表 <c>mapPath</c> → Resources 路径（不含扩展名）；空或未配表时返回默认 TileMap101。
+    /// 关卡表 <c>mapPath</c> → Resources 路径（不含扩展名）；空或未配表时返回默认 TileMap1_1。
     /// </summary>
     public static string ResolveMapResourcesPath(int levelId)
     {

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 单张卡牌UI：根据 RoguelikeCardTemplate 显示技能信息。
 /// </summary>
-public class CardView : MonoBehaviour
+public partial class CardView : MonoBehaviour
 {
     [Header("UI组件")]
     public Image background;
@@ -15,6 +15,31 @@ public class CardView : MonoBehaviour
     public TextMeshProUGUI titleText;
     public TextMeshProUGUI descText;
     public TextMeshProUGUI labelText;
+
+    [Header("新版卡片展示（旧 Prefab 可留空）")]
+    public TextMeshProUGUI levelText;
+    public TextMeshProUGUI gainLabelText;
+    public TextMeshProUGUI gainValueText;
+    public Image badgeImage;
+    public Sprite passiveBadge, newBadge, upgradeBadge, breakthroughBadge;
+    public Image dividerImage;
+    public Image selectionFrame;
+    public ScrollRect descriptionScroll;
+    public GameObject descriptionScrollHint;
+    public RectTransform bondedPanel;
+    public SkillStarRow starRow;
+    public RectTransform pressVisual;
+
+    public int BondedRowCount { get; private set; }
+    public SkillId BoundSkillId { get; private set; }
+    private PlayerSkills _ownerSkills;
+    private CardSelectionPanel _ownerPanel;
+
+    public void SetContext(PlayerSkills skills, CardSelectionPanel panel)
+    {
+        _ownerSkills = skills;
+        _ownerPanel = panel;
+    }
 
     [Header("点击")]
     public Button clickButton;
@@ -49,14 +74,11 @@ public class CardView : MonoBehaviour
     // 缓存 FindObjectOfType 结果，避免每张卡 Bind 时全场景扫描
     private static PlayerSkills _cachedPlayerSkills;
     private static CardSelectionPanel _cachedCardSelectionPanel;
-    private static bool _staticsCached;
 
     private static void CacheStatics()
     {
-        if (_staticsCached) return;
-        _cachedPlayerSkills = FindObjectOfType<PlayerSkills>();
-        _cachedCardSelectionPanel = FindObjectOfType<CardSelectionPanel>();
-        _staticsCached = true;
+        if (_cachedPlayerSkills == null) _cachedPlayerSkills = FindObjectOfType<PlayerSkills>();
+        if (_cachedCardSelectionPanel == null) _cachedCardSelectionPanel = FindObjectOfType<CardSelectionPanel>();
     }
 
     private void Awake()
@@ -71,12 +93,14 @@ public class CardView : MonoBehaviour
         if (descText != null)
         {
             descText.enableWordWrapping = true;
-            descText.overflowMode = TextOverflowModes.Truncate;
+            descText.overflowMode = descriptionScroll != null ? TextOverflowModes.Overflow : TextOverflowModes.Truncate;
         }
     }
 
     public void Bind(CardDeck.DrawResult data, Action onClick)
     {
+        if (_clickBounceRoutine != null) { StopCoroutine(_clickBounceRoutine); _clickBounceRoutine = null; }
+        BoundSkillId = data != null ? data.skillId : SkillId.None;
         _onClick = onClick;
         StopClickPropagationFromDecorations();
         WireButton();
@@ -111,6 +135,39 @@ public class CardView : MonoBehaviour
         if (descText != null)
             descText.text = GetLevelUpPreview(data);
 
+        if (levelText != null)
+        {
+            var content = SkillCardPresentation.Build(data);
+            levelText.text = content.level;
+            if (gainLabelText != null)
+            {
+                gainLabelText.text = content.gainLabel;
+                gainLabelText.enableAutoSizing = true;
+                gainLabelText.fontSizeMin = 28;
+                gainLabelText.fontSizeMax = 34;
+            }
+            if (gainValueText != null)
+            {
+                gainValueText.text = content.gainValue;
+                gainValueText.fontSizeMax = data.currentLevel > 0 ? 36 : 62;
+            }
+            if (descText != null) descText.text = content.description;
+            Color accent = tmpl != null ? tmpl.labelColor : new Color32(49, 94, 123, 255);
+            levelText.color = accent;
+            if (gainLabelText != null) gainLabelText.color = accent;
+            if (gainValueText != null) gainValueText.color = accent;
+            if (dividerImage != null) dividerImage.color = new Color(accent.r, accent.g, accent.b, 0.2f);
+            if (badgeImage != null)
+                badgeImage.sprite = data.skillId.IsPassive() ? passiveBadge : data.currentLevel == 0 ? newBadge :
+                    data.skillDef != null && data.targetLevel >= data.skillDef.maxLevel ? breakthroughBadge : upgradeBadge;
+        }
+
+        if (starRow != null)
+        {
+            starRow.Bind(data.currentLevel, data.targetLevel, data.skillDef != null ? data.skillDef.maxLevel : 5, true);
+            if (levelText != null) levelText.gameObject.SetActive(false);
+        }
+
         // 羁绊展示：被动卡显示其关联的主动技能 icon
         RefreshBondedIcons(data);
 
@@ -118,17 +175,36 @@ public class CardView : MonoBehaviour
             animator.SetTrigger("Show");
 
         gameObject.SetActive(true);
+        RefreshDescriptionScroll();
+    }
+
+    private void RefreshDescriptionScroll()
+    {
+        if (descriptionScroll == null || descText == null) return;
+        float height = Mathf.Max(descriptionScroll.viewport.rect.height, descText.preferredHeight);
+        descText.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+        descriptionScroll.verticalNormalizedPosition = 1;
+        if (descriptionScrollHint != null)
+            descriptionScrollHint.SetActive(height > descriptionScroll.viewport.rect.height + 2);
+    }
+
+    private void SetBondedVisible(bool visible)
+    {
+        BondedRowCount = 0;
+        if (bondedPanel != null) bondedPanel.gameObject.SetActive(visible);
+        else if (bondedGroup != null) bondedGroup.gameObject.SetActive(visible);
     }
 
     private void RefreshBondedIcons(CardDeck.DrawResult data)
     {
+        SetBondedVisible(false);
         if (bondedGroup == null || bondedIconPrefab == null) return;
         bool isPassive = data.skillId.IsPassive();
-        if (data.skillDef == null || !isPassive) { bondedGroup.gameObject.SetActive(false); return; }
+        if (data.skillDef == null || !isPassive) return;
 
         CacheStatics();
-        var ps = _cachedPlayerSkills;
-        if (ps == null || ps.skillCatalog == null) { bondedGroup.gameObject.SetActive(false); return; }
+        var ps = _ownerSkills != null ? _ownerSkills : _cachedPlayerSkills;
+        if (ps == null || ps.skillCatalog == null) return;
 
         // 收集已装备主动技能家族：family → 已装备的 SkillId
         var equippedFamilies = new Dictionary<SkillId, SkillId>();
@@ -174,11 +250,14 @@ public class CardView : MonoBehaviour
         // 先清除上一次选中卡的残留高亮
         foreach (var c in _bondedCells) c.SetHighlight(false);
 
-        bondedGroup.gameObject.SetActive(bondedActives.Count > 0);
+        SetBondedVisible(bondedActives.Count > 0);
+        BondedRowCount = Mathf.CeilToInt(bondedActives.Count / 3f);
+        if (bondedPanel != null)
+            bondedPanel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 128 + Mathf.Max(0, BondedRowCount - 1) * 84);
 
         // 触发闪烁：已上阵技能槽位 + 被动卡下羁绊图标（仅该被动未装备时才闪烁提醒）
         bool alreadyEquipped = ps.HasPassiveSkill(data.skillId);
-        var csp = _cachedCardSelectionPanel;
+        var csp = _ownerPanel != null ? _ownerPanel : _cachedCardSelectionPanel;
         var matchedIds = new List<SkillId>(4);
         if (!alreadyEquipped)
         {
@@ -201,6 +280,14 @@ public class CardView : MonoBehaviour
             {
                 _bondedCells[i].gameObject.SetActive(true);
                 _bondedCells[i].BindIconOnly(bondedActives[i].icon);
+                if (bondedPanel != null)
+                {
+                    int countInRow = Mathf.Min(3, bondedActives.Count - (i / 3) * 3);
+                    var rt = (RectTransform)_bondedCells[i].transform;
+                    rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 1);
+                    rt.sizeDelta = new Vector2(72, 72);
+                    rt.anchoredPosition = new Vector2((276 - (countInRow * 72 + (countInRow - 1) * 12)) * 0.5f + i % 3 * 84, -(i / 3) * 84);
+                }
                 if (matchedIds.Contains(bondedActives[i].id))
                     _bondedCells[i].SetHighlight(true);
             }
@@ -250,64 +337,6 @@ public class CardView : MonoBehaviour
         return data.skillDef.FormatAllLevelDescriptions(highlightLevel: data.targetLevel);
     }
 
-    public void OnClick()
-    {
-        UiClickSound.Play();
-        if (animator != null)
-            animator.SetTrigger("Selected");
-
-        // 防止点击穿透 / 双击（所有卡按钮一次性锁定）
-        var allCards = GetSiblingCardViews();
-        foreach (var cv in allCards)
-        {
-            if (cv.clickButton != null) cv.clickButton.interactable = false;
-        }
-        if (_clickBounceRoutine != null) return;
-
-        _clickBounceRoutine = StartCoroutine(ClickFeedbackThenConfirm(allCards));
-    }
-
-    /// <summary>选中卡放大+亮白；其余卡淡出。动画结束后触发回调。</summary>
-    private System.Collections.IEnumerator ClickFeedbackThenConfirm(CardView[] siblings)
-    {
-        // 选中卡背景直接设纯白
-        if (background != null)
-        {
-            if (!_restColorCached) { _restBgColor = background.color; _restColorCached = true; }
-            background.color = Color.white;
-        }
-
-        const float stepRate = 30f;
-        float stepTime = 1f / stepRate;
-        float elapsed = 0f;
-
-        while (elapsed < clickAnimDuration)
-        {
-            yield return new WaitForSecondsRealtime(stepTime);
-            elapsed += stepTime;
-
-            float t = Mathf.Clamp01(elapsed / clickAnimDuration);
-
-            // 选中卡：平滑放大到目标倍率
-            float s = Mathf.Lerp(1f, clickTargetScale, t);
-            transform.localScale = new Vector3(s, s, 1f);
-
-            // 其余卡：淡出
-            float fadeT = Mathf.Clamp01(elapsed / fadeOutDuration);
-            float targetAlpha = 1f - fadeT;
-            foreach (var cv in siblings)
-            {
-                if (cv == this) continue;
-                if (cv.canvasGroup != null)
-                    cv.canvasGroup.alpha = targetAlpha;
-            }
-        }
-
-        GameLog.Info($"[CardView] ClickFeedback END — invoking callback");
-        _clickBounceRoutine = null;
-        _onClick?.Invoke();
-    }
-
     private CardView[] GetSiblingCardViews()
     {
         if (_cachedSiblings != null) return _cachedSiblings;
@@ -318,11 +347,13 @@ public class CardView : MonoBehaviour
 
     private void ResetClickFeedbackState()
     {
+        ResetPressState();
         transform.localScale = Vector3.one;
         if (canvasGroup != null) canvasGroup.alpha = 1f;
         if (clickButton != null) clickButton.interactable = true;
         if (background != null && _restColorCached)
             background.color = _restBgColor;
+        if (selectionFrame != null) selectionFrame.gameObject.SetActive(false);
     }
 
     private void StopClickPropagationFromDecorations()

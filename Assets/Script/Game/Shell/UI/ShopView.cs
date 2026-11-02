@@ -22,9 +22,31 @@ public class ShopView : HomeTabViewBase
 
     [Header("状态")]
     [SerializeField] private GameObject emptyHint;
+    [SerializeField] private HomeExchangePresentation presentation;
 
     private readonly List<ShopCell> _cells = new List<ShopCell>();
     private Coroutine _countdownRoutine;
+    private Coroutine _adTimeoutRoutine;
+    private AdPurchaseRequest _adRequest;
+    private const float AdRequestTimeout = WXShareRequestRunner.ReturnTimeoutSeconds;
+
+    public bool IsAdRewardInFlight => _adRequest != null && !_adRequest.completed;
+
+#if UNITY_EDITOR
+    /// <summary>Editor validation seam; null uses the real ad provider.</summary>
+    public static Action<Action<bool>> EditorAdRequestOverride;
+#endif
+
+    // FlatBuffer table rows are read-only. Capture the row itself and reward values,
+    // never a ShopCell: a profile event can destroy/rebuild every cell while an ad is open.
+    private sealed class AdPurchaseRequest
+    {
+        public ShopTable row;
+        public int itemId, count;
+        public string receiptId;
+        public float requestedAt;
+        public bool completed;
+    }
 
     // ═══════════════ 生命周期 ═══════════════
 
@@ -43,6 +65,8 @@ public class ShopView : HomeTabViewBase
     public override void OnTabEnter()
     {
         base.OnTabEnter();
+        ExpireAdRequest();
+        ResumeAdTimeout();
         ShopService.CheckAndRefresh();
         RebuildList();
         StartCountdown();
@@ -52,6 +76,9 @@ public class ShopView : HomeTabViewBase
     {
         base.OnTabLeave();
         StopCountdown();
+        // Ad completion owns the business result even when this tab is hidden.
+        // The unscaled deadline is checked again by its callback / next tab entry.
+        _adTimeoutRoutine = null;
     }
 
     public override void OnTabRefresh()
@@ -80,13 +107,16 @@ public class ShopView : HomeTabViewBase
         foreach (var row in items)
         {
             if (!ShopService.IsUnlocked(row)) continue;
-            var cell = Instantiate(cellPrefab, listContent);
+            bool bonus=presentation!=null&&(row.PriceType==0||row.PriceType==3);
+            var cell = Instantiate(bonus?presentation.bonusCellPrefab:cellPrefab,
+                presentation!=null?(bonus?presentation.bonusContent:presentation.fragmentContent):listContent);
             cell.Bind(row, OnCellBuyClicked);
             _cells.Add(cell);
         }
 
         if (emptyHint != null)
             emptyHint.SetActive(_cells.Count == 0);
+        if(presentation!=null)presentation.RefreshLayout();
     }
 
     /// <summary>PriceType 排序优先级（越小越靠前）。</summary>
@@ -111,7 +141,7 @@ public class ShopView : HomeTabViewBase
     private void ClearCells()
     {
         foreach (var c in _cells)
-            if (c != null) Destroy(c.gameObject);
+            if (c != null) {c.gameObject.SetActive(false);Destroy(c.gameObject);}
         _cells.Clear();
     }
 
@@ -121,47 +151,54 @@ public class ShopView : HomeTabViewBase
     {
         if (cell == null || cell.ShopRow == null) return;
 
-        int priceType = cell.ShopRow.PriceType;
-        int count = Mathf.Max(1, cell.ShopRow.ItemNumber);
-        string itemName = cell.ItemRow?.ItemName ?? cell.ShopRow.ShopName ?? "物品";
+        ExpireAdRequest();
+        var row = cell.ShopRow;
+        int priceType = row.PriceType;
+        int itemId = row.ItemID;
+        int count = Mathf.Max(1, row.ItemNumber);
+        string itemName = cell.ItemRow?.ItemName ?? row.ShopName ?? "物品";
+        string receiptId = "shop:" + row.ID + ":" + Guid.NewGuid().ToString("N");
 
         // 免费：直接发奖，不弹确认框
         if (priceType == 0)
         {
-            ExecuteShopPurchase(cell, itemName, count);
+            ExecuteShopPurchase(row, itemId, count, receiptId);
             return;
         }
 
-        // 广告：直接播广告，不弹确认框
+        // 未开通广告时使用分享返回奖励，不弹确认框。
         if (priceType == 3)
         {
-            UIManager.Instance.ShowToast("广告还在路上，分享先把奖励领走～", 2f);
-            StartCoroutine(ClaimAdReward(cell, itemName, count));
+            if (IsAdRewardInFlight) return;
+            UIManager.Instance?.ShowToast("分享返回后领取奖励", 2f);
+            ClaimAdReward(row, itemId, count, receiptId);
             return;
         }
 
         // 金币/钻石：弹确认框
-        int price = ShopService.GetPrice(cell.ShopRow);
+        int price = ShopService.GetPrice(row);
         string currencyLabel = priceType == 2 ? "钻石" : "金币";
+        bool confirmationHandled = false;
         UIManager.Instance.ShowConfirm("兑换确认",
             $"确定购买「{itemName}」×{count}？\n消耗 {price} {currencyLabel}",
             confirmed =>
             {
+                if (confirmationHandled) return;
+                confirmationHandled = true;
                 if (!confirmed) return;
-                ExecuteShopPurchase(cell, itemName, count);
+                ExecuteShopPurchase(row, itemId, count, receiptId);
             });
     }
 
-    private void ExecuteShopPurchase(ShopCell cell, string itemName, int count)
+    private void ExecuteShopPurchase(ShopTable row, int itemId, int count, string receiptId)
     {
-        var result = ShopService.Purchase(cell.ShopRow, out string errMsg);
+        var result = ShopService.Purchase(row, out string errMsg);
         switch (result)
         {
             case ShopPurchaseResult.Success:
-                UIManager.Instance.ShowToast($"已获得 {itemName}×{count}", 1.5f);
-                cell.RefreshLimitDisplay();
                 OnTabRefresh();
                 EventBus.Publish(new PlayerDataChangedEvent());
+                RewardRevealQueue.ShowItem(receiptId, "shop", itemId, count);
                 break;
 
             case ShopPurchaseResult.SoldOut:
@@ -186,34 +223,71 @@ public class ShopView : HomeTabViewBase
         }
     }
 
-    private System.Collections.IEnumerator ClaimAdReward(ShopCell cell, string itemName, int count)
+    private void ClaimAdReward(ShopTable row, int itemId, int count, string receiptId)
     {
-        bool adCompleted = false;
-        bool adResponded = false;
-
-        WeChatRewardedAdProvider.Instance.RequestReviveAd(success =>
+        var request = new AdPurchaseRequest
         {
-            adCompleted = success;
-            adResponded = true;
-        });
-
-        // 等待广告回调（DefaultReviveAdProvider 同步完成，真机广告异步）
-        float timeout = 30f;
-        float elapsed = 0f;
-        while (!adResponded && elapsed < timeout)
+            row = row, itemId = itemId, count = count, receiptId = receiptId,
+            requestedAt = Time.realtimeSinceStartup
+        };
+        _adRequest = request;
+        ResumeAdTimeout();
+        try
         {
-            elapsed += Time.unscaledDeltaTime;
+#if UNITY_EDITOR
+            if (EditorAdRequestOverride != null)
+                EditorAdRequestOverride(success => CompleteAdRequest(request, success));
+            else
+#endif
+                WeChatRewardedAdProvider.Instance.RequestShareReward("快来一起玩文字割草机！", success => CompleteAdRequest(request, success));
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[Shop] 分享请求失败: {ex.Message}");
+            CompleteAdRequest(request, false);
+        }
+    }
+
+    private void CompleteAdRequest(AdPurchaseRequest request, bool success)
+    {
+        if (this == null || request.completed || _adRequest != request) return;
+        if (Time.realtimeSinceStartup - request.requestedAt >= AdRequestTimeout) success = false;
+        request.completed = true;
+        _adRequest = null;
+        if (_adTimeoutRoutine != null) { StopCoroutine(_adTimeoutRoutine); _adTimeoutRoutine = null; }
+
+        if (success)
+            ExecuteShopPurchase(request.row, request.itemId, request.count, request.receiptId);
+        else
+            UIManager.Instance?.ShowToast("未能确认分享返回，请重试", 1.5f);
+    }
+
+    private void ResumeAdTimeout()
+    {
+        if (!IsAdRewardInFlight || !isActiveAndEnabled || _adTimeoutRoutine != null) return;
+        _adTimeoutRoutine = StartCoroutine(WaitForAdDeadline(_adRequest));
+    }
+
+    private void ExpireAdRequest()
+    {
+        if (IsAdRewardInFlight && Time.realtimeSinceStartup - _adRequest.requestedAt >= AdRequestTimeout)
+            CompleteAdRequest(_adRequest, false);
+    }
+
+    private System.Collections.IEnumerator WaitForAdDeadline(AdPurchaseRequest request)
+    {
+        while (!request.completed && Time.realtimeSinceStartup - request.requestedAt < AdRequestTimeout)
+        {
             yield return null;
         }
+        _adTimeoutRoutine = null;
+        CompleteAdRequest(request, false);
+    }
 
-        if (adCompleted)
-        {
-            ExecuteShopPurchase(cell, itemName, count);
-        }
-        else
-        {
-            UIManager.Instance.ShowToast("广告未完成，请稍后再试", 1.5f);
-        }
+    private void OnDestroy()
+    {
+        if (_adRequest != null) _adRequest.completed = true;
+        _adRequest = null;
     }
 
     // ═══════════════ 倒计时 ═══════════════

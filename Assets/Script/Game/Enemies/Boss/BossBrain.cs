@@ -23,6 +23,10 @@ public class BossBrain : MonoBehaviour
 
     /// <summary>Boss 正在执行技能时 EnemyAI 暂停追人。</summary>
     public bool IsBusy { get; set; }
+    public bool IsReviving
+    {
+        get {foreach(var module in _modules)if(module is ReviveModule revive&&revive.IsReviving)return true;return false;}
+    }
 
     private readonly List<BossSkillModule> _modules = new List<BossSkillModule>(4);
 
@@ -63,9 +67,22 @@ public class BossBrain : MonoBehaviour
         // 通知 ReviveModule 清理 OnDied 监听
         foreach (var mod in _modules)
         {
-            if (mod is ReviveModule rv)
-                rv.OnBossDestroyed();
+            CleanupModule(mod);
         }
+    }
+
+    private void OnDisable()
+    {
+        if (gameObject.activeInHierarchy) return;
+        StopAllCoroutines();
+        foreach (var mod in _modules)
+        {
+            if (mod is CloneModule clone) clone.OnOwnerDisposed();
+            if (mod is SummonModule summon) summon.OnOwnerDisposed();
+            if (mod is ZoneModule zone) zone.OnOwnerDisposed();
+            if (mod is ReviveModule revive) revive.OnBossDestroyed();
+        }
+        IsBusy = false;
     }
 
     private void Update()
@@ -73,11 +90,12 @@ public class BossBrain : MonoBehaviour
         if (_modules.Count == 0) return;
 
         float dt = Time.deltaTime;
+        bool recovering=IsReviving;
         foreach (BossSkillModule mod in _modules)
         {
             if (mod.IsPassive) continue;
             mod.Tick(dt);
-            if (mod.CanTrigger() && !IsBusy)
+            if (mod.CanTrigger() && !IsBusy && !recovering)
             {
                 mod.Execute();
             }
@@ -99,7 +117,10 @@ public class BossBrain : MonoBehaviour
 
     private void BuildModules()
     {
+        StopAllCoroutines();
+        foreach (var mod in _modules) CleanupModule(mod);
         _modules.Clear();
+        IsBusy = false;
 
 #if USE_FB_TABLE
         Monster monster = FindMonsterRow(monsterId);
@@ -132,6 +153,10 @@ public class BossBrain : MonoBehaviour
 
     private void AddModule(string type, string rawParams, int mid)
     {
+        // Apply the policy before Init can attach passive listeners. Start and later data
+        // rebuilds use the same marker, so an Instantiate clone cannot regain forbidden skills.
+        var clone = GetComponent<CloneMarker>();
+        if (clone != null && !clone.AllowsSkill(type)) return;
         BossSkillModule mod = CreateModule(type);
         if (mod != null)
         {
@@ -173,6 +198,12 @@ public class BossBrain : MonoBehaviour
     {
         if (mod is ReviveModule rv)
             rv.OnBossDestroyed();
+        if (mod is CloneModule clone)
+            clone.OnOwnerDisposed();
+        if (mod is SummonModule summon)
+            summon.OnOwnerDisposed();
+        if (mod is ZoneModule zone)
+            zone.OnOwnerDisposed();
     }
 
     private static BossSkillModule CreateModule(string type)

@@ -32,6 +32,8 @@ public class GameLayer : MonoBehaviour
 
     [Tooltip("能量进度文字（预制体 Textprogress，如 70%）")]
     public TextMeshProUGUI energyProgressText;
+    public GameObject energyLevelBadge;
+    public EnergyProgressPresentation energyPresentation;
 
     [Header("Boss HP")]
     [Tooltip("Boss 血条（Slider），Boss 出场时显示，与能量条互斥")]
@@ -51,6 +53,7 @@ public class GameLayer : MonoBehaviour
 
     [Tooltip("正计时上限（秒，0=无限）。到达后不变，不触发任何事件。")]
     public int maxSeconds;
+    [SerializeField] private bool compactTimer;
 
     private int _kills;
     private float _timeElapsed;
@@ -64,9 +67,16 @@ public class GameLayer : MonoBehaviour
     public int TargetKills => targetKills;
     public int CurrentWave => _currentWave;
     public int TotalWaves => _totalWaves;
+    public float ElapsedSeconds => _timeElapsed;
 
     private void Start()
     {
+        if(GetComponent<BattleThemeLayout>()!=null)
+        {
+            BattleTextTheme.Apply(levelText,BattleTextTheme.Role.Hud);
+            BattleTextTheme.Apply(bossHpNameText,BattleTextTheme.Role.Hud);
+            BattleTextTheme.Apply(bossHpValueText,BattleTextTheme.Role.Hud);
+        }
         AudioService.Ensure().StartCoroutine(AudioService.Ensure().LoadGroupAsync(AudioLoadGroup.Battle));
 
         // 如果没有拖 UI 引用，自动创建一套基础 UI，便于快速跑起来
@@ -138,6 +148,7 @@ public class GameLayer : MonoBehaviour
 
     private void ShowBossHp(string bossName)
     {
+        if (energyLevelBadge != null) energyLevelBadge.SetActive(false);
         if (energyProgressSlider != null)
             energyProgressSlider.gameObject.SetActive(false);
         if (energyProgressText != null)
@@ -153,13 +164,13 @@ public class GameLayer : MonoBehaviour
         if (bossHpValueText != null)
             bossHpValueText.gameObject.SetActive(true);
 
-        bossHpSlider.minValue = 0f;
-        bossHpSlider.maxValue = 1f;
+        if (bossHpSlider != null) { bossHpSlider.minValue = 0f; bossHpSlider.maxValue = 1f; }
         RefreshBossHp();
     }
 
     private void HideBossHp()
     {
+        if (energyLevelBadge != null) energyLevelBadge.SetActive(true);
         if (bossHpSlider != null)
             bossHpSlider.gameObject.SetActive(false);
         if (bossHpNameText != null)
@@ -231,7 +242,7 @@ public class GameLayer : MonoBehaviour
         int total = Mathf.FloorToInt(_timeElapsed);
         int mm = total / 60;
         int ss = total % 60;
-        timerText.text = $"计时：{mm:00}:{ss:00}";
+        timerText.text = compactTimer ? $"{mm:00}:{ss:00}" : $"计时：{mm:00}:{ss:00}";
     }
 
     private void ResolveWaveTextRef()
@@ -364,6 +375,7 @@ public class GameLayer : MonoBehaviour
 
         if (energyProgressText != null)
             energyProgressText.text = $"Lv{displayLv}";
+        if (energyPresentation != null) energyPresentation.SetProgress(curEnergy, need, displayLv);
     }
 
     /// <summary>

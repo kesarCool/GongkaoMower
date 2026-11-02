@@ -9,7 +9,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class EnemyWordLabel : MonoBehaviour
 {
-    public static bool LogVerbose = true;
+    // Opt in when diagnosing individual spawns; avoid synchronous logs per enemy.
+    public static bool LogVerbose = false;
 
     [Tooltip("世界空间 TMP；为空则在 Awake 时子物体中查找")]
     [SerializeField] private TextMeshPro worldText;
@@ -33,12 +34,14 @@ public class EnemyWordLabel : MonoBehaviour
     [Header("立体字（描边 + 渐变）")]
     [Tooltip("关闭则不改色、不描边、不用顶点渐变")]
     [SerializeField] private bool enableStereoTextStyle = true;
+    [Tooltip("使用与明快地图匹配的共享 SDF 描边材质；不新增字体或图集。")]
+    [SerializeField] private bool useCartoonTextTheme = true;
 
     [Tooltip("为 true 时复制一份 fontMaterial，避免改描边影响同材质其它字")]
     [SerializeField] private bool instanceMaterialPerEnemy = true;
 
     [Tooltip("字面底色基准；偏亮偏暖，暗地图上也清晰可见")]
-    [SerializeField] private Color stereoFaceBase = new Color(1f, 0.93f, 0.7f, 1f);
+    [SerializeField] private Color stereoFaceBase = new Color32(255,245,221,255);
 
     [Tooltip("为 true 且本波已设置 WordMonsterWaveStyle 时，整波共用一波底色，仅做下方「微色相」抖动")]
     [SerializeField] private bool preferWaveSharedTint = true;
@@ -95,9 +98,12 @@ public class EnemyWordLabel : MonoBehaviour
     private Vector3 _strikeBaseLocalPosU;
     private Vector3 _strikeBaseLocalScaleU = Vector3.one;
     private Color32 _strikeBaseFaceU = Color.white;
+    private Color _strikeBaseTintW, _strikeBaseTintU;
+    private VertexGradient _strikeGradientW, _strikeGradientU;
 
     private Coroutine _strikeRoutine;
     private EnemyBase _enemyBase;
+    public int HitAnchorVersion { get; private set; }
 
     private void Awake()
     {
@@ -110,6 +116,7 @@ public class EnemyWordLabel : MonoBehaviour
 
     private void OnEnable()
     {
+        HitAnchorVersion++;
         BattleChineseFontRuntime.EnsureLoaded();
         BattleChineseFontRuntime.TryApplyTo(this);
 
@@ -122,6 +129,7 @@ public class EnemyWordLabel : MonoBehaviour
 
     private void OnDisable()
     {
+        HitAnchorVersion++;
         if (_enemyBase != null)
             _enemyBase.OnDamaged.RemoveListener(OnDamagedHitFeedback);
         _enemyBase = null;
@@ -175,7 +183,8 @@ public class EnemyWordLabel : MonoBehaviour
 
             if (worldText != null)
             {
-                worldText.faceColor = (Color32)Color.Lerp(white, _strikeBaseFaceW, flashT);
+                if(useCartoonTextTheme) ApplyVertexFlash(worldText,_strikeBaseTintW,_strikeGradientW,flashT);
+                else worldText.faceColor = (Color32)Color.Lerp(white, _strikeBaseFaceW, flashT);
                 Transform tw = worldText.transform;
                 tw.localScale = _strikeBaseLocalScaleW * scaleMul;
                 tw.localPosition = _strikeBaseLocalPosW + knockLocal;
@@ -183,7 +192,8 @@ public class EnemyWordLabel : MonoBehaviour
 
             if (uiText != null)
             {
-                uiText.faceColor = (Color32)Color.Lerp(white, _strikeBaseFaceU, flashT);
+                if(useCartoonTextTheme) ApplyVertexFlash(uiText,_strikeBaseTintU,_strikeGradientU,flashT);
+                else uiText.faceColor = (Color32)Color.Lerp(white, _strikeBaseFaceU, flashT);
                 Transform tu = uiText.transform;
                 tu.localScale = _strikeBaseLocalScaleU * scaleMul;
                 tu.localPosition = _strikeBaseLocalPosU + knockLocal;
@@ -219,6 +229,7 @@ public class EnemyWordLabel : MonoBehaviour
             _strikeBaseLocalPosW = tw.localPosition;
             _strikeBaseLocalScaleW = tw.localScale;
             _strikeBaseFaceW = worldText.faceColor;
+            _strikeBaseTintW=worldText.color;_strikeGradientW=worldText.colorGradient;
         }
 
         if (uiText != null)
@@ -227,6 +238,7 @@ public class EnemyWordLabel : MonoBehaviour
             _strikeBaseLocalPosU = tu.localPosition;
             _strikeBaseLocalScaleU = tu.localScale;
             _strikeBaseFaceU = uiText.faceColor;
+            _strikeBaseTintU=uiText.color;_strikeGradientU=uiText.colorGradient;
         }
     }
 
@@ -234,7 +246,8 @@ public class EnemyWordLabel : MonoBehaviour
     {
         if (worldText != null)
         {
-            worldText.faceColor = _strikeBaseFaceW;
+            if(useCartoonTextTheme){worldText.color=_strikeBaseTintW;worldText.colorGradient=_strikeGradientW;}
+            else worldText.faceColor = _strikeBaseFaceW;
             Transform tw = worldText.transform;
             tw.localPosition = _strikeBaseLocalPosW;
             tw.localScale = _strikeBaseLocalScaleW;
@@ -242,7 +255,8 @@ public class EnemyWordLabel : MonoBehaviour
 
         if (uiText != null)
         {
-            uiText.faceColor = _strikeBaseFaceU;
+            if(useCartoonTextTheme){uiText.color=_strikeBaseTintU;uiText.colorGradient=_strikeGradientU;}
+            else uiText.faceColor = _strikeBaseFaceU;
             Transform tu = uiText.transform;
             tu.localPosition = _strikeBaseLocalPosU;
             tu.localScale = _strikeBaseLocalScaleU;
@@ -257,6 +271,24 @@ public class EnemyWordLabel : MonoBehaviour
             _strikeRoutine = null;
         }
         RestoreStrikeVisuals();
+    }
+
+    /// <summary>Snapshot the stable glyph geometry / colors rather than the lethal hit's temporary punch and flash.</summary>
+    public void PrepareForReviveSnapshot()
+    {
+        StopHitFeedbackAndReset();
+        if(worldText!=null)worldText.ForceMeshUpdate();
+    }
+
+    private static void ApplyVertexFlash(TMP_Text tmp,Color tint,VertexGradient gradient,float amount)
+    {
+        // Use vertex colors for per-enemy feedback; never mutate the shared font material.
+        if(tmp.enableVertexGradient)
+        {
+            tmp.color=tint;
+            tmp.colorGradient=new VertexGradient(Color.Lerp(Color.white,gradient.topLeft,amount),Color.Lerp(Color.white,gradient.topRight,amount),Color.Lerp(Color.white,gradient.bottomLeft,amount),Color.Lerp(Color.white,gradient.bottomRight,amount));
+        }
+        else tmp.color=Color.Lerp(Color.white,tint,amount);
     }
 
     private void ResolveTargets()
@@ -277,7 +309,7 @@ public class EnemyWordLabel : MonoBehaviour
         if (worldText != null)
         {
             worldText.font = font;
-            worldText.fontSharedMaterial = font.material;
+            worldText.fontSharedMaterial = useCartoonTextTheme?BattleTextTheme.MaterialFor(font,BattleTextTheme.Role.Word):font.material;
             worldText.SetVerticesDirty();
             worldText.SetLayoutDirty();
         }
@@ -285,7 +317,7 @@ public class EnemyWordLabel : MonoBehaviour
         if (uiText != null)
         {
             uiText.font = font;
-            uiText.fontSharedMaterial = font.material;
+            uiText.fontSharedMaterial = useCartoonTextTheme?BattleTextTheme.MaterialFor(font,BattleTextTheme.Role.Word):font.material;
             uiText.SetVerticesDirty();
             uiText.SetLayoutDirty();
         }
@@ -334,6 +366,63 @@ public class EnemyWordLabel : MonoBehaviour
         return tmp != null && !string.IsNullOrEmpty(tmp.text);
     }
 
+    /// <summary>Presentation contact on a visible character, independent of the enemy's physics shape.</summary>
+    public bool TryGetHitAnchor(Vector2 source, out Transform anchor, out Vector3 localPoint)
+    {
+        anchor = null;
+        localPoint = Vector3.zero;
+        var text = HitAnchorText();
+        if (text == null) return false;
+        Vector3 localSource = text.transform.InverseTransformPoint(source);
+        float nearest = float.PositiveInfinity;
+        var info = text.textInfo;
+        for (int i = 0; i < info.characterCount; i++)
+        {
+            var character = info.characterInfo[i];
+            if (!character.isVisible) continue;
+            Vector3 lo = character.bottomLeft, hi = character.topRight;
+            if (hi.x <= lo.x || hi.y <= lo.y) continue;
+            var edge = new Vector3(Mathf.Clamp(localSource.x, lo.x, hi.x), Mathf.Clamp(localSource.y, lo.y, hi.y), 0);
+            // Place the small bright core just inside the glyph instead of outside its collider.
+            var point = Vector3.Lerp(edge, (lo + hi) * .5f, .18f);
+            float distance = ((Vector2)text.transform.TransformPoint(point) - source).sqrMagnitude;
+            if (distance >= nearest) continue;
+            nearest = distance;
+            localPoint = point;
+            anchor = text.transform;
+        }
+        return anchor != null;
+    }
+
+    public bool TryGetVisualCenter(out Vector2 point)
+    {
+        point = transform.position;
+        var text = HitAnchorText();
+        if (text == null) return false;
+        var info = text.textInfo;
+        Bounds bounds = new Bounds();
+        bool found = false;
+        for (int i = 0; i < info.characterCount; i++)
+        {
+            var character = info.characterInfo[i];
+            if (!character.isVisible) continue;
+            if (!found) { bounds = new Bounds(character.bottomLeft, Vector3.zero); found = true; }
+            bounds.Encapsulate(character.bottomLeft);
+            bounds.Encapsulate(character.topRight);
+        }
+        if (found) point = text.transform.TransformPoint(bounds.center);
+        return found;
+    }
+
+    private TMP_Text HitAnchorText()
+    {
+        ResolveTargets();
+        TMP_Text text = worldText != null && worldText.isActiveAndEnabled ? (TMP_Text)worldText : uiText;
+        if (text == null || !text.isActiveAndEnabled || string.IsNullOrWhiteSpace(text.text)) return null;
+        if (text.havePropertiesChanged || text.textInfo.characterCount == 0) text.ForceMeshUpdate();
+        return text;
+    }
+
     private void ApplyVisualVariation()
     {
         if (worldText != null)
@@ -345,7 +434,7 @@ public class EnemyWordLabel : MonoBehaviour
 
     private void ApplyToTmp(Transform tr, TMP_Text tmp, float baseline, ref bool materialInstanced)
     {
-        if (instanceMaterialPerEnemy && tmp.fontSharedMaterial != null && !materialInstanced)
+        if (!useCartoonTextTheme && instanceMaterialPerEnemy && tmp.fontSharedMaterial != null && !materialInstanced)
         {
             tmp.fontMaterial = new Material(tmp.fontSharedMaterial);
             materialInstanced = true;
@@ -396,9 +485,13 @@ public class EnemyWordLabel : MonoBehaviour
             }
         }
 
-        float ow = Random.Range(outlineWidthRange.x, outlineWidthRange.y);
-        tmp.outlineWidth = ow;
-        tmp.outlineColor = outlineColor;
+        if(useCartoonTextTheme) BattleTextTheme.Apply(tmp,BattleTextTheme.Role.Word);
+        else
+        {
+            float ow = Random.Range(outlineWidthRange.x, outlineWidthRange.y);
+            tmp.outlineWidth = ow;
+            tmp.outlineColor = outlineColor;
+        }
 
         if (stereoUseVertexGradient)
         {
