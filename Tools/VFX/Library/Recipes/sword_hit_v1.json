@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "sword_hit_v1",
+  "displayName": "刀光剑影·交错切痕",
+  "category": "impact",
+  "usage": "普通、满级、环绕与暴击分裂飞刃实际命中",
+  "status": "integrated-editor-verified",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_sword_presentation_v1.png",
+  "materialPath": "Assets/Res/Materials/VFX/mat_sword_presentation_v1.mat",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Impact/fx_sword_hit_v1.prefab",
+  "briefPath": "Tools/VFX/sword-presentation-v1.md",
+  "promptPath": "ArtOutput/VFX/SwordPresentationV1/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/SwordPresentationV1/Sources",
+  "validationReport": "ArtOutput/UI/HitFeedbackAlignmentV1/Sword/validation-report.json",
+  "width": 512,
+  "height": 256,
+  "columns": 8,
+  "rows": 4,
+  "pngBudgetKiB": 96,
+  "compressionQuality": 70,
+  "poolSeconds": 0.33,
+  "referenceRadius": 0.34,
+  "sortingOrder": -5,
+  "layers": [
+    {
+      "name": "fx_sword_hit_v1",
+      "seconds": 0.27,
+      "sizeX": 0.95,
+      "sizeY": 0.95,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "startFrame": 0.0,
+      "size3D": false,
+      "seed": 8721,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.249968752
+        },
+        {
+          "time": 1.0,
+          "value": 0.249968752,
+          "inTangent": 0.249968752,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 0.300007641,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 0.0
+        }
+      ]
+    }
+  ],
+  "packing": null
+}

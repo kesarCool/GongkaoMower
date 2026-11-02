@@ -1,0 +1,10 @@
+{
+  "assets": [
+    { "path": "Assets/Res/image/Home/roadmap/map_autumn_academy_720x1280.jpg", "border": [0,0,0,0], "maxSize": 2048 },
+    { "path": "Assets/Res/image/Home/roadmap/map_winter_town_720x1280.jpg", "border": [0,0,0,0], "maxSize": 2048 }
+  ],
+  "chapters": [
+    { "id": 2, "points": [[241,1450],[680,1181],[534,970],[637,768],[832,647],[691,528],[821,390],[875,278]] },
+    { "id": 3, "points": [[265,1318],[702,1056],[464,883],[670,739],[691,605],[734,432],[778,315],[940,230]] }
+  ]
+}

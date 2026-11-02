@@ -1,0 +1,554 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/Home/character/character_page_bg.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_glow.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 512
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_platform.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 512
+    },
+    {
+      "path": "Assets/Res/image/Home/character/portrait_shadow.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_paper_9slice.png",
+      "moveFrom": "",
+      "border": [
+        34,
+        34,
+        34,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_paper_shadow_9slice.png",
+      "moveFrom": "",
+      "border": [
+        34,
+        34,
+        34,
+        34
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/tab_selected_folder_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        2,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/tab_connector_9slice.png",
+      "moveFrom": "",
+      "border": [
+        4,
+        0,
+        4,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/check_badge_brown.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/check_badge_green.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/stat_compare_arrow.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/stat_row_alternate_9slice.png",
+      "moveFrom": "",
+      "border": [
+        14,
+        14,
+        14,
+        14
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/stat_header_divider.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/skill_progress_line.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/skill_progress_locked.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/skill_progress_unlocked.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/skill_icon_back_9slice.png",
+      "moveFrom": "",
+      "border": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/growth_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/growth_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/growth_disabled_9slice.png",
+      "moveFrom": "",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_card_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_card_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_card_selected_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_card_selected_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/hero_card_locked_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_start_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_start_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_start_disabled_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_start_shadow_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/top_safe_gradient_strip.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/surface_square_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/surface_pill_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/shadow_round_9slice.png",
+      "moveFrom": "",
+      "border": [
+        34,
+        34,
+        34,
+        34
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_settings.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_coins.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_gem.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_swords.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_lock.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_exchange.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_book.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_swords.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_hero.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_trophy.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_selected_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_bar_background_9slice.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        12
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/notify_dot.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_equip_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_equip_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/character_equip_disabled_9slice.png",
+      "moveFrom": "",
+      "border": [
+        39,
+        39,
+        39,
+        39
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/character/icon_character_swap.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    }
+  ]
+}

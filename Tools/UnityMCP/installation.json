@@ -1,0 +1,9 @@
+{
+  "packageVersion": "10.3.0",
+  "commit": "ba6881930eadb2a9006d28bff3325ce03b4bfd8a",
+  "source": "G:\\Demo\\GongkaoMower\\Library\\UnityMCPTools\\source\\unity-mcp-ba6881930eadb2a9006d28bff3325ce03b4bfd8a",
+  "uv": "G:\\Demo\\GongkaoMower\\Library\\UnityMCPTools\\uv\\Scripts\\uv.exe",
+  "python": "G:\\Demo\\GongkaoMower\\Library\\UnityMCPTools\\server-venv\\Scripts\\python.exe",
+  "mcpServer": "G:\\Demo\\GongkaoMower\\Library\\UnityMCPTools\\server-venv\\Scripts\\mcp-for-unity.exe",
+  "cache": "G:\\Demo\\GongkaoMower\\Library\\UnityMCPTools"
+}

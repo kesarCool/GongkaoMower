@@ -1,0 +1,74 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/Game/battle/energy_orb.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/hud_top_gradient.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/icon_pause.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/icon_timer.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/countdown_ring.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 288
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/minimap_frame_9slice.png",
+      "border": [
+        16,
+        16,
+        16,
+        16
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/battle/surface_soft_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    }
+  ]
+}

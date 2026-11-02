@@ -34,3 +34,24 @@ texture_report.txt
 /_npoi_extract/
 /_nuget_dl/
 /_zip_extract/
+
+# Downloaded Node.js dependencies
+node_modules/
+
+# Machine-specific agent settings
+/.claude/settings.local.json
+/.codex/config.toml
+
+# Root-level runtime / crash logs
+/*.log
+
+# Local preview output and recorded validation frames
+/output/
+/ArtOutput/UI/**/frames/
+
+# Local art source and software copyright materials
+/美术资源/
+/软著材料/
+
+# WeChat SDK generated export data and backups
+/TextToolDatas/

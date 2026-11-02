@@ -1,0 +1,565 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/Home/roadmap/map_food_background_1080x1920.jpg",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 2048
+    },
+    {
+      "path": "Assets/Res/image/common/nav_exchange.png",
+      "moveFrom": "Assets/Res/image/Home/nav_exchange.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_book.png",
+      "moveFrom": "Assets/Res/image/Home/nav_book.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_swords.png",
+      "moveFrom": "Assets/Res/image/Home/nav_swords.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_hero.png",
+      "moveFrom": "Assets/Res/image/Home/nav_hero.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_trophy.png",
+      "moveFrom": "Assets/Res/image/Home/nav_trophy.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/top_safe_gradient_strip.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/surface_pill_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/surface_square_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/surface_square_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/surface_locate_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/surface_locate_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/inset_progress_9slice.png",
+      "moveFrom": "",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/info_pill_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/shadow_round_9slice.png",
+      "moveFrom": "",
+      "border": [
+        34,
+        34,
+        34,
+        34
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/button_primary_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        44,
+        44,
+        44,
+        44
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/button_primary_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        44,
+        44,
+        44,
+        44
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/button_primary_disabled_9slice.png",
+      "moveFrom": "",
+      "border": [
+        44,
+        44,
+        44,
+        44
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/nav_bar_background_9slice.png",
+      "moveFrom": "Assets/Res/image/Home/nav_bar_background_9slice.png",
+      "border": [
+        0,
+        0,
+        0,
+        12
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/nav_selected_9slice.png",
+      "moveFrom": "Assets/Res/image/Home/nav_selected_9slice.png",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/notify_dot.png",
+      "moveFrom": "Assets/Res/image/Home/notify_dot.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/node_locked_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/node_available_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/node_cleared_9slice.png",
+      "moveFrom": "",
+      "border": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/node_selection_ring_9slice.png",
+      "moveFrom": "",
+      "border": [
+        48,
+        48,
+        48,
+        48
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/hero_shadow.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/icon_settings.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_coins.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_gem.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_backpack.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_map.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_locate.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_swords.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_check.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_flag.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_lock.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_landmark.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_calculator.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/icon_close.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/star_filled.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/star_empty.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/landmark_common_badge_9slice.png",
+      "moveFrom": "",
+      "border": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/landmark_formula_badge_9slice.png",
+      "moveFrom": "",
+      "border": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/roadmap/landmark_label_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/dialog_panel_cream_9slice.png",
+      "moveFrom": "",
+      "border": [
+        56,
+        56,
+        56,
+        56
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/close_button_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/close_button_pressed_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/level_row_normal_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/level_row_selected_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/level_row_locked_9slice.png",
+      "moveFrom": "",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/common/overlay_dim.png",
+      "moveFrom": "",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    }
+  ]
+}

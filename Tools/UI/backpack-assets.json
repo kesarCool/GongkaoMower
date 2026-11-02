@@ -1,0 +1,44 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/Home/backpack/item_card_normal_9slice.png",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/backpack/item_card_selected_9slice.png",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/backpack/item_icon_surface_9slice.png",
+      "border": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Home/backpack/empty_backpack_glow.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 512
+    }
+  ]
+}

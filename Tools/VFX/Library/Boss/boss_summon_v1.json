@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "boss_summon_v1",
+  "mode": "boss-summon",
+  "displayName": "Boss·敕令召唤",
+  "status": "integrated-editor-verified",
+  "materialPath": "Assets/Res/Materials/VFX/mat_boss_blade_solid_v1.mat",
+  "childName": "BossSummonVisual",
+  "sortingOrder": 2,
+  "birthSeconds": 0.72,
+  "releaseSeconds": 0.36,
+  "chargeSeconds": 0.45,
+  "birthCapacityPerCaster": 32,
+  "addedPngBytes": 0,
+  "addedMaterials": 0,
+  "briefPath": "Tools/VFX/boss-summon-v1.md",
+  "validationReport": "ArtOutput/UI/BossSummonV1/After/validation-report.json"
+}

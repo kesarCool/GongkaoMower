@@ -1,0 +1,7 @@
+{
+  "assets": [
+    { "path": "Assets/Res/image/Home/login/login_background.jpg", "border": [0,0,0,0], "maxSize": 2048 },
+    { "path": "Assets/Res/image/Home/login/game_title.png", "border": [0,0,0,0], "maxSize": 2048 },
+    { "path": "Assets/Res/image/Home/login/bottom_veil.png", "border": [0,0,0,0], "maxSize": 128 }
+  ]
+}

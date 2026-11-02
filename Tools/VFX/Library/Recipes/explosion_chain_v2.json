@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "id": "explosion_chain_v2",
+  "displayName": "连环爆破·星芒爆炸",
+  "category": "impact",
+  "usage": "连环爆破命中",
+  "status": "integrated-editor-verified",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_explosion_library_v2.png",
+  "materialPath": "Assets/Res/Materials/VFX/mat_explosion_library_v2.mat",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Impact/fx_explosion_chain_v2.prefab",
+  "briefPath": "Tools/VFX/explosion-library-v2.md",
+  "promptPath": "ArtOutput/VFX/ExplosionLibraryV2/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/ExplosionLibraryV2/Sources",
+  "validationReport": "ArtOutput/UI/HitFeedbackAlignmentV1/Explosions/validation-report.json",
+  "width": 1024,
+  "height": 512,
+  "columns": 8,
+  "rows": 4,
+  "pngBudgetKiB": 512,
+  "compressionQuality": 60,
+  "poolSeconds": 0.51,
+  "referenceRadius": 1.2,
+  "sortingOrder": -5,
+  "layers": [
+    {
+      "name": "fx_explosion_chain_v2",
+      "seconds": 0.450000018,
+      "sizeX": 3.2,
+      "sizeY": 3.2,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "startFrame": 0.0,
+      "size3D": false,
+      "seed": 6180,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.25,
+          "inTangent": 0.0,
+          "outTangent": 0.0
+        },
+        {
+          "time": 0.18,
+          "value": 0.3125,
+          "inTangent": 0.0,
+          "outTangent": 0.0
+        },
+        {
+          "time": 0.55,
+          "value": 0.40625,
+          "inTangent": 0.0,
+          "outTangent": 0.0
+        },
+        {
+          "time": 1.0,
+          "value": 0.499968767,
+          "inTangent": 0.0,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 0.280003041,
+          "alpha": 1.0
+        },
+        {
+          "time": 0.519996941,
+          "alpha": 0.85
+        },
+        {
+          "time": 0.779995441,
+          "alpha": 0.42
+        },
+        {
+          "time": 1.0,
+          "alpha": 0.0
+        }
+      ]
+    }
+  ],
+  "packing": null
+}

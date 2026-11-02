@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "boss_blade_dissolve_v1",
+  "displayName": "Boss·刀气命中与消散",
+  "category": "impact",
+  "usage": "刀气爆发子弹的命中与到期消散，复用Boss共用图集。预警与飞行请使用Boss独立配方及实战验收。",
+  "status": "integrated-editor-verified",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_boss_blade_burst_v1.png",
+  "materialPath": "Assets/Res/Materials/VFX/mat_boss_blade_burst_v1.mat",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Impact/fx_boss_blade_dissolve_v1.prefab",
+  "briefPath": "Tools/VFX/boss-blade-burst-v1.md",
+  "promptPath": "ArtOutput/VFX/BossBladeBurstV1/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/BossBladeBurstV1/Sources",
+  "validationReport": "ArtOutput/UI/BossBladeBurstV1/After/validation-report.json",
+  "width": 512,
+  "height": 256,
+  "columns": 8,
+  "rows": 4,
+  "pngBudgetKiB": 96,
+  "compressionQuality": 70,
+  "poolSeconds": 0.24,
+  "referenceRadius": 0.3,
+  "sortingOrder": 4,
+  "layers": [
+    {
+      "name": "fx_boss_blade_dissolve_v1",
+      "seconds": 0.18,
+      "sizeX": 0.65,
+      "sizeY": 0.65,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "startFrame": 0.0,
+      "size3D": false,
+      "seed": 18723,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.249968752
+        },
+        {
+          "time": 1.0,
+          "value": 0.249968752,
+          "inTangent": 0.249968752,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 0.300007641,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 0.0
+        }
+      ]
+    }
+  ],
+  "packing": null
+}

@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "lightning_v1",
+  "displayName": "雷霆万钧·普通落雷",
+  "category": "impact",
+  "usage": "普通等级雷霆万钧实际落雷",
+  "status": "integrated-editor-verified",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_lightning_v1.png",
+  "materialPath": "Assets/Res/Materials/VFX/mat_lightning_v1.mat",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Impact/fx_lightning_v1.prefab",
+  "briefPath": "Tools/VFX/lightning-presentation-v1.md",
+  "promptPath": "ArtOutput/VFX/LightningPresentationV1/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/LightningPresentationV1/Sources",
+  "validationReport": "ArtOutput/UI/HitFeedbackAlignmentV1/Lightning/validation-report.json",
+  "width": 512,
+  "height": 256,
+  "columns": 8,
+  "rows": 2,
+  "pngBudgetKiB": 128,
+  "compressionQuality": 65,
+  "poolSeconds": 0.51,
+  "referenceRadius": 1.1,
+  "sortingOrder": -5,
+  "layers": [
+    {
+      "name": "FlashBolt",
+      "seconds": 0.24,
+      "sizeX": 1.65,
+      "sizeY": 4.6,
+      "offsetX": 0.0,
+      "offsetY": 1.88,
+      "startFrame": 0.0,
+      "size3D": true,
+      "seed": 2109,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.4999375
+        },
+        {
+          "time": 1.0,
+          "value": 0.4999375,
+          "inTangent": 0.4999375,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 1.0
+        }
+      ]
+    },
+    {
+      "name": "ContactAndResidual",
+      "seconds": 0.450000018,
+      "sizeX": 2.8,
+      "sizeY": 5.6,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "startFrame": 0.5,
+      "size3D": true,
+      "seed": 2110,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.4999375
+        },
+        {
+          "time": 1.0,
+          "value": 0.4999375,
+          "inTangent": 0.4999375,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 1.0
+        }
+      ]
+    }
+  ],
+  "packing": null
+}

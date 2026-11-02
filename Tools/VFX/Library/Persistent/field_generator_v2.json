@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "id": "field_generator_v2",
+  "mode": "persistent-field",
+  "displayName": "罡气护体·绿色力场 / 橙金突破",
+  "status": "integrated-editor-verified",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Aura/fx_field_generator_v2.prefab",
+  "materialPath": "Assets/Res/Materials/VFX/mat_field_surface_v2.mat",
+  "normalColor": {"r":0.08,"g":0.90,"b":0.17,"a":1},
+  "breakthroughColor": {"r":1,"g":0.43,"b":0.04,"a":1},
+  "surfaceOpacity": 0.27,
+  "waveOpacity": 0.88,
+  "travelMultiplier": 1.6,
+  "waveCount": 3,
+  "sortingOrder": -5,
+  "visualBaseDiameter": 2,
+  "dedicatedTextureCount": 0,
+  "briefPath": "ArtOutput/VFX/FieldGeneratorV2/brief.md",
+  "referencePath": "ArtOutput/VFX/FieldGeneratorV2/Reference/qq-reference.mp4",
+  "validationReport": "ArtOutput/UI/FieldGeneratorV2/After/validation-report.json"
+}

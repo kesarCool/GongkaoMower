@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "hit_new_skill_v1",
+  "displayName": "新技能命中（请改名）",
+  "category": "impact",
+  "usage": "填写真实技能与命中事件",
+  "status": "draft-needs-combat-validation",
+  "briefPath": "ArtOutput/VFX/NewSkill/brief.md",
+  "promptPath": "ArtOutput/VFX/NewSkill/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/NewSkill/Sources",
+  "width": 512,
+  "height": 64,
+  "columns": 8,
+  "rows": 1,
+  "pngBudgetKiB": 96,
+  "compressionQuality": 65,
+  "poolSeconds": 0.36,
+  "referenceRadius": 0.45,
+  "sortingOrder": -5,
+  "layers": [
+    {
+      "name": "Impact",
+      "seconds": 0.30,
+      "sizeX": 1.5,
+      "sizeY": 1.5,
+      "size3D": false,
+      "offsetX": 0,
+      "offsetY": 0,
+      "startFrame": 0,
+      "seed": 8531,
+      "frames": [
+        { "time": 0, "value": 0, "inTangent": 0.999875, "outTangent": 0.999875 },
+        { "time": 1, "value": 0.999875, "inTangent": 0.999875, "outTangent": 0.999875 }
+      ],
+      "alpha": [ { "time": 0, "alpha": 1 }, { "time": 0.35, "alpha": 1 }, { "time": 1, "alpha": 0 } ]
+    }
+  ],
+  "packing": { "sourceColumns": 4, "sourceRows": 4, "paddingPixels": 8, "sourceFrames": [0, 2, 4, 6, 8, 10, 12, 15] }
+}

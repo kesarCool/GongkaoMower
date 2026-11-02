@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "updatedDate": "2026-10-29",
+  "purpose": "Editor 制作交付目录，不是技能运行配置，不由普通粒子导入器加载。历史报告不等于当前重新执行战斗验收。",
+  "workflowPath": "Tools/VFX/boss-production-workflow.md",
+  "briefTemplatePath": "Tools/VFX/Templates/boss-skill-brief.md",
+  "promptTemplatePath": "Tools/VFX/boss-production-prompts.md",
+  "bossPrefabs": [
+    "Assets/Prefab/Enemy/Boss/boss_common.prefab",
+    "Assets/Prefab/Enemy/Boss/boss_30001.prefab",
+    "Assets/Prefab/Enemy/Boss/boss_30002.prefab",
+    "Assets/Prefab/Enemy/Boss/boss_30003.prefab"
+  ],
+  "sharedAssets": [
+    "Assets/Res/Textures/VFX/sheet_boss_blade_burst_v1.png",
+    "Assets/Res/Materials/VFX/mat_boss_blade_burst_v1.mat",
+    "Assets/Res/Materials/VFX/mat_boss_blade_solid_v1.mat",
+    "Assets/Res/Materials/VFX/mat_boss_blade_trail_v1.mat",
+    "Assets/Res/Prefabs/Effects/Impact/fx_boss_blade_dissolve_v1.prefab"
+  ],
+  "entries": [
+    {
+      "id": "boss_blade_burst_v1", "name": "刀气爆发", "kind": "skill", "moduleType": "bladeBurst", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_blade_burst_v1.json",
+      "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/BladeBurstModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossBladeBurstPresentation.cs", "Assets/Script/Game/Enemies/Boss/BossBladeProjectilePresentation.cs"],
+      "builderPath": "Assets/Editor/BossBladeBurstV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Blade Burst V1", "auditMenu": "工具/VFX/检查Boss刀气爆发配置",
+      "validationMenu": "工具/VFX/实战验收/Boss刀气爆发", "validationPhase": "boss-blade-burst", "runnerPath": "Assets/ArtPreview/Skills/BossBladeBurstValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossBladeBurstV1/Audit/configuration.json",
+      "videoPath": "ArtOutput/UI/BossBladeBurstV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossBladeBurstV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-blade-burst-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-blade-burst.cjs",
+      "regressionReports": [],
+      "summary": "按真实 8 / 12 / 16 向预警，短刀气、柔边拖尾与池化消散。共享 512×256 图集，源 PNG 28,653 字节。",
+      "limits": ["手动 CloneMarker 压力样本不证明真实分身继承；使用后续分身报告。", "微信真机与最终包体增量未测量。"]
+    },
+    {
+      "id": "boss_dash_v1", "name": "冲刺", "kind": "skill", "moduleType": "dash", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_dash_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/DashModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossDashPresentation.cs"], "builderPath": "Assets/Editor/BossDashV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Dash V1", "auditMenu": "工具/VFX/检查Boss冲刺配置",
+      "validationMenu": "工具/VFX/实战验收/Boss冲刺与小刀", "validationPhase": "boss-dash-knife", "runnerPath": "Assets/ArtPreview/Skills/BossDashKnifeValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossDashKnifeV1/Audit/dash-configuration.json", "videoPath": "ArtOutput/UI/BossDashKnifeV1/after-dash15-motion.mp4", "comparisonPath": "ArtOutput/UI/BossDashKnifeV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-dash-knife-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-dash-knife.cjs",
+      "regressionReports": ["ArtOutput/UI/BossCloneV1/RegressionDashKnife/validation-report.json"],
+      "summary": "身体包络路线、箭头、后沿速度线与终点环。复用实体材质，0 新贴图 / 材质。",
+      "limits": ["保留原 0.3 秒末锁向、15 / 20 速度及 8 距离。", "原单次 OverlapCircle 可能返回自身；前后隔离额外 hpDelta 均为 0，不视作 30 点技能伤害已命中。"]
+    },
+    {
+      "id": "boss_knife_v1", "name": "小刀", "kind": "skill", "moduleType": "homingKnife", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_knife_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/HomingKnifeModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossKnifePresentation.cs", "Assets/Script/Game/Enemies/Boss/BossBladeProjectilePresentation.cs"], "builderPath": "Assets/Editor/BossKnifeV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Knife V1", "auditMenu": "工具/VFX/检查Boss小刀配置",
+      "validationMenu": "工具/VFX/实战验收/Boss冲刺与小刀", "validationPhase": "boss-dash-knife", "runnerPath": "Assets/ArtPreview/Skills/BossDashKnifeValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossDashKnifeV1/Audit/knife-configuration.json", "videoPath": "ArtOutput/UI/BossDashKnifeV1/after-knife-motion.mp4", "comparisonPath": "ArtOutput/UI/BossDashKnifeV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-dash-knife-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-dash-knife.cjs",
+      "regressionReports": ["ArtOutput/UI/BossCloneV1/RegressionDashKnife/validation-report.json"],
+      "summary": "朱红短刃、文字前沿出手闪、短柔边尾迹。复用刀气图集和消散，0 新贴图 / 材质。",
+      "limits": ["实际 turnRate=0，仍为直飞。", "Trigger 墙体不走原 Collision 回收分支，未宣称撞墙消散。"]
+    },
+    {
+      "id": "boss_clone_v1", "name": "分身", "kind": "skill", "moduleType": "clone", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_clone_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/CloneModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossClonePresentation.cs"], "builderPath": "Assets/Editor/BossCloneV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Clone V1", "auditMenu": "工具/VFX/检查Boss分身配置",
+      "validationMenu": "工具/VFX/实战验收/Boss分身", "validationPhase": "boss-clone", "runnerPath": "Assets/ArtPreview/Skills/BossCloneValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossCloneV1/Audit/configuration.json", "videoPath": "ArtOutput/UI/BossCloneV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossCloneV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-clone-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-clone.cjs",
+      "regressionReports": ["ArtOutput/UI/BossReviveV1/RegressionClone/validation-report.json"],
+      "summary": "真实字形重影、角色统一半透明、主身实印与分身断续印；修正继承白名单与池身份。0 新贴图 / 材质。",
+      "limits": ["攻击预警与弹体不能跟随角色一起降低透明度。", "必须用真实 CloneModule / Start / 重建检验继承，不能只手工放标记对象。"]
+    },
+    {
+      "id": "boss_summon_v1", "name": "召唤", "kind": "skill", "moduleType": "summon", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_summon_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/SummonModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossSummonPresentation.cs"], "builderPath": "Assets/Editor/BossSummonV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Summon V1", "auditMenu": "工具/VFX/检查Boss召唤配置",
+      "validationMenu": "工具/VFX/实战验收/Boss召唤", "validationPhase": "boss-summon", "runnerPath": "Assets/ArtPreview/Skills/BossSummonValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossSummonV1/Audit/configuration.json", "videoPath": "ArtOutput/UI/BossSummonV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossSummonV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-summon-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-summon.cjs",
+      "regressionReports": ["ArtOutput/UI/BossReviveV1/RegressionSummon/validation-report.json"],
+      "summary": "0.45 秒蓄力符环与真实成功出生点门印，保留预留波次数量、属性与时钟。0 新贴图 / 材质。",
+      "limits": ["门印取最终受约束的真实生成位置；失败生成不出空门。", "已释放波次与施法者生命周期分开，旧回调不能污染新池租约。"]
+    },
+    {
+      "id": "boss_revive_v1", "name": "复活", "kind": "skill", "moduleType": "revive", "integration": "table-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_revive_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/ReviveModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossRevivePresentation.cs"], "builderPath": "Assets/Editor/BossReviveV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Revive V1", "auditMenu": "工具/VFX/检查Boss复活配置",
+      "validationMenu": "工具/VFX/实战验收/Boss复活", "validationPhase": "boss-revive", "runnerPath": "Assets/ArtPreview/Skills/BossReviveValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossReviveV1/Audit/configuration.json", "videoPath": "ArtOutput/UI/BossReviveScatterV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossReviveScatterV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-revive-scatter-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-revive-scatter.cjs",
+      "regressionReports": ["ArtOutput/UI/BossZoneV1/RegressionRevive/validation-report.json"],
+      "summary": "同一真实字形散开 / 回聚、余烬核心与真实保护弧；散开位移 1.6 倍，原回聚时间保持。修正动态盾缓存漏接，0 新贴图 / 材质。",
+      "limits": ["保留按当次 MaxHp 递减的恢复公式、等待、次数与可受伤恢复窗口。", "当前是 TMP 字形快照，后续 Spine 主体需要新的身体表现适配。"]
+    },
+    {
+      "id": "boss_zone_v1", "name": "地裂", "kind": "skill", "moduleType": "zone", "integration": "capability-only",
+      "recipePath": "Tools/VFX/Library/Boss/boss_zone_v1.json", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/ZoneModule.cs",
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossZonePresentation.cs"], "builderPath": "Assets/Editor/BossZoneV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Zone V1", "auditMenu": "工具/VFX/检查Boss地裂配置",
+      "validationMenu": "工具/VFX/实战验收/Boss地裂", "validationPhase": "boss-zone", "runnerPath": "Assets/ArtPreview/Skills/BossZoneValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossZoneV1/Audit/configuration.json", "videoPath": "ArtOutput/UI/BossZoneV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossZoneV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-zone-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-zone.cjs", "regressionReports": [],
+      "summary": "世界空间朱红预警、真实判定裂纹与碎石，0.9 秒残痕；延迟创建并复用网格。0 新贴图 / 材质。",
+      "limits": ["正式 Monster / LevelWave 未配 zone；验收使用临时注入，不代表已加入关卡。", "单圈预警约 0.14→0.7 秒，默认末击约 0.7→1.26 秒，是明确玩法调整。", "单轮 2～32 圈；不额外钳制跨越墙边的圆。"]
+    },
+    {
+      "id": "boss_head_crest_v1", "name": "公共头顶标识", "kind": "common-visual", "moduleType": null, "integration": "common-prefab-connected",
+      "recipePath": "Tools/VFX/Library/Boss/boss_head_crest_v1.json", "modulePath": null,
+      "presentationPaths": ["Assets/Script/Game/Enemies/Boss/BossHeadCrestPresentation.cs"], "builderPath": "Assets/Editor/BossHeadCrestV1Builder.cs",
+      "buildMenu": "工具/VFX/Build Boss Head Crest V1", "auditMenu": "工具/VFX/检查Boss头顶标识配置",
+      "validationMenu": "工具/VFX/实战验收/Boss分身", "validationPhase": "boss-clone", "runnerPath": "Assets/ArtPreview/Skills/BossCloneValidationRunner.cs",
+      "configurationReport": "ArtOutput/VFX/BossHeadCrestV1/Audit/configuration.json", "videoPath": "ArtOutput/UI/BossHeadCrestV1/after-closeup.mp4", "comparisonPath": "ArtOutput/UI/BossHeadCrestV1/comparison.png",
+      "proofScript": "Tools/VFX/render-boss-head-crest-proof.cjs", "integrityScript": "Tools/VFX/audit-boss-head-crest.cjs",
+      "regressionReports": ["ArtOutput/UI/BossReviveV1/RegressionClone/validation-report.json"],
+      "summary": "紧凑金橙冠徽、分身空心标记；替换旧双刀装饰，保留真实发射节点。0 新贴图 / 材质。",
+      "limits": ["沿用真实分身夹具进行头标检查，没有单独的 Boss头标 实战菜单。", "已有显式头部 / 身体绑定入口，不等于 Spine 角色已接入。"]
+    }
+  ],
+  "backlog": [
+    {"moduleType": "resist", "name": "独立免伤护盾技能", "modulePath": "Assets/Script/Game/Enemies/Boss/Skills/ResistModule.cs", "status": "not-redesigned-not-table-connected", "note": "复活保护弧与真实复活盾已完成；独立 resist 技能的持续壳体、缓存、减伤类型和耗次仍需单独改版验收。"},
+    {"name": "Spine Boss 主体", "status": "planned", "note": "头部绑定入口已保留；身体动画、出手、命中、拖尾、分身与复活表现适配尚未实现。"},
+    {"name": "微信真机与发布包", "status": "not-measured", "note": "固定机型、场景和构建设置后再记录帧时、内存、过绘及包体增量。"}
+  ]
+}

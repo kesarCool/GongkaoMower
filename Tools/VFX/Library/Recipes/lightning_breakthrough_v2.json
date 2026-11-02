@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "lightning_breakthrough_v2",
+  "displayName": "雷霆万钧·红色突破",
+  "category": "impact",
+  "usage": "羁绊解锁满级或 Legend 突破实际落雷",
+  "status": "integrated-editor-verified",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_lightning_breakthrough_v2.png",
+  "materialPath": "Assets/Res/Materials/VFX/mat_lightning_breakthrough_v2.mat",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Impact/fx_lightning_breakthrough_v2.prefab",
+  "briefPath": "Tools/VFX/lightning-breakthrough-v2.md",
+  "promptPath": "ArtOutput/VFX/LightningBreakthroughV2/prompts.md",
+  "sourceDirectory": "ArtOutput/VFX/LightningBreakthroughV2/Sources",
+  "validationReport": "ArtOutput/UI/HitFeedbackAlignmentV1/Lightning/validation-report.json",
+  "width": 1024,
+  "height": 512,
+  "columns": 8,
+  "rows": 2,
+  "pngBudgetKiB": 256,
+  "compressionQuality": 70,
+  "poolSeconds": 0.54,
+  "referenceRadius": 1.1,
+  "sortingOrder": -5,
+  "layers": [
+    {
+      "name": "ScarletCelestialBolt",
+      "seconds": 0.27,
+      "sizeX": 3.1,
+      "sizeY": 5.2,
+      "offsetX": 0.0,
+      "offsetY": 2.11,
+      "startFrame": 0.0,
+      "size3D": true,
+      "seed": 4601,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.4999375
+        },
+        {
+          "time": 1.0,
+          "value": 0.4999375,
+          "inTangent": 0.4999375,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 1.0
+        }
+      ]
+    },
+    {
+      "name": "CrimsonContactArcs",
+      "seconds": 0.48,
+      "sizeX": 2.8,
+      "sizeY": 5.6,
+      "offsetX": 0.0,
+      "offsetY": 0.0,
+      "startFrame": 0.5,
+      "size3D": true,
+      "seed": 4602,
+      "frames": [
+        {
+          "time": 0.0,
+          "value": 0.0,
+          "inTangent": 0.0,
+          "outTangent": 0.4999375
+        },
+        {
+          "time": 1.0,
+          "value": 0.4999375,
+          "inTangent": 0.4999375,
+          "outTangent": 0.0
+        }
+      ],
+      "alpha": [
+        {
+          "time": 0.0,
+          "alpha": 1.0
+        },
+        {
+          "time": 1.0,
+          "alpha": 1.0
+        }
+      ]
+    }
+  ],
+  "packing": null
+}

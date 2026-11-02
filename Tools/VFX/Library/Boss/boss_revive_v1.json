@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "boss_revive_v1",
+  "mode": "boss-revive",
+  "displayName": "Boss·余烬重生",
+  "status": "integrated-editor-verified",
+  "materialPath": "Assets/Res/Materials/VFX/mat_boss_blade_solid_v1.mat",
+  "childName": "BossReviveVisual",
+  "sortingOrder": 5,
+  "maxGlyphs": 32,
+  "scatterDistanceMultiplier": 1.6,
+  "scatterEnd": 0.23,
+  "gatherStart": 0.46,
+  "gatherEnd": 0.96,
+  "recoverySeconds": 0.35,
+  "shieldSeconds": 0.5,
+  "addedPngBytes": 0,
+  "addedMaterials": 0,
+  "briefPath": "Tools/VFX/boss-revive-v1.md",
+  "validationReport": "ArtOutput/UI/BossReviveScatterV1/After/validation-report.json"
+}

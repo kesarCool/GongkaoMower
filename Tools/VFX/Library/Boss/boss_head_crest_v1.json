@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "boss_head_crest_v1",
+  "mode": "boss-head-crest",
+  "displayName": "Boss·紧凑首领标识",
+  "status": "integrated-editor-verified",
+  "materialPath": "Assets/Res/Materials/VFX/mat_boss_blade_solid_v1.mat",
+  "childName": "BossHeadCrestVisual",
+  "headGap": 0.13,
+  "sortingOrder": 6,
+  "ownerWidth": 0.86,
+  "ownerVertices": 54,
+  "cloneVertices": 64,
+  "addedPngBytes": 0,
+  "addedMaterials": 0,
+  "briefPath": "Tools/VFX/boss-head-crest-v1.md",
+  "validationReport": "ArtOutput/UI/BossHeadCrestV1/After/validation-report.json"
+}

@@ -1,0 +1,134 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/Game/bosswheel/chest_closed.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 512
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/chest_open.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 512
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/wheel_base.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 1024
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/slot_active_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/slot_passive_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/slot_winner_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/reward_active_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/reward_passive_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/cursor_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/winner_check.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 64
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/warm_glow.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 128
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/reveal_rays.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Game/bosswheel/sparkle.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 64
+    }
+  ]
+}

@@ -1,0 +1,410 @@
+{
+  "assembly": "Assets/WX-WASM-SDK-V2/Runtime/Plugins/wx-runtime.dll",
+  "sha256": "04391606b958e2f195e854694c54a245ad397f675a4e7e2c17caa4e766d1619c",
+  "source": "PInvokeInfo.EntryPoint and managed ABI read with Mono.Cecil; generic methods implemented by unity-sdk/sdk.js",
+  "signatures": [
+    {
+      "symbol": "WX_ClassConstructor",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassFunction",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOffEventFunction",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOnEventFunction",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayFunction",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.Boolean"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayNoFunction_t",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayNoFunction_v",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayNoFunction_vn",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.Double"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayNoFunction_vs",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassOneWayNoFunction_vt",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_ClassSetProperty",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OffAddToFavorites",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OffCopyUrl",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OffEventRegister",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OffGameLiveStateChange",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OffHandoff",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OffShareTimeline",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnAddToFavorites",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnAddToFavorites_Resolve",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OnCopyUrl",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnCopyUrl_Resolve",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OnEventRegister",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayFunction",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_v",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_vnns",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.Double",
+        "System.Double",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_vs",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_vsn",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.Double"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_vst",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OneWayNoFunction_vt",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OnGameLiveStateChange",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnGameLiveStateChange_Resolve",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OnHandoff",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnHandoff_Resolve",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_OnShareTimeline",
+      "returns": "System.Void",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_OnShareTimeline_Resolve",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SetPreferredFramesPerSecond",
+      "returns": "System.Void",
+      "parameters": [
+        "System.Double"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_b",
+      "returns": "System.Boolean",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_bs",
+      "returns": "System.Boolean",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_bsnn",
+      "returns": "System.Boolean",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.Double",
+        "System.Double"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_bt",
+      "returns": "System.Boolean",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_nt",
+      "returns": "System.Double",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_ss",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_t",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_tnn",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.Double",
+        "System.Double"
+      ]
+    },
+    {
+      "symbol": "WX_SyncFunction_tt",
+      "returns": "System.String",
+      "parameters": [
+        "System.String",
+        "System.String",
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WXInitializeSDK",
+      "returns": "System.Void",
+      "parameters": [
+        "System.String"
+      ]
+    },
+    {
+      "symbol": "WXIsCloudTest",
+      "returns": "System.Boolean",
+      "parameters": []
+    },
+    {
+      "symbol": "WX_RegisterOnBLECharacteristicValueChangeCallback",
+      "returns": "System.Void",
+      "parameters": [
+        "WeChatWASM.WXSDKManagerHandler/OnBLECharacteristicValueChangeCallback"
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "symbol": "WX_SyncFunction_tnnt",
+      "reason": "No JavaScript SDK implementation in the installed package; Int32[] marshaling cannot be inferred safely."
+    }
+  ],
+  "initializationDependencies": [
+    "SetUnityUIType",
+    "WXIsCloudTest",
+    "WX_RegisterOnTouchCancelCallback",
+    "WX_RegisterOnTouchEndCallback",
+    "WX_RegisterOnTouchMoveCallback",
+    "WX_RegisterOnTouchStartCallback",
+    "WX_RegisterUDPSocketOnMessageCallback",
+    "WX_RegisterTCPSocketOnMessageCallback",
+    "WX_RegisterOnBLECharacteristicValueChangeCallback",
+    "WX_RegisterStartGyroscopeCallback",
+    "WX_RegisterStopGyroscopeCallback",
+    "WX_RegisterOnGyroscopeChangeCallback",
+    "WXInitializeSDK",
+    "JSStartGameDataMonitor"
+  ]
+}

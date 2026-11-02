@@ -1,0 +1,4 @@
+interface:
+  display_name: "文字割草机地图制作"
+  short_description: "为文字割草机制作共享瓦片、差异化关卡并在 Unity 中验证与接入"
+  default_prompt: "使用 $word-mower-maps 按现有规范制作这一章的瓦片地图，保留其他章节并交付实际预览与验证报告。"

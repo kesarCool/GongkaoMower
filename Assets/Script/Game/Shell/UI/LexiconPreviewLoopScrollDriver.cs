@@ -5,7 +5,7 @@ using UnityEngine.UI;
 /// <summary>
 /// 与 <see cref="LoopVerticalScrollRect"/> 同物体；单 Prefab（词条行）池化，数据为 <c>DisplayText</c> 列表。
 /// Cell 根挂 <see cref="LayoutElement"/>，且 <b>Preferred Height 必须大于 0</b>，与 <see cref="LevelSelectLoopScrollDriver"/> 约定一致；
-/// 池父节点勿挂在 <see cref="ScrollRect.content"/> 上。见 <c>docs/虚拟滚动列表选型.md</c>。
+/// 池父节点勿挂在 <see cref="ScrollRect.content"/> 上。见 <c>Doc/虚拟滚动列表选型.md</c>。
 /// </summary>
 [RequireComponent(typeof(LoopVerticalScrollRect))]
 [DisallowMultipleComponent]

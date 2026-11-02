@@ -1,0 +1,194 @@
+{
+  "assets": [
+    {
+      "path": "Assets/Res/image/common/home_card_cream_9slice.png",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_card_claimable_9slice.png",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_card_muted_9slice.png",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/exchange/bonus_gold_card_9slice.png",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/exchange/bonus_gem_card_9slice.png",
+      "border": [
+        30,
+        30,
+        30,
+        30
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/lexicon/filter_normal_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/lexicon/filter_selected_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/icon_ad_video.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/icon_refresh_clock.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/icon_fragment_piece.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_badge_mint_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_badge_sand_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_progress_track_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_progress_green_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_progress_gold_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_number_green_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/common/home_number_gold_9slice.png",
+      "border": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/exchange/reward_coins.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    },
+    {
+      "path": "Assets/Res/image/Home/exchange/reward_gems.png",
+      "border": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "maxSize": 256
+    }
+  ]
+}

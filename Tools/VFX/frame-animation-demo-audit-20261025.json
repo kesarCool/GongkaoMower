@@ -1,0 +1,187 @@
+{
+  "date": "2026-10-25",
+  "sourceDirectory": "F:\\xwechat_files\\wxid_8gett0fzdobf22_4719\\business\\favorite\\temp\\山海特效图鉴-Demo版",
+  "sourceEdition": "Demo",
+  "expectedCount": 16,
+  "actualCount": 16,
+  "totalPngBytes": 28021171.0,
+  "verificationScope": "File size, PNG IHDR and tRNS presence, and SHA-256 only; no runtime playback or per-pixel continuity validation.",
+  "files": [
+    {
+      "file": "assets/cyber/vfx/fei-nine-tail-flipbook-v2.png",
+      "bytes": 2916585,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "hasAlphaChannel": true,
+      "hasTransparencyChunk": false,
+      "sha256": "160ec72ca22d1684c0647dae66f87bb2b37edbd232d17ee91f0f197403549693",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/fox-ninefold-hunt-v1.png",
+      "bytes": 2014599,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "868e12d973c6c09eefb78ec55a8a5622bfbe031d7524a2b2347132d3fe8ad4c9",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/sunbird-corona-descent-v1.png",
+      "bytes": 2037971,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "5a64caef2ffc7209525301518888f7f5e6d145afac174a1e93cfa1b59d687ae5",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/dragon-heaven-judgment-v1.png",
+      "bytes": 2474932,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "eaa76f08a083863b073ccc8d4f24cefe11a0d37cc565099cd3fdddc4c8e0d20d",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/wind-vortex-v1.png",
+      "bytes": 1594161,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "46aab00f106eb37d05deec7ea009d3a6db343042218f9600114477fe2b8fea63",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/flame-burst-v1.png",
+      "bytes": 1482919,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "d36650d4d58d8879edae985c93aea9180017830515a26b40821f086b6ce82388",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/thunder-field-v1.png",
+      "bytes": 1676695,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "f6c95617cea39f2d62076d3a5321955c3fa3725d92a479d73bddde646542ece5",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/fox-mirage-hex-v1.png",
+      "bytes": 1369406,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "99315229617362898cb2091d757f4994cdf9bf2876a45ff48c6e646af6f6b937",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/fei-pulse-firststrike-v1.png",
+      "bytes": 1074554,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "e8a6165f5329a8bc4d202067fbaf36c26e7e0f41dd5e8e87806da31f411232f8",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/thunder-lance-v1.png",
+      "bytes": 1227300,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "eefed1bcb4a8271b198197becd0399fcbe1886030e622c30943957d01355fe73",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/fei-slash-v1.png",
+      "bytes": 1123864,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "506cd92fd1c43cad075747f9337c392c2e75bb3eb90ecfd534839154dbac164d",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/fei-triple-combo-v1.png",
+      "bytes": 1174421,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "5b1b0e36e5eeb2c23da3012baf27ee78920ce372dc58ec246c1c73f1b0cd2b34",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/barrier-ice-dome-v1.png",
+      "bytes": 2185141,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "a1572e04fc530055821af125d9a74165972d26fcf34dabd859bb071f2fd4469b",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/barrier-fire-cage-v1.png",
+      "bytes": 1666331,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "bbfc79821e2923c0f9bce3ec60a0a86b3f0bca14d45e5a087f0631e568348616",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/barrier-armor-bastion-v1.png",
+      "bytes": 1978701,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "e714c2db4685ed863f7c30a4ad20ede2cc26fff3d89035ace091f07734abc1d2",
+      "checksumMatches": true
+    },
+    {
+      "file": "assets/cyber/vfx/barrier-arcane-seal-v1.png",
+      "bytes": 2023591,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 2,
+      "hasAlphaChannel": false,
+      "hasTransparencyChunk": false,
+      "sha256": "294270a7b8ec465b277833bab57c1b919c037eb08b0f9cb28ee9ec58c305e93c",
+      "checksumMatches": true
+    }
+  ]
+}

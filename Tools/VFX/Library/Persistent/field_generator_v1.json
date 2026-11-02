@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "field_generator_v1",
+  "mode": "persistent-aura",
+  "displayName": "罡气护体·琥珀金 / 朱红金",
+  "status": "integrated-editor-verified",
+  "prefabPath": "Assets/Res/Prefabs/Effects/Aura/fx_field_generator_v1.prefab",
+  "texturePath": "Assets/Res/Textures/VFX/sheet_field_generator_v1.png",
+  "normalSource": "ArtOutput/VFX/FieldGeneratorV1/Sources/normal.png",
+  "breakthroughSource": "ArtOutput/VFX/FieldGeneratorV1/Sources/breakthrough.png",
+  "width": 512,
+  "height": 256,
+  "pixelsPerUnit": 256,
+  "visibleArtworkDiameter": 0.875,
+  "pngBudgetKiB": 192,
+  "compressionQuality": 70,
+  "normalRotationSpeed": 32,
+  "breakthroughRotationSpeed": 49,
+  "sortingOrder": -5,
+  "briefPath": "ArtOutput/VFX/FieldGeneratorV1/brief.md",
+  "promptPath": "ArtOutput/VFX/FieldGeneratorV1/prompts.md",
+  "validationReport": "ArtOutput/UI/FieldGeneratorV1/After/validation-report.json"
+}
